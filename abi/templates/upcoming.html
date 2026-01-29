@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Upcoming Projects</title>
+    <title>Anstehende Aktionen</title>
     <style>
         body { font-family: sans-serif; }
         .top-bar { display: flex; justify-content: space-between; margin-bottom: 20px; }
@@ -23,8 +23,8 @@
 <body>
 
 <div class="top-bar">
-    <h1>Upcoming Projects</h1>
-    <button>Add Project</button>
+    <h1>Anstehende Aktionen</h1>
+    <button>neue Aktion</button>
 </div>
 
 {% for project in projects %}
@@ -38,7 +38,7 @@
             <h2>{{ project.title }}</h2>
             <p>{{ project.description }}</p>
 
-            <h3>Participants</h3>
+            <h3>Teilnehmer</h3>
             <ul>
                 {% for user in project.participants.all %}
                     <li>{{ user.username }}</li>

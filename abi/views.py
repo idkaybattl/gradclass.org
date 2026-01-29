@@ -24,7 +24,7 @@ def upcoming_projects(request):
     projects = Project.objects.filter(starting_date__gte=now()).order_by("starting_date")
     users = User.objects.all()
 
-    return render(request, "upcoming_projects.html", {
+    return render(request, "upcoming.html", {
         "projects": projects,
         "users": users,
     })
