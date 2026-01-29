@@ -95,12 +95,14 @@ main {
     gap: 1.5rem;
 }
 
-.card {
+.card, .card:visited {
     background: var(--card);
     border-radius: var(--radius);
     padding: 1.5rem;
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
+    text-decoration: none;
+    color: var(--text);
 }
 
 .card:hover {
