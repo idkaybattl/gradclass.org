@@ -1,0 +1,33 @@
+{% load static %}
+
+<!doctype html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% block title %}Abi 28{% endblock %}</title>
+
+        <link rel="stylesheet" href="{% static 'abi/base.css' %}" />
+        <link rel="stylesheet" href="{% static 'abi/colors.css' %}" />
+        {% block head %} {% endblock %}
+
+        <!-- Schrift -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+
+    <body>
+        <header>
+            <h1>Abi 28</h1>
+            <button class="profile-btn">Profil</button>
+        </header>
+
+        {% block main %}{% endblock %}
+
+        {% block scripts %}{% endblock %}
+    </body>
+</html>

@@ -1,22 +1,27 @@
 {% load static %}
 
-<!DOCTYPE html>
+<!doctype html>
 <html>
+    <head>
+        <title>Hello</title>
+        <link
+            href="https://fonts.googleapis.com/css?family=Roboto+Condensed"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="{% static 'abi/demo.css' %}" />
+        <link rel="stylesheet" href="{% static 'abi/theme3.css' %}" />
+    </head>
 
-<head>
-    <title>Hello</title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'abi/demo.css' %}">
-    <link rel="stylesheet" href="{% static 'abi/theme3.css' %}">
-</head>
+    <body>
+        <div id="caleandar"></div>
 
-<body>
-    <div id="caleandar">
-
-    </div>
-
-        <script type="text/javascript" src="{% static 'abi/js/caleandar.js' %}"></script>
-        <script type="text/javascript" src="{% static 'abi/js/demo.js' %}"></script>
-</body>
-
+        <script
+            type="text/javascript"
+            src="{% static 'abi/js/caleandar.js' %}"
+        ></script>
+        <script
+            type="text/javascript"
+            src="{% static 'abi/js/demo.js' %}"
+        ></script>
+    </body>
 </html>

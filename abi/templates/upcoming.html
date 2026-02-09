@@ -1,76 +1,62 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Anstehende Aktionen</title>
-    <style>
-        body { font-family: sans-serif; }
-        .top-bar { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .project { padding: 12px; border: 1px solid #ccc; margin-bottom: 10px; cursor: pointer; }
-        .popup {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-        }
-        .popup-content {
-            background: white;
-            padding: 20px;
-            max-width: 500px;
-            margin: 100px auto;
-        }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
 
+{% load static %}
+
+{% block title %}Anstehende Aktionen{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'abi/upcoming.css' %}" />
+{% endblock %}
+
+{% block main %}
 <div class="top-bar">
     <h1>Anstehende Aktionen</h1>
     <button>neue Aktion</button>
 </div>
 
 {% for project in projects %}
-    <div class="project" onclick="openPopup({{ project.id }})">
-        <strong>{{ project.title }}</strong><br>
-        {{ project.starting_date }} → {{ project.ending_date }}
-    </div>
+<div class="project" onclick="openPopup({{ project.id }})">
+    <strong>{{ project.title }}</strong><br />
+    {{ project.starting_date }} → {{ project.ending_date }}
+</div>
 
-    <div class="popup" id="popup-{{ project.id }}">
-        <div class="popup-content">
-            <h2>{{ project.title }}</h2>
-            <p>{{ project.description }}</p>
+<div class="popup" id="popup-{{ project.id }}">
+    <div class="popup-content">
+        <h2>{{ project.title }}</h2>
+        <p>{{ project.description }}</p>
 
-            <h3>Teilnehmer</h3>
-            <ul>
-                {% for user in project.participants.all %}
-                    <li>{{ user.username }}</li>
-                {% empty %}
-                    <li>No participants yet</li>
+        <h3>Teilnehmer</h3>
+        <ul>
+            {% for user in project.participants.all %}
+            <li>{{ user.username }}</li>
+            {% empty %}
+            <li>No participants yet</li>
+            {% endfor %}
+        </ul>
+
+        <form
+            method="post"
+            action="{% url 'add-participant' project.id %}"
+        >
+            {% csrf_token %}
+            <select name="user_id">
+                {% for user in users %}
+                <option value="{{ user.id }}">
+                    {{ user.username }}
+                </option>
                 {% endfor %}
-            </ul>
+            </select>
+            <button type="submit">Add participant</button>
+        </form>
 
-            <form method="post" action="{% url 'add-participant' project.id %}">
-                {% csrf_token %}
-                <select name="user_id">
-                    {% for user in users %}
-                        <option value="{{ user.id }}">{{ user.username }}</option>
-                    {% endfor %}
-                </select>
-                <button type="submit">Add participant</button>
-            </form>
-
-            <br>
-            <button onclick="closePopup({{ project.id }})">Close</button>
-        </div>
+        <br />
+        <button onclick="closePopup({{ project.id }})">Close</button>
     </div>
+</div>
 {% endfor %}
 
-<script>
-function openPopup(id) {
-    document.getElementById("popup-" + id).style.display = "block";
-}
-function closePopup(id) {
-    document.getElementById("popup-" + id).style.display = "none";
-}
-</script>
+{% endblock %}
 
-</body>
-</html>
+{% block scripts %}
+<script src="{% static 'abi/js/upcoming.js' %}"></script>
+{% endblock %}

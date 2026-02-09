@@ -1,61 +1,36 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="de">
+{% block title %}Abi 28 - Abikasse{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abi 28 – Abikasse</title>
+{% block head %}
+<link rel="stylesheet" href="{% static 'abi/index.css' %}" />
+{% endblock %}
 
+{%block main %}
+<main>
+    <!-- Counter Platzhalter -->
+    <section class="counter">
+        <span>Aktueller Stand der Abikasse</span>
+        <strong>€ 0 / € 10.000</strong>
+    </section>
 
-        <link rel="stylesheet" href="{% static 'abi/colors.css' %}">
-    <link rel="stylesheet" href="{% static 'abi/index.css' %}">
+    <!-- Hauptnavigation -->
+    <section class="grid">
+        <a class="card" href="upcoming">
+            <h2>Anstehende Aktionen</h2>
+            <p>Alle geplanten und anstehenden Aktionen anzeigen</p>
+        </a>
 
-    <!-- Schrift -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
+        <a class="card">
+            <h2>Umfragen</h2>
+            <p>Über Mottos, Aktionen & mehr abstimmen</p>
+        </a>
 
-<body>
-
-    <header>
-        <h1>Abi 28</h1>
-        <button class="profile-btn">Profil</button>
-    </header>
-
-    <main>
-        <!-- Counter Platzhalter -->
-        <section class="counter">
-            <span>Aktueller Stand der Abikasse</span>
-            <strong>€ 0 / € 10.000</strong>
-        </section>
-
-        <!-- Hauptnavigation -->
-        <section class="grid">
-            <a class="card" href="upcoming">
-                <h2>Anstehende Aktionen</h2>
-                <p>Alle geplanten und anstehenden Aktionen anzeigen</p>
-            </a>
-
-            <a class="card">
-                <h2>Umfragen</h2>
-                <p>Über Mottos, Aktionen & mehr abstimmen</p>
-            </a>
-
-            <a class="card" href="calendar">
-                <h2>Kalender</h2>
-                <p>Termine und Aktionen im Überblick</p>
-            </a>
-
-            <a class="card">
-                <h2>Meine Aktionen</h2>
-                <p>Bereits erledigte Aktionen einsehen</p>
-            </a>
-        </section>
-    </main>
-
-</body>
-
-</html>
+        <a class="card">
+            <h2>Meine Aktionen</h2>
+            <p>Bereits erledigte Aktionen einsehen</p>
+        </a>
+    </section>
+</main>
+{% endblock %}
