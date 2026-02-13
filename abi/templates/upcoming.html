@@ -47,10 +47,16 @@
 <div class="edit" id="edit-{{ project.id }}">
     <div class="edit-content">
         <header>
-            <h2>{{ project.title }}</h2>
+            <h2 contenteditable="true">{{ project.title }}</h2>
         </header>
 
-        <p>{{ project.description }}</p>
+        <p contenteditable="true">{{ project.description }}</p>
+
+        <label for="starting-datetime">Birthday (date and time):</label>
+        <input type="datetime-local" id="starting-datetime" name="starting_datetime">
+
+        <label for="ending-datetime">Birthday (date and time):</label>
+        <input type="datetime-local" id="ending-datetime" name="ending-datetime">
 
         <h3>Teilnehmer</h3>
         <ul>

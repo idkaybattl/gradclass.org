@@ -11,4 +11,10 @@ urlpatterns = [
         views.add_participant,
         name="add-participant",
     ),
+    path(
+        "upcoming/<int:project_id>/update/",
+        views.update_project,
+        name="update-project",
+    ),
+    path("upcoming/<int:project_id>/join/", views.join_project, name="join-project"),
 ]
