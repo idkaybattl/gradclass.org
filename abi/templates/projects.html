@@ -5,7 +5,7 @@
 {% block title %}Anstehende Aktionen{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'abi/upcoming.css' %}" />
+<link rel="stylesheet" href="{% static 'abi/projects.css' %}" />
 {% endblock %}
 
 {% block main %}
@@ -15,7 +15,7 @@
     <button>neue Aktion</button>
 </div>
 
-{% for project in projects %}
+{% for project, form in forms %}
 <div class="project" onclick="openDetails({{ project.id }})">
     <strong>{{ project.title }}</strong><br />
     {{ project.starting_date }} → {{ project.ending_date }}
@@ -39,23 +39,28 @@
             {% endfor %}
         </ul>
 
-        <br />
-        <button onclick="closeDetails({{ project.id }})">Schließen</button>
+        <br/>
+        <button onclick="closeDetails( {{ project.id }} )">Schließen</button>
     </div>
 </div>
 
 <div class="edit" id="edit-{{ project.id }}">
-    <div class="edit-content">
-        <header>
-            <h2 contenteditable="true">{{ project.title }}</h2>
+    <form method="post" class="edit-content">
+        {% csrf_token %}
+        <input type="hidden" name="project_id" value="{{ project.id }}">
+        {{ form.as_p }}
+        <button type="submit" value="Fertig">Fertig</button>
+
+        <!--<header>
+            <input type="text" id="title" name="title" required minlength="3" maxlength="255" value="{{ project.title }}"></input>
         </header>
 
-        <p contenteditable="true">{{ project.description }}</p>
+        <input type="text" id="description" name="description" required minlength="3" value="{{ project.description }}"></input>
 
-        <label for="starting-datetime">Birthday (date and time):</label>
+        <label for="starting-datetime"></label>
         <input type="datetime-local" id="starting-datetime" name="starting_datetime">
 
-        <label for="ending-datetime">Birthday (date and time):</label>
+        <label for="ending-datetime"></label>
         <input type="datetime-local" id="ending-datetime" name="ending-datetime">
 
         <h3>Teilnehmer</h3>
@@ -68,13 +73,13 @@
         </ul>
 
         <br />
-        <button onclick="closeEdit({{ project.id }})">Fertig</button>
-    </div>
+        <button type="submit" onclick="closeEdit({{ project.id }})" value="Fertig"></button>-->
+    </form>
 </div>
 {% endfor %}
 
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'abi/js/upcoming.js' %}"></script>
+<script src="{% static 'abi/js/projects.js' %}"></script>
 {% endblock %}

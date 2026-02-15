@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
 from django.utils.timezone import now
 
+from .forms import ProjectForm
 from .models import Project
 
 User = get_user_model()
@@ -21,55 +22,33 @@ def calendar(request):
 
 
 @login_required
-def upcoming_projects(request):
-    projects = Project.objects.filter(starting_date__gte=now()).order_by(
-        "starting_date"
-    )
-    users = User.objects.all()
+def projects(request):
+    if request.method == "GET":
+        projects = Project.objects.filter(starting_date__gte=now()).order_by(
+            "starting_date"
+        )
+        users = User.objects.all()
 
-    return render(
-        request,
-        "upcoming.html",
-        {
-            "projects": projects,
-            "users": users,
-        },
-    )
-
-
-@login_required
-def add_participant(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
+        forms = [
+            (project, ProjectForm(instance=project, prefix=str(project.id)))
+            for project in projects
+        ]
+        return render(
+            request,
+            "projects.html",
+            {"forms": forms, "users": users},
+        )
 
     if request.method == "POST":
-        user_id = request.POST.get("user_id")
-        if user_id:
-            user = get_object_or_404(User, id=user_id)
-            project.participants.add(user)
+        id = request.POST.get("project_id")
+        project = Project.objects.get(pk=id)
 
-    return redirect("upcoming-projects")
+        form = ProjectForm(request.POST, instance=project, prefix=str(project.id))
 
+        if form.is_valid():
+            form.save()
 
-@login_required
-def update_project(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-
-    if request.method == "POST":
-        title = request.POST.get("title")
-        description = request.POST.get("description")
-        starting_date = request.POST.get("starting_date")
-        ending_date = request.POST.get("ending_date")
-        participants = request.POST.get("add_participant")
-
-        if title and description and starting_date and ending_date:
-            project.title = title
-            project.description = description
-            project.starting_date = starting_date
-            project.ending_date = ending_date
-            project.participants = participants
-            project.save()
-
-    return redirect("upcoming-projects")
+        return redirect("/projects")
 
 
 @login_required
@@ -82,4 +61,4 @@ def join_project(request, project_id):
             user = get_object_or_404(User, id=user_id)
             project.participants.add(user)
 
-    return redirect("upcoming-projects")
+    return redirect("/projects")
