@@ -11,7 +11,10 @@
                 {% if can_edit %}
                 <button type="button" class="btn btn-primary" data-popup-switch="edit-{{ project.id }}">Bearbeiten</button>
                 {% elif is_participant %}
-                <span class="details-participation-state">Du nimmst bereits teil</span>
+                <form method="post" action="{% url 'leave-project' project.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary">Teilnahme beenden</button>
+                </form>
                 {% else %}
                 <form method="post" action="{% url 'join-project' project.id %}">
                     {% csrf_token %}

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .forms import ProjectForm
 from .models import Project
@@ -104,7 +105,7 @@ def projects(request):
                 new_project.creator = request.user
                 new_project.save()
                 create_form.save_m2m()
-                return redirect("/projects")
+                return redirect("projects")
 
             return render(
                 request,
@@ -131,7 +132,7 @@ def projects(request):
 
             if edit_form.is_valid():
                 edit_form.save()
-                return redirect("/projects")
+                return redirect("projects")
 
             return render(
                 request,
@@ -144,7 +145,7 @@ def projects(request):
                 },
             )
 
-        return redirect("/projects")
+        return redirect("projects")
 
     create_form = build_project_form(prefix="new")
     project_forms = build_project_forms()
@@ -161,11 +162,22 @@ def projects(request):
 
 
 @login_required
+@require_POST
 def join_project(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
     if request.method == "POST":
-        if request.user.id != project.creator_id:
-            project.participants.add(request.user)
+        project.participants.add(request.user)
 
-    return redirect("/projects")
+    return redirect("projects")
+
+
+@login_required
+@require_POST
+def leave_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    if request.method == "POST":
+        project.participants.remove(request.user)
+
+    return redirect("projects")
