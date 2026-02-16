@@ -44,6 +44,9 @@ a:active {
 }
 
 .profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: var(--primary);
     color: white;
     border: none;
@@ -51,10 +54,96 @@ a:active {
     border-radius: 999px;
     font-weight: 600;
     cursor: pointer;
+    text-decoration: none;
+}
+
+.profile-menu {
+    position: relative;
+    z-index: 1400;
+}
+
+.profile-menu summary {
+    list-style: none;
+}
+
+.profile-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.profile-menu[open] .profile-btn {
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.35);
+}
+
+.profile-menu .profile-btn::after {
+    content: "▾";
+    margin-left: 0.45rem;
+    font-size: 0.85em;
+    line-height: 1;
+}
+
+.profile-menu[open] .profile-btn::after {
+    content: "▴";
+}
+
+.profile-menu__content {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    min-width: 210px;
+    max-width: min(260px, calc(100vw - 2rem));
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+    padding: 0.45rem;
+    display: grid;
+    gap: 0.25rem;
+    z-index: 1200;
+}
+
+.profile-menu:not([open]) .profile-menu__content {
+    display: none;
+}
+
+.profile-menu__link,
+.profile-menu__logout {
+    width: 100%;
+    text-align: left;
+    padding: 0.55rem 0.7rem;
+    border-radius: 8px;
+    font: inherit;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.profile-menu__link:hover,
+.profile-menu__logout:hover {
+    background: rgba(128, 128, 128, 0.18);
+}
+
+.profile-menu__logout-form {
+    margin: 0;
 }
 
 @media (max-width: 600px) {
+    header {
+        padding: 0.85rem 1rem;
+    }
+
     header h1 {
         font-size: 1.2rem;
+    }
+
+    .profile-btn {
+        padding: 0.45rem 0.8rem;
+        font-size: 0.92rem;
+    }
+
+    .profile-menu__content {
+        right: 0;
+        left: auto;
     }
 }

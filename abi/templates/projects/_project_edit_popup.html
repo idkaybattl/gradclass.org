@@ -1,0 +1,53 @@
+<div class="popup" id="edit-{{ project.id }}" data-popup>
+    <form
+        method="post"
+        class="popup__content popup__content--edit"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-edit-title-{{ project.id }}"
+    >
+        {% csrf_token %}
+        <input type="hidden" name="project_id" value="{{ project.id }}" />
+        <header>
+            <h2 id="project-edit-title-{{ project.id }}">Aktion bearbeiten</h2>
+            <button type="button" class="btn btn-link" data-popup-switch="details-{{ project.id }}">Zurück</button>
+        </header>
+
+        {{ form.non_field_errors }}
+
+        <p>
+            {{ form.title.errors }}
+            {{ form.title.label_tag }}
+            {{ form.title }}
+        </p>
+
+        <p>
+            {{ form.description.errors }}
+            {{ form.description.label_tag }}
+            {{ form.description }}
+        </p>
+
+        <p>
+            {{ form.starting_date.errors }}
+            {{ form.starting_date.label_tag }}
+            {{ form.starting_date }}
+        </p>
+
+        <p>
+            {{ form.ending_date.errors }}
+            {{ form.ending_date.label_tag }}
+            {{ form.ending_date }}
+        </p>
+
+        <div class="participants-form-field">
+            {{ form.participants.errors }}
+            {{ form.participants.label_tag }}
+            {{ form.participants }}
+        </div>
+
+        <div class="popup__actions">
+            <button type="submit" class="btn btn-primary">Fertig</button>
+            <button type="button" class="btn btn-secondary" data-popup-close>Schließen</button>
+        </div>
+    </form>
+</div>

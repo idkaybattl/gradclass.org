@@ -10,105 +10,28 @@
 {% endblock %}
 
 {% block main %}
-<div class="top-bar">
-    <h1>Anstehende Aktionen</h1>
-    <a href="/calendar">Kalender</a>
-    <button>neue Aktion</button>
-</div>
-
-{% for project, form in forms %}
-<div class="project" onclick="openDetails({{ project.id }})">
-    <strong>{{ project.title }}</strong><br />
-    {{ project.starting_date }} → {{ project.ending_date }}
-</div>
-
-<div class="details" id="details-{{ project.id }}">
-    <div class="details-content">
-        <header>
-            <h2>{{ project.title }}</h2>
-            <button onclick="openEdit({{ project.id }})">Bearbeiten</button>
-        </header>
-
-        <p>{{ project.description }}</p>
-
-        <h3>Teilnehmer</h3>
-        <ul>
-            {% for user in project.participants.all %}
-            <li>{{ user.username }}</li>
-            {% empty %}
-            <li>keine Teilnehmer</li>
-            {% endfor %}
-        </ul>
-
-        <br/>
-        <button onclick="closeDetails( {{ project.id }} )">Schließen</button>
-    </div>
-</div>
-
-<div class="edit" id="edit-{{ project.id }}">
-    <form method="post" class="edit-content">
-        {% csrf_token %}
-        <input type="hidden" name="project_id" value="{{ project.id }}">
-        {{ form.non_field_errors }}
-
-        <p>
-            {{ form.title.errors }}
-            {{ form.title.label_tag }}
-            {{ form.title }}
-        </p>
-
-        <p>
-            {{ form.description.errors }}
-            {{ form.description.label_tag }}
-            {{ form.description }}
-        </p>
-
-        <p>
-            {{ form.starting_date.errors }}
-            {{ form.starting_date.label_tag }}
-            {{ form.starting_date }}
-        </p>
-
-        <p>
-            {{ form.ending_date.errors }}
-            {{ form.ending_date.label_tag }}
-            {{ form.ending_date }}
-        </p>
-
-        <div class="participants-form-field">
-            {{ form.participants.errors }}
-            {{ form.participants.label_tag }}
-            {{ form.participants }}
+<main class="projects-page">
+    <section class="top-bar">
+        <h1>Anstehende Aktionen</h1>
+        <div class="top-bar__actions">
+            <a href="/calendar" class="btn btn-link">Kalender</a>
+            <button type="button" class="btn btn-primary">Neue Aktion</button>
         </div>
+    </section>
 
-        <button type="submit" value="Fertig">Fertig</button>
-
-        <!--<header>
-            <input type="text" id="title" name="title" required minlength="3" maxlength="255" value="{{ project.title }}"></input>
-        </header>
-
-        <input type="text" id="description" name="description" required minlength="3" value="{{ project.description }}"></input>
-
-        <label for="starting-datetime"></label>
-        <input type="datetime-local" id="starting-datetime" name="starting_datetime">
-
-        <label for="ending-datetime"></label>
-        <input type="datetime-local" id="ending-datetime" name="ending-datetime">
-
-        <h3>Teilnehmer</h3>
-        <ul>
-            {% for user in project.participants.all %}
-            <li>{{ user.username }}</li>
-            {% empty %}
-            <li>No participants yet</li>
-            {% endfor %}
-        </ul>
-
-        <br />
-        <button type="submit" onclick="closeEdit({{ project.id }})" value="Fertig"></button>-->
-    </form>
-</div>
-{% endfor %}
+    <section class="projects-grid">
+        {% for project, form in forms %}
+        {% include "projects/_project_card.html" %}
+        {% include "projects/_project_details_popup.html" %}
+        {% include "projects/_project_edit_popup.html" %}
+        {% empty %}
+        <article class="empty-projects">
+            <h2>Keine Aktionen geplant</h2>
+            <p>Zurzeit gibt es keine zukünftigen Aktionen.</p>
+        </article>
+        {% endfor %}
+    </section>
+</main>
 
 {% endblock %}
 

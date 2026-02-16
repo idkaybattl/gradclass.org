@@ -70,13 +70,15 @@ class ProjectForm(forms.ModelForm):
     starting_date = forms.DateTimeField(
         label="Beginn ",
         widget=forms.DateTimeInput(
-            format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}
+            format="%Y-%m-%dT%H:%M",
+            attrs={"type": "datetime-local", "lang": "de-DE"},
         ),
     )
     ending_date = forms.DateTimeField(
         label="Ende ",
         widget=forms.DateTimeInput(
-            format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}
+            format="%Y-%m-%dT%H:%M",
+            attrs={"type": "datetime-local", "lang": "de-DE"},
         ),
     )
     participants = forms.ModelMultipleChoiceField(

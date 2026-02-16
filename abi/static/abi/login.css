@@ -1,0 +1,75 @@
+.login-page {
+    min-height: calc(100vh - 90px);
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+}
+
+.login-card {
+    width: min(460px, 100%);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.8rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-card h2 {
+    font-size: 1.5rem;
+}
+
+.login-subtitle {
+    margin-top: 0.4rem;
+    margin-bottom: 1.2rem;
+    color: var(--muted);
+}
+
+.login-note {
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    background: rgba(10, 132, 255, 0.18);
+    color: var(--text);
+}
+
+.login-form {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.login-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.login-field label {
+    font-weight: 600;
+}
+
+.login-field input {
+    width: 100%;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+}
+
+.login-field ul.errorlist,
+.login-form ul.errorlist {
+    list-style: none;
+    color: #b00020;
+    font-size: 0.9rem;
+}
+
+.login-submit {
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.6rem 1rem;
+    margin-top: 0.25rem;
+}

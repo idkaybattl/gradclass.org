@@ -25,7 +25,21 @@
             <a href="/">
                 <h1>Abi 28</h1>
             </a>
-            <button class="profile-btn">Profil</button>
+            {% if user.is_authenticated %}
+            <details class="profile-menu">
+                <summary class="profile-btn">Profil</summary>
+                <div class="profile-menu__content">
+                    <a href="/projects/" class="profile-menu__link">Meine Aktionen</a>
+                    <a href="/calendar/" class="profile-menu__link">Kalender</a>
+                    <form method="post" action="{% url 'logout' %}" class="profile-menu__logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="profile-menu__logout">Logout</button>
+                    </form>
+                </div>
+            </details>
+            {% else %}
+            <a href="{% url 'login' %}" class="profile-btn">Login</a>
+            {% endif %}
         </header>
 
         {% block main %}{% endblock %}

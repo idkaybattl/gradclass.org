@@ -1,0 +1,16 @@
+<button
+    type="button"
+    class="project-card"
+    data-popup-open="details-{{ project.id }}"
+>
+    <strong>{{ project.title }}</strong>
+    <span>
+        <time datetime="{{ project.starting_date|date:'c' }}">
+            {{ project.starting_date|date:"d.m.Y H:i" }} Uhr
+        </time>
+        →
+        <time datetime="{{ project.ending_date|date:'c' }}">
+            {{ project.ending_date|date:"d.m.Y H:i" }} Uhr
+        </time>
+    </span>
+</button>

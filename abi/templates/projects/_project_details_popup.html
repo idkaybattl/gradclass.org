@@ -1,0 +1,45 @@
+<div class="popup" id="details-{{ project.id }}" data-popup>
+    <div
+        class="popup__content popup__content--details"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-title-{{ project.id }}"
+    >
+        <header>
+            <h2 id="project-title-{{ project.id }}">{{ project.title }}</h2>
+            <button type="button" class="btn btn-primary" data-popup-switch="edit-{{ project.id }}">Bearbeiten</button>
+        </header>
+
+        <section class="details-description" aria-label="Beschreibung">
+            <h3>Beschreibung</h3>
+            <p>{{ project.description|linebreaksbr }}</p>
+        </section>
+
+        <section class="details-schedule" aria-label="Zeit und Datum">
+            <h3>Zeitplan</h3>
+            <p>
+                <strong>Beginn:</strong>
+                <time datetime="{{ project.starting_date|date:'c' }}">
+                    {{ project.starting_date|date:"d.m.Y H:i" }} Uhr
+                </time>
+            </p>
+            <p>
+                <strong>Ende:</strong>
+                <time datetime="{{ project.ending_date|date:'c' }}">
+                    {{ project.ending_date|date:"d.m.Y H:i" }} Uhr
+                </time>
+            </p>
+        </section>
+
+        <h3>Teilnehmer</h3>
+        <ul class="details-participants">
+            {% for user in project.participants.all %}
+            <li>{{ user.username }}</li>
+            {% empty %}
+            <li>keine Teilnehmer</li>
+            {% endfor %}
+        </ul>
+
+        <button type="button" class="btn btn-secondary" data-popup-close>Schließen</button>
+    </div>
+</div>
