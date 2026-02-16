@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
@@ -105,6 +106,7 @@ def projects(request):
                 new_project.creator = request.user
                 new_project.save()
                 create_form.save_m2m()
+                messages.success(request, "Projekt erfolgreich erstellt.")
                 return redirect("projects")
 
             return render(
@@ -132,6 +134,7 @@ def projects(request):
 
             if edit_form.is_valid():
                 edit_form.save()
+                messages.success(request, "Projekt erfolgreich bearbeitet.")
                 return redirect("projects")
 
             return render(
@@ -168,6 +171,7 @@ def join_project(request, project_id):
 
     if request.method == "POST":
         project.participants.add(request.user)
+        messages.success(request, "Du nimmst jetzt Teil.")
 
     return redirect("projects")
 
@@ -179,5 +183,6 @@ def leave_project(request, project_id):
 
     if request.method == "POST":
         project.participants.remove(request.user)
+        messages.success(request, "Du hast dein Teilnahme beendet.")
 
     return redirect("projects")

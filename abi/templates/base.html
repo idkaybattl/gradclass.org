@@ -7,8 +7,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{% block title %}Abi 28{% endblock %}</title>
 
-        <link rel="stylesheet" href="{% static 'abi/base.css' %}" />
-        <link rel="stylesheet" href="{% static 'abi/colors.css' %}" />
+        <link rel="stylesheet" href="{% static 'abi/base.css' %}?v=20260216b" />
+        <link rel="stylesheet" href="{% static 'abi/colors.css' %}?v=20260216c" />
         {% block head %} {% endblock %}
 
         <!-- Schrift -->
@@ -42,8 +42,39 @@
             {% endif %}
         </header>
 
+        {% if messages %}
+        <section class="site-messages" aria-label="Systemmeldungen">
+            {% for message in messages %}
+            <div
+                class="site-message{% if message.tags %} {{ message.tags }}{% endif %}"
+                role="status"
+                data-site-message
+                data-dismiss-after="6000"
+            >
+                <div class="site-message__icon" aria-hidden="true">
+                    {% if "success" in message.tags %}
+                    <span>✓</span>
+                    {% elif "warning" in message.tags %}
+                    <span>!</span>
+                    {% elif "error" in message.tags %}
+                    <span>✕</span>
+                    {% else %}
+                    <span>i</span>
+                    {% endif %}
+                </div>
+                <p class="site-message__text">{{ message }}</p>
+                <button type="button" class="site-message__dismiss" data-dismiss-message aria-label="Meldung schließen">
+                    ×
+                </button>
+                <div class="site-message__timer" aria-hidden="true"></div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
         {% block main %}{% endblock %}
 
+        <script src="{% static 'abi/js/messages.js' %}?v=20260216b"></script>
         {% block scripts %}{% endblock %}
     </body>
 </html>
