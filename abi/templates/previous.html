@@ -12,7 +12,7 @@
 {% block main %}
 <main class="projects-page">
     <section class="top-bar">
-        <h1>Anstehende Aktionen</h1>
+        <h1>Meine vergangenen Aktionen</h1>
         <div class="top-bar__actions">
             <a href="/calendar" class="btn btn-link">Kalender</a>
             <button type="button" class="btn btn-primary" data-popup-open="create-project-popup">Neue Aktion</button>
@@ -30,8 +30,8 @@
         {% endif %}
         {% empty %}
         <article class="empty-projects">
-            <h2>Keine Aktionen geplant</h2>
-            <p>Zurzeit gibt es keine zukünftigen Aktionen.</p>
+            <h2>Keine vergangenen Aktionen</h2>
+            <p>Du hast noch an keinen Aktionen teilgenommen.</p>
         </article>
         {% endfor %}
     </section>
