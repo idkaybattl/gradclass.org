@@ -98,6 +98,7 @@ def projects(request):
                 project,
                 overrides.get(project.id)
                 or build_project_form(instance=project, prefix=str(project.id)),
+                project.final,
                 can_edit_project(request.user, project),
                 project.id in participant_project_ids,
             )
@@ -239,6 +240,7 @@ def previous(request):
                 project,
                 overrides.get(project.id)
                 or build_project_form(instance=project, prefix=str(project.id)),
+                project.final,
                 can_edit_project(request.user, project),
                 project.id in participant_project_ids,
             )
