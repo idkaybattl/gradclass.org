@@ -1,6 +1,7 @@
 {% load static %}
 
 <!doctype html>
+
 <html lang="de">
     <head>
         <meta charset="UTF-8" />
@@ -14,10 +15,7 @@
         <!-- Schrift -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-            rel="stylesheet"
-        />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     </head>
 
     <body>
@@ -31,6 +29,9 @@
                 <div class="profile-menu__content">
                     <a href="/projects/" class="profile-menu__link">Meine Aktionen</a>
                     <a href="/calendar/" class="profile-menu__link">Kalender</a>
+                    {% if user.is_staff %}
+                    <a href="/admin/" class="profile-menu__link">Admin Panel</a>
+                    {% endif %}
                     <form method="post" action="{% url 'logout' %}" class="profile-menu__logout-form">
                         {% csrf_token %}
                         <button type="submit" class="profile-menu__logout">Logout</button>
@@ -45,12 +46,8 @@
         {% if messages %}
         <section class="site-messages" aria-label="Systemmeldungen">
             {% for message in messages %}
-            <div
-                class="site-message{% if message.tags %} {{ message.tags }}{% endif %}"
-                role="status"
-                data-site-message
-                data-dismiss-after="6000"
-            >
+            <div class="site-message{% if message.tags %} {{ message.tags }}{% endif %}" role="status" data-site-message
+                data-dismiss-after="6000">
                 <div class="site-message__icon" aria-hidden="true">
                     {% if "success" in message.tags %}
                     <span>✓</span>
