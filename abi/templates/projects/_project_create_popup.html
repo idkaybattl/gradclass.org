@@ -1,12 +1,6 @@
-<div class="popup" id="create-project-popup" data-popup>
-    <form
-        method="post"
-        class="popup__content popup__content--create"
-        data-project-form
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="project-create-title"
-    >
+<div class="popup-content" id="create-project-popup" data-popup>
+    <form method="post" class="popup__content popup__content--create" data-project-form role="dialog" aria-modal="true"
+        aria-labelledby="project-create-title" action="{% url 'create-project' project.id %}">
         {% csrf_token %}
         <input type="hidden" name="form_action" value="create_project" />
         <header>

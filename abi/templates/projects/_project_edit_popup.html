@@ -1,12 +1,6 @@
-<div class="popup" id="edit-{{ project.id }}" data-popup>
-    <form
-        method="post"
-        class="popup__content popup__content--edit"
-        data-project-form
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="project-edit-title-{{ project.id }}"
-    >
+<div class="popup-content" id="edit-{{ project.id }}" data-popup>
+    <form method="post" class="popup__content popup__content--edit" data-project-form role="dialog" aria-modal="true"
+        aria-labelledby="project-edit-title-{{ project.id }}" action="edit-project">
         {% csrf_token %}
         <input type="hidden" name="project_id" value="{{ project.id }}" />
         <input type="hidden" name="form_action" value="edit_project" />

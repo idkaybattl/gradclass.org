@@ -1,8 +1,5 @@
-<button
-    type="button"
-    class="project-card"
-    data-popup-open="details-{{ project.id }}"
->
+<button type="button" class="project-card" data-popup-open="popup-big"
+    data-popup-url="{% url 'project-details' project.id %}">
     <strong>{{ project.title }}</strong>
     <span>
         <time datetime="{{ project.starting_date|date:'c' }}">

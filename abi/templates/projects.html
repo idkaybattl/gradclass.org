@@ -15,25 +15,21 @@
         <h1>Anstehende Aktionen</h1>
         <div class="top-bar__actions">
             <a href="/calendar" class="btn btn-link">Kalender</a>
-            <button type="button" class="btn btn-primary" data-popup-open="create-project-popup">Neue Aktion</button>
+            <button type="button" class="btn btn-primary" data-popup-open="popup-big"
+                data-popup-url="{% url 'project-create' %}">Neue Aktion</button>
         </div>
     </section>
 
-    {% include "projects/_project_create_popup.html" %}
-
     <section class="projects-grid">
-        {% for project, form, final, can_edit, is_participant in forms %}
+        {% for project in projects %}
         {% include "projects/_project_card.html" %}
-        {% include "projects/_project_details_popup.html" %}
-        {% if can_edit and not final %}
-        {% include "projects/_project_edit_popup.html" %}
-        {% endif %}
         {% empty %}
         <article class="empty-projects">
             <h2>Keine Aktionen geplant</h2>
             <p>Zurzeit gibt es keine zukünftigen Aktionen.</p>
         </article>
         {% endfor %}
+        <div data-popup class="popup-big" id="popup-big"></div>
     </section>
 
     {% if initial_popup_id %}

@@ -1,24 +1,31 @@
-<div class="popup" id="details-{{ project.id }}" data-popup>
+<div class="popup-content" id="details-{{ project.id }}">
     <div class="popup__content popup__content--details" role="dialog" aria-modal="true"
         aria-labelledby="project-title-{{ project.id }}">
         <header>
             <h2 id="project-title-{{ project.id }}">{{ project.title }}</h2>
             <div class="details-header-action">
-                {% if not final %}
                 {% if can_edit %}
-                <button type="button" class="btn btn-primary"
-                    data-popup-switch="edit-{{ project.id }}">Bearbeiten</button>
-                {% elif is_participant %}
-                <form method="post" action="{% url 'leave-project' project.id %}">
+                <button type="button" class="btn btn-primary" data-popup-open="popup-big"
+                    data-popup-url="{% url 'project-edit' project.id %}">Bearbeiten</button>
+                {% endif %}
+
+                {% if is_participant %}
+                <form method="post" action="{% url 'project-leave' project.id %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-secondary">Teilnahme beenden</button>
                 </form>
                 {% else %}
-                <form method="post" action="{% url 'join-project' project.id %}">
+                <form method="post" action="{% url 'project-join' project.id %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary">Teilnehmen</button>
                 </form>
                 {% endif %}
+
+                {% if can_delete %}
+                <form method="post" action="{% url 'project-delete' project.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary">Löschen</button>
+                </form>
                 {% endif %}
             </div>
         </header>

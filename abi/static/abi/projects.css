@@ -107,7 +107,7 @@
     text-decoration: none;
 }
 
-.popup {
+.popup-big {
     display: none;
     position: fixed;
     inset: 0;
@@ -123,7 +123,7 @@
     overflow-y: auto;
 }
 
-.popup__content {
+.popup-content {
     width: min(720px, 100%);
     max-height: calc(100vh - 2rem);
     max-height: calc(100dvh - 2rem);
@@ -134,7 +134,7 @@
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.2);
 }
 
-.popup__content header {
+.popup-content header {
     display: flex;
     justify-content: space-between;
     gap: 1rem;

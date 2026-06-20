@@ -5,15 +5,17 @@ function getPopupById(id) {
   return document.getElementById(id);
 }
 
-function openPopupById(id) {
-  const popup = getPopupById(id);
+// also close all other popups
+function openPopup(popup) {
   if (!popup) {
     return;
   }
+  closeAllPopups();
   popup.classList.add("popup--open");
 }
 
 function closePopup(popup) {
+  console.log(popup);
   if (!popup) {
     return;
   }
@@ -24,6 +26,27 @@ function closeAllPopups() {
   document
     .querySelectorAll("[data-popup].popup--open")
     .forEach((popup) => closePopup(popup));
+}
+
+function showLoadingState(popup) {
+  popup.innerHTML = "loading.."
+}
+
+function renderPopupContent(popup, content) {
+  popup.innerHTML = content;
+}
+
+async function loadAndRenderPopupContent(popup, url) {
+  showLoadingState(popup);
+
+  try {
+    const response = await fetch(url);
+    const content = await response.text();
+    renderPopupContent(popup, content);
+  } catch (err) {
+    popup.innerHTML = "Failed to load content.";
+    console.error(err);
+  }
 }
 
 function pad2(value) {
@@ -125,22 +148,25 @@ function initProjectFormValidation(form) {
   update();
 }
 
-document.addEventListener("click", (event) => {
+document.addEventListener("click", async (event) => {
   const openTrigger = event.target.closest("[data-popup-open]");
+  console.log("event triggered");
   if (openTrigger) {
-    openPopupById(openTrigger.dataset.popupOpen);
-    return;
-  }
+    const popup = document.getElementById(openTrigger.dataset.popupOpen);
+    openPopup(popup);
+    console.log("opening popup");
 
-  const switchTrigger = event.target.closest("[data-popup-switch]");
-  if (switchTrigger) {
-    closePopup(switchTrigger.closest("[data-popup]"));
-    openPopupById(switchTrigger.dataset.popupSwitch);
+    // fetch data if necessary
+    const url = openTrigger.dataset.popupUrl;
+    if (url) {
+      await loadAndRenderPopupContent(popup, url);
+    }
     return;
   }
 
   const closeTrigger = event.target.closest("[data-popup-close]");
   if (closeTrigger) {
+    console.log("closing popup");
     closePopup(closeTrigger.closest("[data-popup]"));
     return;
   }

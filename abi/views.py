@@ -42,6 +42,7 @@ def get_project_creation_limit_error(user):
     return None
 
 
+@login_required
 def abi(request):
     abikasse, _ = Abikasse.objects.get_or_create(
         pk=1,
@@ -57,122 +58,128 @@ def abi(request):
     )
 
 
+@login_required
 def calendar(request):
     return render(request, "calendar.html")
 
 
 @login_required
-def projects(request):
-    username_field = User.USERNAME_FIELD
-    participants_queryset = User.objects.all().order_by(username_field)
+def create_project(request):
+    participants_queryset = get_participants_queryset()
     all_users = list(participants_queryset)
-    projects = list(
-        Project.objects.filter(ending_date__gte=timezone.now())
-        .select_related("creator")
-        .prefetch_related("participants")
-        .order_by("starting_date")
+
+    form = build_project_form(
+        request=request,
+        users=all_users,
+        participants_queryset=participants_queryset,
+        data=request.POST,
+        prefix="new",
     )
 
-    participant_project_ids = {
-        participant.project_id
-        for participant in Project.participants.through.objects.filter(
-            user_id=request.user.id,
-            project_id__in=[project.id for project in projects],
-        )
-    }
+    rate_limit_error = get_project_creation_limit_error(request.user)
+    if rate_limit_error:
+        form.add_error(None, rate_limit_error)
 
-    def build_project_form(*, instance=None, data=None, prefix=None):
-        return ProjectForm(
-            data=data,
-            instance=instance,
-            prefix=prefix,
+    if form.is_valid():
+        new_project = form.save(commit=False)
+        new_project.creator = request.user
+        new_project.save()
+        form.save_m2m()
+        messages.success(request, "Projekt erfolgreich erstellt.")
+
+    return redirect("projects")
+
+
+@login_required
+def edit_project(request):
+    project_id = request.POST.get("project_id")
+    if project_id:
+        project = get_object_or_404(Project, pk=project_id)
+        if not can_edit_project(request.user, project) or project.final:
+            return HttpResponseForbidden("Du darfst diese Aktion nicht bearbeiten.")
+
+        participants_queryset = get_participants_queryset()
+        all_users = list(participants_queryset)
+
+        form = build_project_form(
+            request=request,
             users=all_users,
             participants_queryset=participants_queryset,
-            request_user=request.user,
+            data=request.POST,
+            prefix="new",
         )
 
-    def build_project_forms(overrides=None):
-        overrides = overrides or {}
-        return [
-            (
-                project,
-                overrides.get(project.id)
-                or build_project_form(instance=project, prefix=str(project.id)),
-                project.final,
-                can_edit_project(request.user, project),
-                project.id in participant_project_ids,
-            )
-            for project in projects
-        ]
-
-    if request.method == "POST":
-        form_action = request.POST.get("form_action")
-
-        if form_action == "create_project":
-            create_form = build_project_form(data=request.POST, prefix="new")
-            rate_limit_error = get_project_creation_limit_error(request.user)
-            if rate_limit_error:
-                create_form.add_error(None, rate_limit_error)
-
-            if create_form.is_valid():
-                new_project = create_form.save(commit=False)
-                new_project.creator = request.user
-                new_project.save()
-                create_form.save_m2m()
-                messages.success(request, "Projekt erfolgreich erstellt.")
-                return redirect("projects")
-
-            return render(
-                request,
-                "projects.html",
-                {
-                    "forms": build_project_forms(),
-                    "create_form": create_form,
-                    "form_media": create_form.media,
-                    "initial_popup_id": "create-project-popup",
-                },
-            )
-
-        project_id = request.POST.get("project_id")
-        if project_id:
-            project = get_object_or_404(Project, pk=project_id)
-            if not can_edit_project(request.user, project) or project.final:
-                return HttpResponseForbidden("Du darfst diese Aktion nicht bearbeiten.")
-
-            edit_form = build_project_form(
-                data=request.POST,
-                instance=project,
-                prefix=str(project.id),
-            )
-
-            if edit_form.is_valid():
-                edit_form.save()
-                messages.success(request, "Projekt erfolgreich bearbeitet.")
-                return redirect("projects")
-
-            return render(
-                request,
-                "projects.html",
-                {
-                    "forms": build_project_forms(overrides={project.id: edit_form}),
-                    "create_form": build_project_form(prefix="new"),
-                    "form_media": edit_form.media,
-                    "initial_popup_id": f"edit-{project.id}",
-                },
-            )
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Projekt erfolgreich bearbeitet.")
 
         return redirect("projects")
 
-    create_form = build_project_form(prefix="new")
-    project_forms = build_project_forms()
+
+@login_required
+def projects(request, mode):
+    now = timezone.now()
+
+    if mode == "upcoming":
+        projects = (
+            Project.objects.filter(ending_date__gt=timezone.now())
+            .select_related("creator")
+            .prefetch_related("participants")
+            .order_by("starting_date")
+        )
+
+    elif mode == "own":
+        projects = (
+            Project.objects.filter(
+                Q(participants=request.user) | Q(creator=request.user)
+            )
+            .select_related("creator")
+            .prefetch_related("participants")
+            .order_by("starting_date")
+        )
+
+    # mode "all"
+    else:
+        if request.user.is_staff:
+            projects = (
+                Project.objects.all()
+                .select_related("creator")
+                .prefetch_related("participants")
+                .order_by("starting_date")
+            )
+        else:
+            projects = (
+                Project.objects.filter(
+                    Q(participants=request.user)
+                    | Q(creator=request.user)
+                    | Q(ending_date__gt=timezone.now())
+                )
+                .distinct()
+                .select_related("creator")
+                .prefetch_related("participants")
+                .order_by("starting_date")
+            )
+
+    return render(request, "projects.html", {"projects": projects})
+
+
+@login_required
+def project_details(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    can_edit = not project.final and (
+        request.user.is_staff or project.creator == request.user
+    )
+    is_participant = project.participants.filter(pk=request.user.pk).exists()
+    can_delete = can_edit
 
     return render(
         request,
-        "projects.html",
+        "projects/_project_details_popup.html",
         {
-            "forms": project_forms,
-            "create_form": create_form,
-            "form_media": create_form.media,
+            "project": project,
+            "can_edit": can_edit,
+            "is_participant": is_participant,
+            "can_delete": can_delete,
         },
     )
 
@@ -182,9 +189,14 @@ def projects(request):
 def join_project(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
-    if request.method == "POST" and not project.final:
-        project.participants.add(request.user)
-        messages.success(request, "Du nimmst jetzt Teil.")
+    if project.starting_date < timezone.now():
+        messages.error(request, "Das Projekt liegt in der Vergangenheit")
+    else:
+        if project.participants.filter(pk=request.user.pk).exists():
+            messages.error(request, "Du nimmst an diesem Projekt bereits teil.")
+        else:
+            project.participants.add(request.user)
+            messages.success(request, "Du nimmst jetzt Teil.")
 
     return redirect("projects")
 
@@ -194,126 +206,30 @@ def join_project(request, project_id):
 def leave_project(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
-    if request.method == "POST" and not project.final:
+    if project.final:
+        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
+    else:
+        if not project.participants.filter(pk=request.user.pk).exists():
+            messages.error(request, "Du nimmst an diesem Projekt nicht teil.")
+        else:
+            messages.success(request, "Du hast deine Teilnahme beendet.")
+        # remove participant in either case just in case
         project.participants.remove(request.user)
-        messages.success(request, "Du hast dein Teilnahme beendet.")
 
     return redirect("projects")
 
 
 @login_required
-def previous(request):
-    username_field = User.USERNAME_FIELD
-    participants_queryset = User.objects.all().order_by(username_field)
-    all_users = list(participants_queryset)
-    projects = list(
-        Project.objects.filter(ending_date__lt=timezone.now())
-        .filter(Q(creator=request.user), Q(participants=request.user))
-        .select_related("creator")
-        .prefetch_related("participants")
-        .order_by("starting_date")
-        .distinct()
-    )
+@require_POST
+def delete_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
 
-    participant_project_ids = {
-        participant.project_id
-        for participant in Project.participants.through.objects.filter(
-            user_id=request.user.id,
-            project_id__in=[project.id for project in projects],
-        )
-    }
+    if project.final:
+        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
+    elif not request.user.is_staff and not request.user == project.creator:
+        messages.error(request, "Du bist nicht berechtigt das Projekt zu löschen")
+    else:
+        project.delete()
+        messages.success(request, "Projekt erfolgreich gelöscht")
 
-    def build_project_form(*, instance=None, data=None, prefix=None):
-        return ProjectForm(
-            data=data,
-            instance=instance,
-            prefix=prefix,
-            users=all_users,
-            participants_queryset=participants_queryset,
-            request_user=request.user,
-        )
-
-    def build_project_forms(overrides=None):
-        overrides = overrides or {}
-        return [
-            (
-                project,
-                overrides.get(project.id)
-                or build_project_form(instance=project, prefix=str(project.id)),
-                project.final,
-                can_edit_project(request.user, project),
-                project.id in participant_project_ids,
-            )
-            for project in projects
-        ]
-
-    if request.method == "POST":
-        form_action = request.POST.get("form_action")
-
-        if form_action == "create_project":
-            create_form = build_project_form(data=request.POST, prefix="new")
-            rate_limit_error = get_project_creation_limit_error(request.user)
-            if rate_limit_error:
-                create_form.add_error(None, rate_limit_error)
-
-            if create_form.is_valid():
-                new_project = create_form.save(commit=False)
-                new_project.creator = request.user
-                new_project.save()
-                create_form.save_m2m()
-                messages.success(request, "Projekt erfolgreich erstellt.")
-                return redirect("projects")
-
-            return render(
-                request,
-                "projects.html",
-                {
-                    "forms": build_project_forms(),
-                    "create_form": create_form,
-                    "form_media": create_form.media,
-                    "initial_popup_id": "create-project-popup",
-                },
-            )
-
-        project_id = request.POST.get("project_id")
-        if project_id:
-            project = get_object_or_404(Project, pk=project_id)
-            if not can_edit_project(request.user, project) or project.final:
-                return HttpResponseForbidden("Du darfst diese Aktion nicht bearbeiten.")
-
-            edit_form = build_project_form(
-                data=request.POST,
-                instance=project,
-                prefix=str(project.id),
-            )
-
-            if edit_form.is_valid():
-                edit_form.save()
-                messages.success(request, "Projekt erfolgreich bearbeitet.")
-                return redirect("projects")
-
-            return render(
-                request,
-                "projects.html",
-                {
-                    "forms": build_project_forms(overrides={project.id: edit_form}),
-                    "create_form": build_project_form(prefix="new"),
-                    "form_media": edit_form.media,
-                    "initial_popup_id": f"edit-{project.id}",
-                },
-            )
-
-        return redirect("projects")
-
-    create_form = build_project_form(prefix="new")
-    project_forms = build_project_forms()
-
-    return render(
-        request,
-        "previous.html",
-        {
-            "forms": project_forms,
-            "create_form": create_form,
-            "form_media": create_form.media,
-        },
-    )
+    return redirect("projects")
