@@ -62,7 +62,7 @@
         <h3>Teilnehmer</h3>
         <ul class="details-participants">
             {% for user in project.participants.all %}
-            <li>{{ user.username }}</li>
+            <li>{{ user.first_name }} {{ user.last_name }}</li>
             {% empty %}
             <li>keine Teilnehmer</li>
             {% endfor %}
