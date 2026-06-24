@@ -1,15 +1,19 @@
-<div class="popup-content" id="edit-{{ project.id }}" data-popup>
-    <form method="post" class="popup__content popup__content--edit" data-project-form role="dialog" aria-modal="true"
-        aria-labelledby="project-edit-title-{{ project.id }}" action="edit-project">
+<div class="popup-content" id="edit-{{ project.id }}">
+    <form method="post" class="popup__content popup__content--edit" data-project-form
+        action="{% url 'project-edit' project.id %}">
         {% csrf_token %}
+        {% if next_url %}
+        <input type="hidden" name="next" value="{{ next_url }}" />
+        {% endif %}
         <input type="hidden" name="project_id" value="{{ project.id }}" />
         <input type="hidden" name="form_action" value="edit_project" />
         <header>
             <h2 id="project-edit-title-{{ project.id }}">Aktion bearbeiten</h2>
-            <button type="button" class="btn btn-link" data-popup-switch="details-{{ project.id }}">Zurück</button>
+            <button type="button" class="btn btn-link" data-popup-open="popup-big"
+                data-popup-url="{% url 'project-details' project.id %}">Zurück</button>
         </header>
 
-        {% include "projects/_project_form_fields.html" with form=form %}
+        {% include "projects/_project_form_fields.html" %}
 
         <div class="popup__actions">
             <button type="submit" class="btn btn-primary">Fertig</button>

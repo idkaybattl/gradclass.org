@@ -1,13 +1,12 @@
 from datetime import timedelta
-from email.mime import message
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .forms import ProjectForm
@@ -20,6 +19,29 @@ MAX_PROJECTS_PER_DAY = 10
 
 def can_edit_project(user, project):
     return project.creator_id == user.id or user.is_staff
+
+
+def get_safe_next_url(request):
+    next_url = request.POST.get("next") or request.GET.get("next")
+    if not next_url:
+        return None
+
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+
+    return None
+
+
+def redirect_next_or(request, fallback, **kwargs):
+    next_url = get_safe_next_url(request)
+    if next_url:
+        return redirect(next_url)
+
+    return redirect(fallback, **kwargs)
 
 
 def get_project_creation_limit_error(user):
@@ -69,7 +91,7 @@ def create_project(request):
     rate_limit_error = get_project_creation_limit_error(request.user)
     if rate_limit_error:
         messages.error(request, rate_limit_error)
-        return
+        return redirect_next_or(request, "projects")
 
     if request.method == "GET":
         form = ProjectForm(prefix="new", request_user=request.user)
@@ -78,11 +100,12 @@ def create_project(request):
             "projects/_project_create_popup.html",
             {
                 "form": form,
+                "next_url": get_safe_next_url(request),
             },
         )
 
     data = request.POST
-    form = ProjectForm(data=data, prefix="new")
+    form = ProjectForm(data=data, prefix="new", request_user=request.user)
 
     if form.is_valid():
         new_project = form.save(commit=False)
@@ -91,33 +114,55 @@ def create_project(request):
         form.save_m2m()
         messages.success(request, "Projekt erfolgreich erstellt.")
 
-    return redirect("projects")
+        return redirect_next_or(request, "projects")
+
+    return render(
+        request,
+        "projects/_project_create_popup.html",
+        {"form": form, "next_url": get_safe_next_url(request)},
+        status=400,
+    )
 
 
 @login_required
-def edit_project(request):
-    project_id = request.POST.get("project_id")
-    if project_id:
-        project = get_object_or_404(Project, pk=project_id)
-        if not can_edit_project(request.user, project) or project.final:
-            return HttpResponseForbidden("Du darfst diese Aktion nicht bearbeiten.")
+def edit_project(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    if not can_edit_project(request.user, project) or project.final:
+        messages.error(request, "Du darfst diese Aktion nicht bearbeiten")
+        return redirect_next_or(request, "projects")
 
-        participants_queryset = get_participants_queryset()
-        all_users = list(participants_queryset)
-
-        form = build_project_form(
-            request=request,
-            users=all_users,
-            participants_queryset=participants_queryset,
+    if request.method == "POST":
+        form = ProjectForm(
             data=request.POST,
-            prefix="new",
+            instance=project,
+            prefix=str(project.id),
+            request_user=request.user,
         )
 
         if form.is_valid():
             form.save()
             messages.success(request, "Projekt erfolgreich bearbeitet.")
 
-        return redirect("projects")
+            return redirect_next_or(request, "projects")
+
+        return render(
+            request,
+            "projects/_project_edit_popup.html",
+            {"form": form, "project": project, "next_url": get_safe_next_url(request)},
+            status=400,
+        )
+
+    else:
+        form = ProjectForm(
+            instance=project,
+            prefix=str(project.id),
+            request_user=request.user,
+        )
+        return render(
+            request,
+            "projects/_project_edit_popup.html",
+            {"form": form, "project": project, "next_url": get_safe_next_url(request)},
+        )
 
 
 @login_required
@@ -164,7 +209,13 @@ def projects(request, mode):
                 .order_by("starting_date")
             )
 
-    return render(request, "projects.html", {"projects": projects})
+    # The actual form is loaded into the dialog; this only renders widget assets.
+    form_media = ProjectForm(participants_queryset=User.objects.none()).media
+    return render(
+        request,
+        "projects.html",
+        {"projects": projects, "form_media": form_media},
+    )
 
 
 @login_required
@@ -184,6 +235,7 @@ def project_details(request, project_id):
             "can_edit": can_edit,
             "is_participant": is_participant,
             "can_delete": can_delete,
+            "next_url": get_safe_next_url(request),
         },
     )
 
@@ -202,7 +254,7 @@ def join_project(request, project_id):
             project.participants.add(request.user)
             messages.success(request, "Du nimmst jetzt Teil.")
 
-    return redirect("projects")
+    return redirect_next_or(request, "projects")
 
 
 @login_required
@@ -220,7 +272,7 @@ def leave_project(request, project_id):
         # remove participant in either case just in case
         project.participants.remove(request.user)
 
-    return redirect("projects")
+    return redirect_next_or(request, "projects")
 
 
 @login_required
@@ -236,4 +288,4 @@ def delete_project(request, project_id):
         project.delete()
         messages.success(request, "Projekt erfolgreich gelöscht")
 
-    return redirect("projects")
+    return redirect_next_or(request, "projects")

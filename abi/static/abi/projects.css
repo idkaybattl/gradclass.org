@@ -109,11 +109,21 @@
 
 .popup-big {
     display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    width: 100vw;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
     z-index: 2100;
     padding: calc(1rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
+}
+
+.popup-big::backdrop {
+    background: rgba(0, 0, 0, 0.55);
 }
 
 .popup--open {
@@ -302,7 +312,7 @@
         flex-direction: column;
     }
 
-    .popup {
+    .popup-big {
         padding: calc(0.75rem + env(safe-area-inset-top)) 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
     }
 }

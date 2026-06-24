@@ -170,6 +170,10 @@ function removeParticipant(widget, userId) {
 }
 
 function initParticipantsWidget(widget) {
+  if (widget.dataset.participantsWidgetInitialized === "true") {
+    return;
+  }
+
   const searchInput = widget.querySelector("[data-user-search]");
   const addButton = widget.querySelector("[data-add-user]");
   const select = widget.querySelector("[data-user-select]");
@@ -177,6 +181,8 @@ function initParticipantsWidget(widget) {
   if (!searchInput || !addButton || !select) {
     return;
   }
+
+  widget.dataset.participantsWidgetInitialized = "true";
 
   addButton.addEventListener("click", () => addParticipant(widget));
   searchInput.addEventListener("input", () => filterAvailableUsers(widget));
@@ -196,8 +202,18 @@ function initParticipantsWidget(widget) {
   filterAvailableUsers(widget);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  document
+function initParticipantsWidgets(root = document) {
+  root
     .querySelectorAll("[data-participants-widget]")
     .forEach((widget) => initParticipantsWidget(widget));
+}
+
+window.initParticipantsWidgets = initParticipantsWidgets;
+
+document.addEventListener("DOMContentLoaded", () => {
+  initParticipantsWidgets();
+});
+
+document.addEventListener("htmx:afterSwap", (event) => {
+  initParticipantsWidgets(event.target);
 });

@@ -5,42 +5,75 @@ function getPopupById(id) {
   return document.getElementById(id);
 }
 
+function openPopupById(id) {
+  openPopup(getPopupById(id));
+}
+
 // also close all other popups
 function openPopup(popup) {
   if (!popup) {
     return;
   }
-  closeAllPopups();
+  closeAllPopups(popup);
+  if (typeof popup.showModal === "function" && !popup.open) {
+    popup.showModal();
+  }
   popup.classList.add("popup--open");
 }
 
 function closePopup(popup) {
-  console.log(popup);
   if (!popup) {
     return;
   }
   popup.classList.remove("popup--open");
+  popup.removeAttribute("aria-labelledby");
+  if (typeof popup.close === "function" && popup.open) {
+    popup.close();
+  }
 }
 
-function closeAllPopups() {
+function closeAllPopups(exceptPopup = null) {
   document
-    .querySelectorAll("[data-popup].popup--open")
-    .forEach((popup) => closePopup(popup));
+    .querySelectorAll("[data-popup].popup--open, dialog[data-popup][open]")
+    .forEach((popup) => {
+      if (popup !== exceptPopup) {
+        closePopup(popup);
+      }
+    });
 }
 
 function showLoadingState(popup) {
-  popup.innerHTML = "loading.."
+  popup.innerHTML = '<div class="popup-content">loading...</div>';
 }
 
 function renderPopupContent(popup, content) {
   popup.innerHTML = content;
+  const title = popup.querySelector("h2[id]");
+  if (title) {
+    popup.setAttribute("aria-labelledby", title.id);
+  }
+  initProjectForms(popup);
+  window.initParticipantsWidgets?.(popup);
+}
+
+function getPopupUrl(url) {
+  const popupUrl = new URL(url, window.location.href);
+  if (!popupUrl.searchParams.has("next")) {
+    popupUrl.searchParams.set(
+      "next",
+      window.location.pathname + window.location.search
+    );
+  }
+  return popupUrl;
 }
 
 async function loadAndRenderPopupContent(popup, url) {
   showLoadingState(popup);
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(getPopupUrl(url), {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
     const content = await response.text();
     renderPopupContent(popup, content);
   } catch (err) {
@@ -125,11 +158,17 @@ function updateProjectFormDateValidation(form) {
 }
 
 function initProjectFormValidation(form) {
+  if (form.dataset.projectFormInitialized === "true") {
+    return;
+  }
+
   const startInput = form.querySelector("input[name$='starting_date']");
   const endInput = form.querySelector("input[name$='ending_date']");
   if (!startInput || !endInput) {
     return;
   }
+
+  form.dataset.projectFormInitialized = "true";
 
   const update = () => updateProjectFormDateValidation(form);
   startInput.addEventListener("input", update);
@@ -148,13 +187,35 @@ function initProjectFormValidation(form) {
   update();
 }
 
+function initProjectForms(root = document) {
+  root
+    .querySelectorAll("form[data-project-form]")
+    .forEach((form) => initProjectFormValidation(form));
+}
+
+async function submitProjectForm(form) {
+  const response = await fetch(form.action, {
+    method: "POST",
+    body: new FormData(form),
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+
+  if (response.redirected) {
+    window.location.assign(response.url);
+    return;
+  }
+
+  const popup = form.closest("[data-popup]");
+  if (popup) {
+    renderPopupContent(popup, await response.text());
+  }
+}
+
 document.addEventListener("click", async (event) => {
   const openTrigger = event.target.closest("[data-popup-open]");
-  console.log("event triggered");
   if (openTrigger) {
     const popup = document.getElementById(openTrigger.dataset.popupOpen);
     openPopup(popup);
-    console.log("opening popup");
 
     // fetch data if necessary
     const url = openTrigger.dataset.popupUrl;
@@ -166,7 +227,6 @@ document.addEventListener("click", async (event) => {
 
   const closeTrigger = event.target.closest("[data-popup-close]");
   if (closeTrigger) {
-    console.log("closing popup");
     closePopup(closeTrigger.closest("[data-popup]"));
     return;
   }
@@ -176,6 +236,16 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+document.addEventListener("submit", async (event) => {
+  const form = event.target.closest("form[data-project-form]");
+  if (!form || event.defaultPrevented) {
+    return;
+  }
+
+  event.preventDefault();
+  await submitProjectForm(form);
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") {
     return;
@@ -183,10 +253,18 @@ document.addEventListener("keydown", (event) => {
   closeAllPopups();
 });
 
+document.addEventListener(
+  "close",
+  (event) => {
+    if (event.target.matches("[data-popup]")) {
+      event.target.classList.remove("popup--open");
+    }
+  },
+  true
+);
+
 document.addEventListener("DOMContentLoaded", () => {
-  document
-    .querySelectorAll("form[data-project-form]")
-    .forEach((form) => initProjectFormValidation(form));
+  initProjectForms();
 
   const initialPopupMarker = document.querySelector("[data-popup-initial]");
   if (!initialPopupMarker) {

@@ -3,7 +3,8 @@
         <strong>Aktuelle Teilnehmer</strong>
         <ul class="participants-widget__selected-list" data-selected-list>
             {% for user in widget.selected_users %}
-            <li class="participants-widget__selected-item" data-user-id="{{ user.id }}" data-user-label="{{ user.label }}">
+            <li class="participants-widget__selected-item" data-user-id="{{ user.id }}"
+                data-user-label="{{ user.label }}">
                 <span>{{ user.label }}</span>
                 <button type="button" class="participants-widget__remove" data-remove-user="{{ user.id }}">
                     Entfernen
@@ -18,14 +19,9 @@
     <div class="participants-widget__controls">
         <label class="participants-widget__label">
             Nutzer suchen
-            <input
-                type="search"
-                {% if widget.attrs.id %}id="{{ widget.attrs.id }}_search"{% endif %}
-                class="participants-widget__search"
-                data-user-search
-                placeholder="Nutzer suchen ..."
-                autocomplete="off"
-            />
+            <input type="search" {% if widget.attrs.id %}id="{{ widget.attrs.id }}_search" {% endif %}
+                class="participants-widget__search" data-user-search placeholder="Nutzer suchen ..."
+                autocomplete="off" />
         </label>
 
         <label class="participants-widget__label">
@@ -37,7 +33,8 @@
             </select>
         </label>
 
-        <p class="participants-widget__available-empty{% if widget.available_users %} participants-widget__available-empty--hidden{% endif %}" data-empty-available>
+        <p class="participants-widget__available-empty{% if widget.available_users %} participants-widget__available-empty--hidden{% endif %}"
+            data-empty-available>
             Keine weiteren Nutzer verfügbar.
         </p>
 

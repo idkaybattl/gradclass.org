@@ -1,7 +1,10 @@
-<div class="popup-content" id="create-project-popup" data-popup>
-    <form method="post" class="popup__content popup__content--create" data-project-form role="dialog" aria-modal="true"
-        aria-labelledby="project-create-title" action="{% url 'project-create' %}">
+<div class="popup-content" id="create-project-popup">
+    <form method="post" class="popup__content popup__content--create" data-project-form
+        action="{% url 'project-create' %}">
         {% csrf_token %}
+        {% if next_url %}
+        <input type="hidden" name="next" value="{{ next_url }}" />
+        {% endif %}
         <input type="hidden" name="form_action" value="create_project" />
         <header>
             <h2 id="project-create-title">Neue Aktion erstellen</h2>
