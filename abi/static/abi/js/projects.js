@@ -253,16 +253,6 @@ document.addEventListener("keydown", (event) => {
   closeAllPopups();
 });
 
-document.addEventListener(
-  "close",
-  (event) => {
-    if (event.target.matches("[data-popup]")) {
-      event.target.classList.remove("popup--open");
-    }
-  },
-  true
-);
-
 document.addEventListener("DOMContentLoaded", () => {
   initProjectForms();
 

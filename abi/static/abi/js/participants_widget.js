@@ -78,23 +78,21 @@ function filterAvailableUsers(widget) {
   const searchInput = widget.querySelector("[data-user-search]");
   const select = widget.querySelector("[data-user-select]");
   const addButton = widget.querySelector("[data-add-user]");
-  const term = searchInput.value.trim().toLowerCase();
+  const term = searchInput.value.trim();
 
-  const visibleOptions = [];
+  const options = Array.from(select.options);
 
-  Array.from(select.options).forEach((option) => {
-    const label = (option.dataset.userLabel || option.textContent).toLowerCase();
-    const isVisible = label.includes(term);
-    option.hidden = !isVisible;
-    if (isVisible) {
-      visibleOptions.push(option);
-    }
-  });
+  const visibleOptions = term
+    ? getSearchResults(term, options, (option) => [
+      option.dataset.userLabel || option.textContent,
+    ])
+    : options.sort((a, b) => a.text.localeCompare(b.text, "de"));
+
+  select.innerHTML = "";
+  visibleOptions.forEach((option) => select.add(option));
 
   if (visibleOptions.length > 0) {
     select.value = visibleOptions[0].value;
-  } else {
-    select.value = "";
   }
 
   addButton.disabled = visibleOptions.length === 0;
