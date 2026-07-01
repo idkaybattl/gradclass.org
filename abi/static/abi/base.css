@@ -75,14 +75,14 @@ a:active {
 }
 
 .profile-menu .profile-btn::after {
-    content: "▾";
+    content: "◂";
     margin-left: 0.45rem;
     font-size: 0.85em;
     line-height: 1;
 }
 
 .profile-menu[open] .profile-btn::after {
-    content: "▴";
+    content: "▾";
 }
 
 .profile-menu__content {

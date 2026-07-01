@@ -1,16 +1,18 @@
 from datetime import timedelta
+from operator import not_
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import ProjectForm
-from .models import Abikasse, Project
+from .models import Abikasse, Notification, Project
 
 User = get_user_model()
 MAX_PROJECTS_PER_HOUR = 5
@@ -79,6 +81,35 @@ def abi(request):
         "index.html",
         {"abikasse_current": abikasse.current, "abikasse_goal": abikasse.goal},
     )
+
+
+@login_required
+@require_GET
+def notifications(request):
+    user = request.user
+    notifications = Notification.objects.filter(user=user, is_read=False).order_by(
+        "-created_at"
+    )
+    return render(request, "notifications.html", {"notifications": notifications})
+
+
+@login_required
+@require_POST
+def mark_all_notifications_as_read(request):
+    user = request.user
+    notifications = Notification.objects.filter(user=user, is_read=False)
+    notifications.update(is_read=True)
+    return JsonResponse({"success": True})
+
+
+@login_required
+@require_POST
+def mark_notification_as_read(request, notification_id):
+    user = request.user
+    notification = Notification.objects.get(id=notification_id, user=user)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({"success": True})
 
 
 @login_required

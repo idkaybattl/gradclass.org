@@ -24,6 +24,15 @@
         <a href="/">
             <h1>Abi 28</h1>
         </a>
+        <details id="notifications" class="notifications" data-url="{% url 'notifications' %}">
+            <summary class="notifications-title">Benachrichtigungen</summary>
+            <div class="notifications-content">
+                <button id="mark-all-as-read" data-url="{% url 'mark-all-notifications-as-read' %}">Alle gelesen
+                </button>
+                <div class="notifications-list">
+                </div>
+            </div>
+        </details>
         {% if user.is_authenticated %}
         <details class="profile-menu">
             <summary class="profile-btn">Profil</summary>
@@ -62,6 +71,8 @@
     {% block main %}{% endblock %}
 
     <script src="{% static 'abi/js/messages.js' %}?v=20260216b"></script>
+    <script src="{% static 'abi/js/cookies.js'  %}"></script>
+    <script src="{% static 'abi/js/notifications.js' %}"></script>
     {% block scripts %}{% endblock %}
 </body>
 

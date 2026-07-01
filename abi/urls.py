@@ -7,6 +7,17 @@ urlpatterns = [
     path("login/", auth_views.LoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("", views.abi, name="abi"),
+    path("notifications/", views.notifications, name="notifications"),
+    path(
+        "notifications/mark_all_read/",
+        views.mark_all_notifications_as_read,
+        name="mark-all-notifications-as-read",
+    ),
+    path(
+        "notifications/<int:notification_id>/read/",
+        views.mark_notification_as_read,
+        name="mark-notification-as-read",
+    ),
     path("calendar/", views.calendar, name="calendar"),
     path("projects/", views.projects, {"mode": "all"}, name="projects"),
     path(

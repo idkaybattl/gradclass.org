@@ -1,0 +1,7 @@
+<p hidden id="notification-count">{{ notifications|length }}</p>
+{% for notification in notifications %}
+<div class="notification">
+    <p>{{ notification.message }}</p>
+    <button id="mark-as-read" data-url="{% url 'mark-notification-as-read' notification.id %}">Mark as Read</button>
+</div>
+{% endfor %}
