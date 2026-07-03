@@ -8,6 +8,6 @@
         href="{{ notification.get_url }}"
     {% endif %}>
     <p>{{ notification }}</p>
-    <button id="mark-as-read" data-url="{% url 'mark-notification-as-read' notification.id %}">Mark as Read</button>
+    <button id="mark-as-read" data-url="{% url 'mark-notification-as-read' notification.id %}">Gelesen</button>
 </button>
 {% endfor %}
