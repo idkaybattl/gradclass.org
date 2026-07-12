@@ -31,6 +31,13 @@
             <h2>Meine Aktionen</h2>
             <p>Bereits erledigte Aktionen einsehen</p>
         </a>
+
+        {% if can_view_all_projects %}
+        <a class="card" href="{% url 'projects' %}">
+            <h2>Alle Aktionen</h2>
+            <p>Alle Aktionen einsehen</p>
+        </a>
+        {% endif %}
     </section>
 </main>
 {% endblock %}

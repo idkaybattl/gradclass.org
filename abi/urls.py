@@ -37,6 +37,16 @@ urlpatterns = [
     path(
         "projects/<int:project_id>/delete/", views.delete_project, name="project-delete"
     ),
+    path(
+        "projects/<int:project_id>/set-earnings/",
+        views.set_project_earnings,
+        name="set-earnings",
+    ),
+    path(
+        "projects/<int:project_id>/set-earnings-received/",
+        views.set_earnings_received,
+        name="set-earnings-received",
+    ),
     # polls
     path("polls/", views.polls, name="polls"),
 ]

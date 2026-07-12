@@ -10,8 +10,8 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
-from .forms import ProjectForm
-from .models import Abikasse, Project
+from .forms import ProjectForm, SetEarningsForm, SetEarningsReceivedForm
+from .models import Abikasse, Project, ProjectParticipation
 from .notifications import Notification
 from .services import save_project
 
@@ -21,7 +21,7 @@ MAX_PROJECTS_PER_DAY = 10
 
 
 def can_edit_project(user, project):
-    return project.creator_id == user.id or user.is_staff
+    return not project.final and (project.creator_id == user.id or user.is_staff)
 
 
 def get_safe_next_url(request):
@@ -74,14 +74,14 @@ def abi(request):
     abikasse, _ = Abikasse.objects.get_or_create(
         pk=1,
         defaults={
-            "current": 0,
             "goal": 30000,
         },
     )
+
     return render(
         request,
         "index.html",
-        {"abikasse_current": abikasse.current, "abikasse_goal": abikasse.goal},
+        {"abikasse_current": abikasse.total_earnings, "abikasse_goal": abikasse.goal},
     )
 
 
@@ -205,8 +205,6 @@ def edit_project(request, project_id):
 @login_required
 @require_GET
 def projects(request, mode):
-    now = timezone.now()
-
     if mode == "upcoming":
         projects = (
             Project.objects.filter(ending_date__gt=timezone.now())
@@ -240,7 +238,7 @@ def projects(request, mode):
         else:
             projects = (
                 Project.objects.filter(
-                    Q(participants=request.user)
+                    Q(participants=request.user)  # pyright: ignore[reportOperatorIssue]
                     | Q(creator=request.user)
                     | Q(ending_date__gt=timezone.now())
                 )
@@ -250,10 +248,15 @@ def projects(request, mode):
                 .order_by("starting_date")
             )
 
+    can_view_all_projects = request.user.is_staff
+
     return render(
         request,
         "projects.html",
-        {"projects": projects},
+        {
+            "projects": projects,
+            "can_view_all_projects": can_view_all_projects,
+        },
     )
 
 
@@ -261,11 +264,14 @@ def projects(request, mode):
 @require_GET
 def project_details(request, project_id):
     project = get_object_or_404(Project, id=project_id)
-    can_edit = not project.final and (
-        request.user.is_staff or project.creator == request.user
-    )
+    can_edit = can_edit_project(request.user, project)
     is_participant = project.participants.filter(pk=request.user.pk).exists()
     can_delete = can_edit
+    can_leave = is_participant and not project.final
+    can_join = not is_participant and not project.final
+    can_approve_payment = request.user.is_staff
+    earnings_form = SetEarningsForm(instance=project)
+    earnings_received_form = SetEarningsReceivedForm(instance=project)
 
     return render(
         request,
@@ -275,7 +281,12 @@ def project_details(request, project_id):
             "can_edit": can_edit,
             "is_participant": is_participant,
             "can_delete": can_delete,
+            "can_leave": can_leave,
+            "can_join": can_join,
+            "can_approve_payment": can_approve_payment,
             "next_url": get_safe_next_url(request),
+            "earnings_form": earnings_form,
+            "earnings_received_form": earnings_received_form,
         },
     )
 
@@ -285,13 +296,20 @@ def project_details(request, project_id):
 def join_project(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
-    if project.starting_date < timezone.now():
+    if project.final:
+        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
+    elif project.starting_date < timezone.now():
         messages.error(request, "Das Projekt liegt in der Vergangenheit")
+
     else:
         if project.participants.filter(pk=request.user.pk).exists():
             messages.error(request, "Du nimmst an diesem Projekt bereits teil.")
         else:
-            project.participants.add(request.user)
+            participation = ProjectParticipation.objects.create(  # pyright: ignore[reportAttributeAccessIssue]
+                project=project,
+                user=request.user,
+            )
+            participation.save()
             messages.success(request, "Du nimmst jetzt Teil.")
 
     return redirect_next_or(request, "projects")
@@ -327,6 +345,45 @@ def delete_project(request, project_id):
     else:
         project.delete()
         messages.success(request, "Projekt erfolgreich gelöscht")
+
+    return redirect_next_or(request, "projects-upcoming")
+
+
+@login_required
+@require_POST
+def set_project_earnings(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    if not can_edit_project(request.user, project):
+        messages.error(request, "Du bist nicht berechtigt das Projekt zu bearbeiten.")
+    else:
+        form = SetEarningsForm(
+            request.POST, instance=get_object_or_404(Project, id=project_id)
+        )
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Einnahmen erfolgreich gesetzt.")
+
+    return redirect_next_or(request, "projects-own")
+
+
+@login_required
+@require_POST
+def set_earnings_received(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    if not request.user.is_staff:
+        messages.error(request, "Du bist nicht berechtigt das Projekt zu bearbeiten.")
+
+    else:
+        form = SetEarningsReceivedForm(
+            request.POST, instance=get_object_or_404(Project, id=project_id)
+        )
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.final = True
+            project.save()
+            messages.success(request, "Einnahmen erfolgreich gesetzt.")
 
     return redirect_next_or(request, "projects")
 

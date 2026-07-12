@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum
 
 User = settings.AUTH_USER_MODEL
 
@@ -26,6 +27,11 @@ class Project(models.Model):
         blank=True,
     )
 
+    earnings = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    earnings_received = models.BooleanField(default=False)  # pyright: ignore[reportArgumentType]
+
     def __str__(self):
         return str(self.title)
 
@@ -49,7 +55,9 @@ class ProjectParticipation(models.Model):
 
 class Abikasse(models.Model):
     goal = models.PositiveIntegerField()
-    current = models.IntegerField()
+
+    def total_earnings(self):
+        Project.objects.aggregate(Sum("earnings"))  # pyright: ignore[reportAttributeAccessIssue]
 
     def save(self, *args, **kwargs):
         # so that there is only one abikasse instance in the database

@@ -172,3 +172,15 @@ class ProjectForm(forms.ModelForm):
             "ending_date",
             "participants",
         ]
+
+
+class SetEarningsForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ["earnings"]
+
+
+class SetEarningsReceivedForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ["earnings_received"]

@@ -8,7 +8,7 @@
                     data-popup-url="{% url 'project-edit' project.id %}">Bearbeiten</button>
                 {% endif %}
 
-                {% if is_participant %}
+                {% if can_leave %}
                 <form method="post" action="{% url 'project-leave' project.id %}">
                     {% csrf_token %}
                     {% if next_url %}
@@ -16,7 +16,7 @@
                     {% endif %}
                     <button type="submit" class="btn btn-secondary">Teilnahme beenden</button>
                 </form>
-                {% else %}
+                {% elif can_join %}
                 <form method="post" action="{% url 'project-join' project.id %}">
                     {% csrf_token %}
                     {% if next_url %}
@@ -34,6 +34,9 @@
                     {% endif %}
                     <button type="submit" class="btn btn-secondary">Löschen</button>
                 </form>
+                {% endif %}
+                {% if project.final %}
+                Projekt abgeschlossen
                 {% endif %}
             </div>
         </header>
@@ -67,6 +70,23 @@
             <li>keine Teilnehmer</li>
             {% endfor %}
         </ul>
+
+        {% if can_edit %}
+        <form action="{% url 'set-earnings' project.id %}" method="post">
+            {% csrf_token %}
+            {{ earnings_form.as_p }}
+            <button type="submit" class="btn btn-primary">Abschicken</button>
+        </form>
+        {% else %}
+        Einnahmen: {{ project.earnings|floatformat:2 }} €
+        {% endif %}
+        {% if can_approve_payment %}
+        <form action="{% url 'set-earnings-received' project.id %}" method="post">
+            {% csrf_token %}
+            {{ earnings_received_form.as_p }}
+            <button type="submit" class="btn btn-primary">Abschicken</button>
+        </form>
+        {% endif %}
 
         <button type="button" class="btn btn-secondary" data-popup-close>Schließen</button>
     </div>
