@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
@@ -38,7 +40,9 @@ class Project(models.Model):
 
 class ProjectParticipation(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="project_participations"
+    )
 
     participation_time = models.DurationField(null=True, blank=True)
 
@@ -57,7 +61,7 @@ class Abikasse(models.Model):
     goal = models.PositiveIntegerField()
 
     def total_earnings(self):
-        Project.objects.aggregate(Sum("earnings"))  # pyright: ignore[reportAttributeAccessIssue]
+        return Project.objects.aggregate(Sum("earnings")).get("earnings__sum", 0)  # pyright: ignore[reportAttributeAccessIssue]
 
     def save(self, *args, **kwargs):
         # so that there is only one abikasse instance in the database
@@ -66,3 +70,19 @@ class Abikasse(models.Model):
 
     def __str__(self):
         return "Abikasse"
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    has_had_tour = models.BooleanField(default=False)  # pyright: ignore[reportArgumentType]
+
+    def total_earnings(self):
+        return self.user.participating_projects.aggregate(Sum("earnings")).get(  # pyright: ignore[reportAttributeAccessIssue]
+            "earnings__sum", 0
+        )
+
+    def total_hours(self):
+        result = self.user.project_participations.aggregate(  # pyright: ignore[reportAttributeAccessIssue]
+            total=Sum("participation_time")
+        )
+        return result["total"] or timedelta(0)

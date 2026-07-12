@@ -15,6 +15,25 @@
         <strong>{{abikasse_current}}€ / {{abikasse_goal}}€</strong>
     </section>
 
+    <section class="ranking">
+        <h1>Rangliste</h1>
+        <table class="ranking-table">
+            <tr class="ranking-row">
+                <th>Rang</th>
+                <th>Schüler</th>
+                <th>Arbeitsstunden</th>
+            </tr>
+
+            {% for entry in ranking %}
+            <tr class="ranking-row">
+                <th class="">{{ entry.rank }}</th>
+                <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
+                <th class="">{{ entry.hours }}</th>
+            </tr>
+            {% endfor %}
+        </table>
+    </section>
+
     <!-- Hauptnavigation -->
     <section class="grid">
         <a class="card" href="{% url 'projects-upcoming' %}">

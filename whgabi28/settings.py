@@ -144,7 +144,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_REDIRECT_URL = "/projects/"
+LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/?logged_out=1"
 
 LOGIN_URL = "/login"
