@@ -1,13 +1,14 @@
 <button type="button" class="project-card" data-popup-open="popup-big"
     data-popup-url="{% url 'project-details' project.id %}">
-    <strong>{{ project.title }}</strong>
+    <strong id="title">{{ project.title }}</strong>
     <span>
-        <time datetime="{{ project.starting_date|date:'c' }}">
+        <time datetime="{{ project.starting_date|date:'c' }}" id="starting-datetime">
             {{ project.starting_date|date:"d.m.Y H:i" }} Uhr
         </time>
         →
-        <time datetime="{{ project.ending_date|date:'c' }}">
+        <time datetime="{{ project.ending_date|date:'c' }}" id="ending-datetime">
             {{ project.ending_date|date:"d.m.Y H:i" }} Uhr
         </time>
     </span>
+    <p hidden id="description">{{ project.description }}</p>
 </button>
