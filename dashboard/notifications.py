@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -12,6 +14,7 @@ User = settings.AUTH_USER_MODEL
 class NotificationVerbChoices(models.TextChoices):
     ADDED_TO_PROJECT = ("added_to_event", "Added to event")
     REMOVED_FROM_PROJECT = ("removed_from_event", "Removed from event")
+    TIME_FRAME_CHANGED = ("time_frame_changed", "Time frame changed")
 
 
 class Notification(models.Model):
@@ -28,6 +31,9 @@ class Notification(models.Model):
     object_id = models.PositiveIntegerField(null=True, blank=True)
     target = GenericForeignKey("content_type", "object_id")
 
+    # NEW: flexible payload for verb-specific data
+    payload = models.JSONField(null=True, blank=True)
+
     is_read = models.BooleanField(default=False)  # pyright: ignore[reportArgumentType]
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -40,13 +46,42 @@ class Notification(models.Model):
             self.target, Event
         ):
             return f"Du wurdest aus {self.target.title} entfernt"
+        elif self.verb == NotificationVerbChoices.TIME_FRAME_CHANGED and isinstance(
+            self.target, Event
+        ):
+            p = self.payload or {}
+            old_start = p.get("old_starting_date")
+            old_end = p.get("old_ending_date")
+            new_start = p.get("new_starting_date")
+            new_end = p.get("new_ending_date")
+
+            def _fmt(val):
+                if not val:
+                    return ""
+                if isinstance(val, str):
+                    try:
+                        dt = datetime.fromisoformat(val)
+                        return dt.strftime("%Y-%m-%d %H:%M")
+                    except Exception:
+                        return val
+                if isinstance(val, datetime):
+                    return val.strftime("%Y-%m-%d %H:%M")
+                return str(val)
+
+            old_s = _fmt(old_start)
+            old_e = _fmt(old_end)
+            new_s = _fmt(new_start)
+            new_e = _fmt(new_end)
+            title = self.target.title
+            return f"Zeitrahmen geändert: {title} von {old_s} - {old_e} zu {new_s} - {new_e}"
         else:
             return f"{self.verb} {self.target.__str__()}"
 
     def get_url(self) -> str:
-        if (
-            self.verb == NotificationVerbChoices.ADDED_TO_PROJECT
-            or self.verb == NotificationVerbChoices.REMOVED_FROM_PROJECT
+        if self.verb in (
+            NotificationVerbChoices.ADDED_TO_PROJECT,
+            NotificationVerbChoices.REMOVED_FROM_PROJECT,
+            NotificationVerbChoices.TIME_FRAME_CHANGED,
         ) and isinstance(self.target, Event):
             return reverse("event-detail", kwargs={"event_id": self.target.pk})
 
@@ -54,9 +89,10 @@ class Notification(models.Model):
         return reverse("main-page")
 
     def open_as_popup(self) -> bool:
-        if (
-            self.verb == NotificationVerbChoices.ADDED_TO_PROJECT
-            or self.verb == NotificationVerbChoices.REMOVED_FROM_PROJECT
+        if self.verb in (
+            NotificationVerbChoices.ADDED_TO_PROJECT,
+            NotificationVerbChoices.REMOVED_FROM_PROJECT,
+            NotificationVerbChoices.TIME_FRAME_CHANGED,
         ) and isinstance(self.target, Event):
             return True
 
@@ -81,4 +117,32 @@ def notify_participants(event: Event, old, new):
             user=participant,
             verb=NotificationVerbChoices.REMOVED_FROM_PROJECT,
             target=event,
+        ).save()
+
+
+def notify_time_frame_changed(
+    event,
+    recipients,
+    old_starting_date,
+    old_ending_date,
+    new_starting_date,
+    new_ending_date,
+):
+    payload = {
+        "old_starting_date": old_starting_date.isoformat()
+        if old_starting_date
+        else None,
+        "old_ending_date": old_ending_date.isoformat() if old_ending_date else None,
+        "new_starting_date": new_starting_date.isoformat()
+        if new_starting_date
+        else None,
+        "new_ending_date": new_ending_date.isoformat() if new_ending_date else None,
+    }
+
+    for recipient in recipients:
+        Notification(
+            user=recipient,
+            verb=NotificationVerbChoices.TIME_FRAME_CHANGED,
+            target=event,
+            payload=payload,
         ).save()
