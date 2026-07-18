@@ -6,9 +6,8 @@
             <li class="participants-widget__selected-item" data-user-id="{{ user.id }}"
                 data-user-label="{{ user.label }}">
                 <span>{{ user.label }}</span>
-                <button type="button" class="participants-widget__remove" data-remove-user="{{ user.id }}">
-                    Entfernen
-                </button>
+                <button type="button" class="participants-widget__remove"
+                    data-remove-user="{{ user.id }}">Entfernen</button>
             </li>
             {% empty %}
             <li class="participants-widget__empty" data-empty-selected>keine Teilnehmer</li>
@@ -24,21 +23,30 @@
                 autocomplete="off" />
         </label>
 
-        <label class="participants-widget__label">
-            Nutzer hinzufügen
-            <select class="participants-widget__available-users" data-user-select size="5">
+        <div class="participants-widget__label">
+            <span>Nutzer hinzufügen</span>
+            <div class="participants-widget__available-users" data-available-list>
+                <template id="participant-available-tpl">
+                    <div class="participants-widget__available-item" data-user-id="" data-user-label="">
+                        <span></span>
+                        <button type="button" class="participants-widget__add" data-add-user
+                            data-user-id="">Hinzufügen</button>
+                    </div>
+                </template>
+
                 {% for user in widget.available_users %}
-                <option value="{{ user.id }}" data-user-label="{{ user.label }}">{{ user.label }}</option>
+                <div class="participants-widget__available-item" data-user-id="{{ user.id }}"
+                    data-user-label="{{ user.label }}">
+                    <span>{{ user.label }}</span>
+                    <button type="button" class="participants-widget__add" data-add-user
+                        data-user-id="{{ user.id }}">Hinzufügen</button>
+                </div>
                 {% endfor %}
-            </select>
-        </label>
+            </div>
+        </div>
 
         <p class="participants-widget__available-empty{% if widget.available_users %} participants-widget__available-empty--hidden{% endif %}"
-            data-empty-available>
-            Keine weiteren Nutzer verfügbar.
-        </p>
-
-        <button type="button" class="participants-widget__add" data-add-user>Hinzufügen</button>
+            data-empty-available>Keine weiteren Nutzer verfügbar.</p>
     </div>
 
     <div data-hidden-inputs>

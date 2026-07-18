@@ -86,11 +86,25 @@ function initEventFormValidation(form) {
   endInput.addEventListener("input", update);
   endInput.addEventListener("change", update);
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     const isValid = updateEventFormDateValidation(form);
     if (!isValid) {
       event.preventDefault();
       form.reportValidity();
+      return;
+    }
+
+    // Handle submit here (AJAX), with safe fallback
+    event.preventDefault();
+    try {
+      await submitEventForm(form);
+    } catch (err) {
+      console.error("AJAX submit failed, falling back to normal submit:", err);
+      try {
+        form.submit();
+      } catch (innerErr) {
+        console.error("Fallback submit failed:", innerErr);
+      }
     }
   });
 
@@ -121,12 +135,5 @@ async function submitEventForm(form) {
   }
 }
 
-document.addEventListener("submit", async (event) => {
-  const form = event.target.closest("form[data-event-form]");
-  if (!form || event.defaultPrevented) {
-    return;
-  }
-
-  event.preventDefault();
-  await submitEventForm(form);
-});
+// Note: form-level handler above manages submit. We keep no document-level
+// submit handler to avoid conflicts and double-handling.

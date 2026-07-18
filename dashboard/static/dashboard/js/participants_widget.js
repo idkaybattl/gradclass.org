@@ -1,5 +1,5 @@
-// global storage for all users available
-let allUserOptions = [];
+// participants_widget.js
+// Uses search.js -> searchItems(query, items, getFields)
 
 function createSelectedItem(userId, userLabel) {
   const item = document.createElement("li");
@@ -30,15 +30,6 @@ function createHiddenInput(fieldName, userId) {
   return input;
 }
 
-function sortSelectOptions(select) {
-  const options = Array.from(select.options).sort((a, b) =>
-    a.text.localeCompare(b.text, "de")
-  );
-
-  select.innerHTML = "";
-  options.forEach((option) => select.add(option));
-}
-
 function updateSelectedEmptyState(widget) {
   const selectedList = widget.querySelector("[data-selected-list]");
   const selectedItems = selectedList.querySelectorAll("[data-user-id]");
@@ -57,87 +48,99 @@ function updateSelectedEmptyState(widget) {
   }
 }
 
-function updateAvailableState(widget) {
-  const select = widget.querySelector("[data-user-select]");
-  const addButton = widget.querySelector("[data-add-user]");
+function updateAvailableEmptyMessage(widget, visibleCount) {
   const emptyMessage = widget.querySelector("[data-empty-available]");
-  const hasAnyOptions = select.options.length > 0;
-
-  emptyMessage.classList.toggle(
-    "participants-widget__available-empty--hidden",
-    hasAnyOptions
-  );
-
-  if (!hasAnyOptions) {
-    select.disabled = true;
-    addButton.disabled = true;
-    return;
+  const hasAny = visibleCount > 0;
+  if (emptyMessage) {
+    emptyMessage.classList.toggle(
+      "participants-widget__available-empty--hidden",
+      hasAny
+    );
   }
+}
 
-  select.disabled = false;
+function readInitialAvailableUsers(widget) {
+  // read server-rendered available items into a plain-data array
+  const container = widget.querySelector("[data-available-list]");
+  if (!container) return [];
+
+  // find direct child items that carry data-user-id (ignore template)
+  const nodes = Array.from(container.querySelectorAll(".participants-widget__available-item[data-user-id]"));
+  return nodes.map((el) => ({ id: el.dataset.userId, label: el.dataset.userLabel || el.querySelector('span')?.textContent.trim() || '' }));
+}
+
+function createAvailableNode(widget, user) {
+  const container = widget.querySelector("[data-available-list]");
+  const tpl = container.querySelector("#participant-available-tpl") || document.getElementById("participant-available-tpl");
+  const node = tpl.content.firstElementChild.cloneNode(true);
+
+  node.dataset.userId = user.id;
+  node.dataset.userLabel = user.label;
+  const span = node.querySelector("span");
+  if (span) span.textContent = user.label;
+  const addBtn = node.querySelector("[data-add-user]");
+  if (addBtn) addBtn.dataset.userId = user.id;
+
+  return node;
+}
+
+function renderAvailableList(widget, users) {
+  const container = widget.querySelector("[data-available-list]");
+  if (!container) return;
+
+  // remove existing rendered items but keep the template element
+  Array.from(container.children).forEach((child) => {
+    if (child.tagName && child.tagName.toLowerCase() === "template") return;
+    child.remove();
+  });
+
+  users.forEach((user) => container.appendChild(createAvailableNode(widget, user)));
+  updateAvailableEmptyMessage(widget, users.length);
 }
 
 function filterAvailableUsers(widget) {
   const searchInput = widget.querySelector("[data-user-search]");
-  const select = widget.querySelector("[data-user-select]");
-  const addButton = widget.querySelector("[data-add-user]");
-  const term = searchInput.value.toLowerCase();
+  const term = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : "";
 
-  const visibleOptions = term
-    ? searchItems(term, allUserOptions, (option) => [
-      option.dataset.userLabel || option.textContent,
-    ])
-    : allUserOptions.sort((a, b) => a.text.localeCompare(b.text, "de"));
+  const all = widget._allUserOptions || [];
 
-  select.innerHTML = "";
-  visibleOptions.forEach((option) => select.add(option));
+  const visible = term
+    ? searchItems(term, all, (option) => [option.label])
+    : [...all].sort((a, b) => a.label.localeCompare(b.label, "de"));
 
-  if (visibleOptions.length > 0) {
-    select.value = visibleOptions[0].value;
-  }
-
-  addButton.disabled = visibleOptions.length === 0;
+  renderAvailableList(widget, visible);
 }
 
-function addParticipant(widget) {
+function addParticipant(widget, userId) {
   const fieldName = widget.dataset.fieldName;
-  const select = widget.querySelector("[data-user-select]");
   const selectedList = widget.querySelector("[data-selected-list]");
   const hiddenInputsContainer = widget.querySelector("[data-hidden-inputs]");
 
-  const selectedOption = select.selectedOptions[0];
-  if (!selectedOption || selectedOption.hidden) {
-    return;
-  }
+  const all = widget._allUserOptions || [];
+  const idx = all.findIndex((u) => u.id === userId);
+  if (idx === -1) return;
 
-  const userId = selectedOption.value;
-  const userLabel = selectedOption.dataset.userLabel || selectedOption.textContent;
+  const user = all[idx];
 
+  // prevent duplicates
   const alreadySelected = Array.from(
     selectedList.querySelectorAll("[data-user-id]")
   ).some((item) => item.dataset.userId === userId);
 
-  if (alreadySelected) {
-    return;
-  }
+  if (alreadySelected) return;
 
-  selectedList.appendChild(createSelectedItem(userId, userLabel));
-  hiddenInputsContainer.appendChild(createHiddenInput(fieldName, userId));
-  selectedOption.remove();
+  selectedList.appendChild(createSelectedItem(user.id, user.label));
+  hiddenInputsContainer.appendChild(createHiddenInput(fieldName, user.id));
 
-  // remove the selected option from allUserOptions
-  const selectedIndex = allUserOptions.findIndex(user => user.value === userId);
-  if (selectedIndex !== -1) {
-    allUserOptions.splice(selectedIndex, 1);
-  }
+  // remove from available
+  all.splice(idx, 1);
+  widget._allUserOptions = all;
 
   updateSelectedEmptyState(widget);
-  updateAvailableState(widget);
   filterAvailableUsers(widget);
 }
 
 function removeParticipant(widget, userId) {
-  const select = widget.querySelector("[data-user-select]");
   const selectedList = widget.querySelector("[data-selected-list]");
   const hiddenInputsContainer = widget.querySelector("[data-hidden-inputs]");
 
@@ -145,35 +148,23 @@ function removeParticipant(widget, userId) {
     (item) => item.dataset.userId === userId
   );
 
-  if (!selectedItem) {
-    return;
-  }
+  if (!selectedItem) return;
 
   const userLabel =
-    selectedItem.dataset.userLabel ||
-    selectedItem.querySelector("span")?.textContent ||
-    "";
+    selectedItem.dataset.userLabel || selectedItem.querySelector("span")?.textContent || "";
   selectedItem.remove();
 
   const hiddenInput = Array.from(
     hiddenInputsContainer.querySelectorAll("[data-hidden-user]")
   ).find((input) => input.value === userId);
-  if (hiddenInput) {
-    hiddenInput.remove();
-  }
+  if (hiddenInput) hiddenInput.remove();
 
-  // add user back to avaialble participant options
-  const option = document.createElement("option");
-  option.value = userId;
-  option.dataset.userLabel = userLabel;
-  option.textContent = userLabel;
-
-  allUserOptions.push(option);
-  // refilter the select
-  filterAvailableUsers(widget);
+  // add user back to available data
+  const all = widget._allUserOptions || [];
+  all.push({ id: userId, label: userLabel });
+  widget._allUserOptions = all;
 
   updateSelectedEmptyState(widget);
-  updateAvailableState(widget);
   filterAvailableUsers(widget);
 }
 
@@ -183,33 +174,37 @@ function initParticipantsWidget(widget) {
   }
 
   const searchInput = widget.querySelector("[data-user-search]");
-  const addButton = widget.querySelector("[data-add-user]");
-  const select = widget.querySelector("[data-user-select]");
+  const container = widget.querySelector("[data-available-list]");
 
-  if (!searchInput || !addButton || !select) {
+  if (!searchInput || !container) {
     return;
   }
 
   widget.dataset.participantsWidgetInitialized = "true";
 
-  // Initialise all user options
-  allUserOptions = Array.from(select.options)
+  // Initialise all user options from server-rendered DOM into plain objects
+  widget._allUserOptions = readInitialAvailableUsers(widget);
 
-  addButton.addEventListener("click", () => addParticipant(widget));
+  // wire listeners
   searchInput.addEventListener("input", () => filterAvailableUsers(widget));
-  select.addEventListener("dblclick", () => addParticipant(widget));
 
+  // delegated click handler for add/remove
   widget.addEventListener("click", (event) => {
-    const removeButton = event.target.closest("[data-remove-user]");
-    if (!removeButton) {
+    const addBtn = event.target.closest("[data-add-user]");
+    if (addBtn) {
+      const id = addBtn.dataset.userId;
+      if (id) addParticipant(widget, id);
       return;
     }
-    removeParticipant(widget, removeButton.dataset.removeUser);
+
+    const removeButton = event.target.closest("[data-remove-user]");
+    if (removeButton) {
+      removeParticipant(widget, removeButton.dataset.removeUser);
+    }
   });
 
-  sortSelectOptions(select);
+  // initial state updates
   updateSelectedEmptyState(widget);
-  updateAvailableState(widget);
   filterAvailableUsers(widget);
 }
 
