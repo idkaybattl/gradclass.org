@@ -1,0 +1,25 @@
+{
+  "name": "gradclass.org",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "npm run copy-static",
+    "copy-static": "mkdir -p dashboard/static/vendor/htmx && cp node_modules/htmx.org/dist/htmx.min.js dashboard/static/vendor/htmx/ && mkdir -p dashboard/static/vendor/cropper && cp node_modules/cropperjs/dist/cropper.min.js dashboard/static/vendor/cropper/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idkaybattl/whgabi28.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/idkaybattl/whgabi28/issues"
+  },
+  "homepage": "https://github.com/idkaybattl/whgabi28#readme",
+  "dependencies": {
+    "cropperjs": "^2.1.1",
+    "htmx.org": "^2.0.10"
+  }
+}

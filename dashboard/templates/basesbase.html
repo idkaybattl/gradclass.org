@@ -1,0 +1,67 @@
+{% load static %}
+
+<!doctype html>
+
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Abi 28{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'dashboard/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/colors.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/participants_widget.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/events.css' %}" />
+    {% block head %} {% endblock %}
+
+    <!-- Schrift -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+    <header>
+        <a href="/">
+            <h1>Abi 28</h1>
+        </a>
+        {% block header %}{% endblock %}
+    </header>
+
+    {% if messages %}
+    <section class="site-messages" aria-label="Systemmeldungen">
+        {% for message in messages %}
+        <div class="site-message{% if message.tags %} {{ message.tags }}{% endif %}" role="status" data-site-message
+            data-dismiss-after="6000">
+            <p class="site-message__text">{{ message }}</p>
+            <button type="button" class="site-message__dismiss" data-dismiss-message aria-label="Meldung schließen">
+                ×
+            </button>
+            <div class="site-message__timer" aria-hidden="true"></div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+
+    <footer>
+        <p>Bei Problemen, Feature- oder Verbesserungsvorschlägen gerne bei dem
+            <a href="https://github.com/idkaybattl/gradclass.org" target="_blank">Github Repo</a>
+            melden
+        </p>
+    </footer>
+
+    <script src="{% static 'dashboard/js/cookies.js'  %}"></script>
+    <script src="{% static 'dashboard/js/messages.js' %}?v=20260216b"></script>
+    <script src="{% static 'dashboard/js/search.js' %}"></script>
+    <script src="{% static 'dashboard/js/popups.js' %}"></script>
+    <script src="{% static 'dashboard/js/events.js' %}"></script>
+    <script src="{% static 'dashboard/js/participants_widget.js' %}"></script>
+    <script src="{% static 'dashboard/js/notifications.js' %}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+{% extends 'basesbase.html' %}
+
+{% block content %}
+<main>
+    <h1>Home Page</h1>
+    <div class="intro-steps">
+        <section id="step-1" class="step">
+            <div>
+                Hi {{ request.user.first_name }}, <br>
+                es ist vielleicht ein bisschen verwirrend wofür diese Website sein soll, deswegen eine kleine Erklärung:
+                <br>
+                <br>
+                um Aktionen zu organisieren, mit denen wir für unseren Jahrgang Geld verdienen wollen,
+                kann man diese auf dieser Website eintragen (Waffelverkauf, Giro, etc.). <br>
+                <br>
+                Darum bitten wir auch, da die Arbeitsstunden und das verdiente Geld hier nicht nur aufgezeichnet werden,
+                sondern potentiell, über ein Punktesystem, den Preis der Abiball Tickets beeinflussen könnten. <br>
+                Wie genau dies ablaufen wird ist noch nicht entschieden. <br>
+                <br>
+                <details>
+                    <summary>Während den Ferien werde ich vermutlich noch einige Features zu der Website hinzufügen.
+                    </summary>
+                    <ul>
+                        <li>Eine Kalenderansicht</li>
+                        <li>Ankündigungen</li>
+                        <li>Kommentare/Forum</li>
+                        <li>Todos/Aufgabenverteilung</li>
+                        <li>Eine Galerie, bei der Bilder (Videos?) hochgeladen werden können (für Abibuch und Film z.B.)
+                        </li>
+                        <li>KI?!!</li>
+                        <li>etc.</li>
+                    </ul>
+                </details>
+                <br>
+                Wenn irgendwelche Probleme bei der Website auftreten, oder ihr noch Ideen für die Website habt,
+                damit sie nicht so langweilig bleibt, erstellt gerne ein Issue auf
+                <a href="https://github.com/idkaybattl/gradclass.org/issues">Github</a>, wenn ihr es formell haben
+                wollt,
+                oder meldet euch bei mir persönlich. <br>
+                Der ganze Quellcode liegt übrigens auch, offen, auf <a
+                    href="https://github.com/idkaybattl/gradclass.org">Github</a>,
+                falls Interesse besteht. <br>
+                <br>
+                GaLiGrü <br>
+                Moritz (Fechte)
+            </div>
+            <button id="to-step-2">Weiter</button>
+        </section>
+        <section id="step-2" class="step hidden">
+            {% include "components/_user_edit.html" with user=user form=form next_url=next_url %}
+        </section>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('to-step-2')?.addEventListener('click', function () {
+        document.getElementById('step-1').classList.add('hidden');
+        document.getElementById('step-2').classList.remove('hidden');
+
+        // If you want to focus the first input in the form:
+        const firstInput = document.querySelector('#step-2 form input, #step-2 form textarea, #step-2 form select');
+        if (firstInput) firstInput.focus();
+    });
+</script>
+{% endblock %}
+
+{% block head %}
+<style>
+    .step.hidden {
+        display: none;
+    }
+</style>
+{% endblock %}

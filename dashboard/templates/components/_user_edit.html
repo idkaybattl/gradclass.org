@@ -1,0 +1,23 @@
+<div class="popup-content" id="edit-{{ user.id }}">
+    <form method="post" class="popup__content popup__content--edit" data-event-form
+        action="{% url 'user-edit' user.id %}">
+        {% csrf_token %}
+        {% if next_url %}
+        <input type="hidden" name="next" value="{{ next_url }}" />
+        {% endif %}
+        <input type="hidden" name="user_id" value="{{ user.id }}" />
+        <input type="hidden" name="form_action" value="edit_user" />
+        <header>
+            <h2 id="user-edit-title-{{ user.id }}">Profil bearbeiten</h2>
+            <button type="button" class="btn btn-link" data-popup-open="popup-big"
+                data-popup-url="{% url 'user-details' user.id %}">Zurück</button>
+        </header>
+
+        {{ form.as_p }}
+
+        <div class="popup__actions">
+            <button type="submit" class="btn btn-primary">Fertig</button>
+            <button type="button" class="btn btn-secondary" data-popup-close>Schließen</button>
+        </div>
+    </form>
+</div>
