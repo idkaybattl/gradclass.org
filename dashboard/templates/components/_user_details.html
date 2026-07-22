@@ -18,6 +18,7 @@
             <p>Nutzername: {{ user.username }}</p>
             <p>IServ Mail: {{ user.email }}</p>
             <p>Externe Mail: {{ user.profile.external_mail | default:"Keine Angabe bisher" }}</p>
+            <p>Telefonnummer: {{ user.profile.phone_numer | default:"Keine Angabe bisher" }}</p>
         </section>
 
         <section class="details-schedule" aria-label="Projektteilnahmen">

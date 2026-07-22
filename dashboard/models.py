@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
+from phonenumber_field.modelfields import PhoneNumberField
 
 User = settings.AUTH_USER_MODEL
 
@@ -76,6 +77,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     has_had_introduction = models.BooleanField(default=False)  # pyright: ignore[reportArgumentType]
     external_mail = models.EmailField(blank=True, null=True)
+    phone_number = PhoneNumberField(blank=True, null=True)
     birthday = models.DateField(blank=True, null=True)
 
     def total_earnings(self):

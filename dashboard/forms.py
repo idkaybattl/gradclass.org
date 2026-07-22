@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from phonenumber_field.formfields import PhoneNumberField
 
 from .models import Event, UserProfile
 
@@ -193,7 +194,8 @@ class UserProfileForm(forms.ModelForm):
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     external_mail = forms.EmailField(label="Externe E‑Mail", required=False)
+    phone_number = PhoneNumberField(region="DE")
 
     class Meta:
         model = UserProfile
-        fields = ["external_mail", "birthday"]
+        fields = ["external_mail", "phone_number", "birthday"]
