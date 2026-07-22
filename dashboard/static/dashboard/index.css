@@ -1,9 +1,11 @@
+/* Main layout */
 main {
     max-width: 1100px;
     margin: 2rem auto;
     padding: 0 1rem;
 }
 
+/* Counter widget */
 .counter {
     background: var(--card);
     border-radius: var(--radius);
@@ -11,24 +13,24 @@ main {
     margin-bottom: 2rem;
     text-align: center;
 }
-
 .counter span {
     display: block;
     font-size: 0.9rem;
     color: var(--muted);
 }
-
 .counter strong {
     font-size: 2rem;
     color: var(--primary);
 }
 
+/* Grid system */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
 }
 
+/* Card component */
 .card,
 .card:visited {
     background: var(--card);
@@ -41,18 +43,38 @@ main {
     text-decoration: none;
     color: var(--text);
 }
-
 .card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
-
 .card h2 {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
 }
-
 .card p {
     font-size: 0.9rem;
     color: var(--muted);
+}
+
+/* -------------------------------------------------
+   Additional utilities for the index page
+   ------------------------------------------------- */
+
+/* Centered text utility */
+.text-center {
+    text-align: center;
+}
+
+/* Margin utilities (specific to index) */
+.mt-2 { margin-top: 1rem; }
+.mb-2 { margin-bottom: 1rem; }
+
+/* Card variant – subtle border */
+.card--bordered {
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+/* Hover shadow variant */
+.card--shadow {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
 }

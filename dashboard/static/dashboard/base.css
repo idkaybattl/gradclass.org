@@ -15,6 +15,10 @@ body {
     min-height: 100vh;
 }
 
+/* -------------------------------------------------
+   Header & Global Elements
+   ------------------------------------------------- */
+
 header {
     background: var(--card);
     padding: 1rem 1.5rem;
@@ -42,6 +46,10 @@ a:active {
     text-decoration: none;
     color: inherit;
 }
+
+/* -------------------------------------------------
+   Profile menu
+   ------------------------------------------------- */
 
 .profile-btn {
     display: inline-flex;
@@ -127,6 +135,10 @@ a:active {
 .profile-menu__logout-form {
     margin: 0;
 }
+
+/* -------------------------------------------------
+   Site messages
+   ------------------------------------------------- */
 
 .site-messages {
     width: min(920px, calc(100% - 2rem));
@@ -235,6 +247,10 @@ a:active {
     }
 }
 
+/* -------------------------------------------------
+   Message type overrides
+   ------------------------------------------------- */
+
 .site-message.success {
     --msg-border: color-mix(in srgb, var(--primary) 82%, var(--text) 18%);
     --msg-accent: color-mix(in srgb, var(--primary) 90%, var(--text) 10%);
@@ -258,6 +274,10 @@ a:active {
     --msg-accent: color-mix(in srgb, var(--text) 55%, var(--primary) 45%);
     --msg-icon-bg: color-mix(in srgb, var(--bg) 72%, var(--text) 28%);
 }
+
+/* -------------------------------------------------
+   Popups
+   ------------------------------------------------- */
 
 .popup-big {
     display: none;
@@ -304,6 +324,10 @@ a:active {
     margin-bottom: 1rem;
 }
 
+/* -------------------------------------------------
+   Buttons
+   ------------------------------------------------- */
+
 .btn {
     border: 0;
     border-radius: 999px;
@@ -337,7 +361,9 @@ a:active {
     text-decoration: none;
 }
 
-
+/* -------------------------------------------------
+   Details & Forms
+   ------------------------------------------------- */
 
 .details-header-action {
     display: flex;
@@ -366,23 +392,11 @@ a:active {
     color: var(--text);
 }
 
-.details-description {
-    background: var(--bg);
-    border-radius: 12px;
-    padding: 0.85rem 0.9rem;
-    margin-bottom: 1rem;
-}
+/* -------------------------------------------------
+   Description & Schedule blocks
+   ------------------------------------------------- */
 
-.details-description h3 {
-    margin: 0 0 0.45rem;
-}
-
-.details-description p {
-    margin: 0;
-    color: var(--text);
-    line-height: 1.45;
-}
-
+.details-description,
 .details-schedule {
     background: var(--bg);
     border-radius: 12px;
@@ -390,8 +404,16 @@ a:active {
     margin-bottom: 1rem;
 }
 
+.details-description h3,
 .details-schedule h3 {
     margin: 0 0 0.45rem;
+}
+
+.details-description p,
+.details-schedule p {
+    margin: 0;
+    color: var(--text);
+    line-height: 1.45;
 }
 
 .details-schedule p {
@@ -402,6 +424,10 @@ a:active {
 .details-schedule strong {
     color: var(--text);
 }
+
+/* -------------------------------------------------
+   Participants list
+   ------------------------------------------------- */
 
 .details-participants {
     list-style: none;
@@ -416,6 +442,10 @@ a:active {
     padding: 0.55rem 0.7rem;
 }
 
+/* -------------------------------------------------
+   Popup actions & form elements
+   ------------------------------------------------- */
+
 .popup__actions {
     display: flex;
     gap: 0.6rem;
@@ -425,10 +455,6 @@ a:active {
 .popup__content form,
 .popup__content p {
     margin-bottom: 0.9rem;
-}
-
-.details-header-action form {
-    margin: 0;
 }
 
 .popup__content label {
@@ -465,6 +491,10 @@ a:active {
 .popup__content ul.errorlist li {
     margin-bottom: 0.2rem;
 }
+
+/* -------------------------------------------------
+   Responsive tweaks
+   ------------------------------------------------- */
 
 @media (max-width: 720px) {
     .btn-link,
@@ -533,24 +563,64 @@ a:active {
     padding: 0 1rem;
 }
 
+/* Flex helpers */
 .flex-center {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* Text helpers */
 .text-muted {
     color: var(--muted);
+}
+.text-center {
+    text-align: center;
+}
+.text-right {
+    text-align: right;
 }
 
 /* Spacing helpers */
 .mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
 .mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.ml-1 { margin-left: 0.5rem; }
+.mr-1 { margin-right: 0.5rem; }
+.mx-1 { margin-left: 0.5rem; margin-right: 0.5rem; }
+.my-1 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
 .p-1  { padding: 0.5rem; }
+.p-2  { padding: 1rem; }
+.pt-1 { padding-top: 0.5rem; }
+.pb-1 { padding-bottom: 0.5rem; }
 
-/* Rounded corners and subtle shadow */
+/* Display helpers */
+.d-block { display: block; }
+.d-inline { display: inline; }
+.d-inline-block { display: inline-block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+
+/* Width helpers */
+.w-100 { width: 100%; }
+.w-auto { width: auto; }
+.max-w-full { max-width: 100%; }
+
+/* Background helpers */
+.bg-primary { background: var(--primary) !important; }
+.bg-muted   { background: var(--muted) !important; }
+.bg-card    { background: var(--card) !important; }
+
+/* Border helpers */
+.border { border: 1px solid var(--muted); }
+.border-primary { border-color: var(--primary); }
+
+/* Rounded & shadow helpers */
 .rounded { border-radius: var(--radius); }
+.rounded-sm { border-radius: 4px; }
 .shadow-sm { box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+.shadow-md { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
 @media (max-width: 720px) {
     .container {

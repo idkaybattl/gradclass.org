@@ -1,55 +1,67 @@
-.cld-main{
-  width: 660px;
+/* Calendar core layout */
+.cld-main {
+    width: 660px;
+    max-width: 100%;
+    margin: 0 auto;
 }
-.cld-main a{
-  color: #7B00FF;
+
+/* Links inside the calendar */
+.cld-main a {
+    color: #7B00FF;
 }
-  .cld-datetime{
+
+/* Date & time selector */
+.cld-datetime {
     position: relative;
     width: 66%;
     min-width: 100px;
     max-width: 300px;
     margin: auto;
     overflow: hidden;
-  }
-  .cld-datetime .today{
+}
+.cld-datetime .today {
     position: relative;
     float: left;
     width: calc(100% - 40px);
     margin: auto;
     text-align: center;
-  }
-  .cld-nav{
+}
+
+/* Navigation arrows */
+.cld-nav {
     position: relative;
     width: 20px;
     height: 20px;
     margin-top: 2px;
-  }
-  .cld-nav:hover{
-    cursor: pointer;
-  }
-  .cld-nav:hover svg{
-      fill: #666;
-  }
-  .cld-rwd{
-    float: left;
-  }
-  .cld-fwd{
-    float: right;
-  }
-    .cld-nav svg:hover{
-
-    }
-.cld-labels, .cld-days{
-  padding-left: 0;
 }
-  .cld-label, .cld-day{
+.cld-nav:hover {
+    cursor: pointer;
+}
+.cld-nav:hover svg {
+    fill: #666;
+}
+.cld-rwd {
+    float: left;
+}
+.cld-fwd {
+    float: right;
+}
+
+/* Labels and day grid */
+.cld-labels,
+.cld-days {
+    padding-left: 0;
+}
+.cld-label,
+.cld-day {
     box-sizing: border-box;
     display: inline-block;
     width: 14.28%;
     text-align: center;
-  }
-  .cld-day{
+}
+
+/* Individual day cells */
+.cld-day {
     display: block;
     float: left;
     position: relative;
@@ -58,37 +70,67 @@
     height: 66px;
     border: 1px solid #ddd;
     overflow-y: auto;
-  }
-  .cld-day.clickable:hover{
+    background: var(--card);
+    color: var(--text);
+}
+.cld-day.clickable:hover {
     cursor: pointer;
-  }
-  .cld-day.today{
+    background: #eee;
+}
+.cld-day.today {
     border: 1px solid #7B00FF;
-  }
-  .cld-day.disableDay{
+}
+.cld-day.disableDay {
     opacity: 0.5;
-  }
-  .cld-day.nextMonth, .cld-day.prevMonth{
+}
+.cld-day.nextMonth,
+.cld-day.prevMonth {
     opacity: 0.33;
-  }
-    .cld-number{
-      margin: 0;
-      text-align: left;
+}
+
+/* Number inside a day */
+.cld-number {
+    margin: 0;
+    text-align: left;
+}
+.cld-number.eventday {
+    font-weight: bold;
+}
+.cld-number.eventday:hover {
+    background: #eee;
+}
+
+/* Title inside a day (e.g., event title) */
+.cld-title {
+    font-size: 10px;
+    display: block;
+    margin: 0;
+    font-weight: normal;
+}
+
+/* -------------------------------------------------
+   Additional theme utilities
+   ------------------------------------------------- */
+
+/* Hover effect for any clickable element */
+.cld-clickable {
+    cursor: pointer;
+}
+
+/* Selected day (e.g., when a user picks a date) */
+.cld-day.selected {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 720px) {
+    .cld-main {
+        width: 100%;
+        padding: 0 0.5rem;
     }
-      .cld-title{
-        font-size: 10px;
-        display: block;
-        margin: 0;
-        font-weight: normal;
-      }
-      .cld-day:hover{
-        background: #eee;
-      }
-      .cld-number.eventday{
-        font-weight: bold;
-      }
-      .cld-number.eventday:hover{
-        background: #eee;
-      }
-      .today .cld-number.eventday:hover{
-      }
+    .cld-datetime {
+        width: 100%;
+        max-width: none;
+    }
+}
