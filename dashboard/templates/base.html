@@ -1,4 +1,12 @@
 {% extends 'basesbase.html' %}
+
+{% load static %}
+
+{% block basehead %}
+<link rel="stylesheet" href="{% static 'dashboard/notifications.css' %}" />
+{% block head %}{% endblock %}
+{% endblock %}
+
 {% block header %}
 <details id="notifications" class="notifications" data-url="{% url 'notifications' %}"
     hx-get="{% url 'notifications' %}" hx-target="#notifications .notifications-list" hx-trigger="toggle, refresh"

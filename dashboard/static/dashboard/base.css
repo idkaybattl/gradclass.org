@@ -13,6 +13,7 @@ body {
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    padding-bottom: 4rem
 }
 
 /* -------------------------------------------------
@@ -493,10 +494,62 @@ a:active {
 }
 
 /* -------------------------------------------------
+   Header – logo
+   ------------------------------------------------- */
+header img.logo {
+    height: 2.5rem;
+    /* matches the original h1 font‑size */
+    vertical-align: middle;
+}
+
+/* -------------------------------------------------
+   Footer – fixed (sticky) at the bottom
+   ------------------------------------------------- */
+footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--card);
+    padding: 1rem 1.5rem;
+    text-align: center;
+    border-top: 1px solid rgba(128, 128, 128, 0.15);
+    /* Ensure the footer sits above normal page content */
+    z-index: 900;
+}
+
+/* Make the link unmistakably a link */
+footer a {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+footer a:hover,
+footer a:focus {
+    opacity: 0.85;
+}
+
+/* -------------------------------------------------
+   Dark‑mode tweak – white logo
+   ------------------------------------------------- */
+header img.logo {
+    filter: none;
+    /* light‑mode: keep original colours */
+}
+
+@media (prefers-color-scheme: dark) {
+    header img.logo {
+        /* Invert the monochrome SVG so it appears white on a dark bg */
+        filter: invert(1) brightness(2);
+    }
+}
+
+/* -------------------------------------------------
    Responsive tweaks
    ------------------------------------------------- */
 
 @media (max-width: 720px) {
+
     .btn-link,
     .btn-primary {
         text-align: center;
@@ -574,53 +627,138 @@ a:active {
 .text-muted {
     color: var(--muted);
 }
+
 .text-center {
     text-align: center;
 }
+
 .text-right {
     text-align: right;
 }
 
 /* Spacing helpers */
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
-.ml-1 { margin-left: 0.5rem; }
-.mr-1 { margin-right: 0.5rem; }
-.mx-1 { margin-left: 0.5rem; margin-right: 0.5rem; }
-.my-1 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
-.p-1  { padding: 0.5rem; }
-.p-2  { padding: 1rem; }
-.pt-1 { padding-top: 0.5rem; }
-.pb-1 { padding-bottom: 0.5rem; }
+.mt-1 {
+    margin-top: 0.5rem;
+}
+
+.mt-2 {
+    margin-top: 1rem;
+}
+
+.mb-1 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-2 {
+    margin-bottom: 1rem;
+}
+
+.ml-1 {
+    margin-left: 0.5rem;
+}
+
+.mr-1 {
+    margin-right: 0.5rem;
+}
+
+.mx-1 {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.my-1 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.p-1 {
+    padding: 0.5rem;
+}
+
+.p-2 {
+    padding: 1rem;
+}
+
+.pt-1 {
+    padding-top: 0.5rem;
+}
+
+.pb-1 {
+    padding-bottom: 0.5rem;
+}
 
 /* Display helpers */
-.d-block { display: block; }
-.d-inline { display: inline; }
-.d-inline-block { display: inline-block; }
-.d-flex { display: flex; }
-.d-grid { display: grid; }
+.d-block {
+    display: block;
+}
+
+.d-inline {
+    display: inline;
+}
+
+.d-inline-block {
+    display: inline-block;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.d-grid {
+    display: grid;
+}
 
 /* Width helpers */
-.w-100 { width: 100%; }
-.w-auto { width: auto; }
-.max-w-full { max-width: 100%; }
+.w-100 {
+    width: 100%;
+}
+
+.w-auto {
+    width: auto;
+}
+
+.max-w-full {
+    max-width: 100%;
+}
 
 /* Background helpers */
-.bg-primary { background: var(--primary) !important; }
-.bg-muted   { background: var(--muted) !important; }
-.bg-card    { background: var(--card) !important; }
+.bg-primary {
+    background: var(--primary) !important;
+}
+
+.bg-muted {
+    background: var(--muted) !important;
+}
+
+.bg-card {
+    background: var(--card) !important;
+}
 
 /* Border helpers */
-.border { border: 1px solid var(--muted); }
-.border-primary { border-color: var(--primary); }
+.border {
+    border: 1px solid var(--muted);
+}
+
+.border-primary {
+    border-color: var(--primary);
+}
 
 /* Rounded & shadow helpers */
-.rounded { border-radius: var(--radius); }
-.rounded-sm { border-radius: 4px; }
-.shadow-sm { box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-.shadow-md { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.rounded {
+    border-radius: var(--radius);
+}
+
+.rounded-sm {
+    border-radius: 4px;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-md {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
 @media (max-width: 720px) {
     .container {

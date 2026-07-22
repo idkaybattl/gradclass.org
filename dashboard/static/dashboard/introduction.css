@@ -1,3 +1,163 @@
 .step.hidden {
     display: none;
 }
+
+main {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Steps behave like cards */
+.intro-steps .step {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.intro-steps .step:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Headings inside a step – keep the same size as .card h2 */
+.intro-steps .step h1,
+.intro-steps .step h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Paragraphs inside a step – colour & line‑height like .card p */
+.intro-steps .step p,
+.intro-steps .step li {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+/* Button – reuse the global button utilities */
+.intro-steps .step button {
+    display: inline-block;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--primary);
+    color: #fff;
+    transition:
+        transform 0.12s ease,
+        opacity 0.12s ease;
+}
+
+.intro-steps .step button:hover {
+    transform: translateY(-1px);
+}
+
+/* Optional – give the details element a tiny margin */
+.intro-steps .step details {
+    margin-top: 1rem;
+}
+
+/* Keep the hidden‑step helper */
+.step.hidden {
+    display: none;
+}
+
+/* -------------------------------------------------
+   Form layout – keep the same look as other pages
+   ------------------------------------------------- */
+
+.form-fields {
+    display: grid;
+    gap: 1rem;
+    /* space between each field */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* inputs, select, textarea – use the palette */
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+}
+
+/* error message colour – same as popup errors */
+.form-group .error {
+    color: #b00020;
+    font-size: 0.9rem;
+}
+
+/* -------------------------------------------------
+   Action buttons – unified size & spacing
+   ------------------------------------------------- */
+
+.form-actions {
+    margin-top: 1.5rem;
+    /* space between fields and buttons */
+    display: flex;
+    gap: 0.6rem;
+    /* same gap as .popup__actions */
+    flex-wrap: wrap;
+}
+
+/* make both btns the same width on small screens */
+@media (max-width: 600px) {
+    .form-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+/* optional – give the “Zurück” link the same hover as a button */
+#back-to-step-1 {
+    display: inline-block;
+}
+
+.note {
+    /* Size & weight – a step up from normal paragraph text */
+    font-size: 1.2rem;
+    /* ≈20 % larger than the 0.9rem used for normal text */
+    font-weight: 600;
+    /* semi‑bold for emphasis */
+
+    /* Colour – use the primary colour for the text */
+    color: var(--primary);
+
+    /* Background – a very light version of the primary colour.
+           The opacity trick works because the variable is a hex value. */
+    background: rgba(0, 122, 255, 0.07);
+    /* light‑blue on light mode */
+    /* In dark mode we want a slightly darker overlay – we can reuse the same RGBA
+           because the primary colour changes automatically via the media query. */
+
+    /* Padding & rounded corners – match the rest of the UI */
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius);
+
+    /* Spacing to keep it visually separate from surrounding fields */
+    margin: 1rem 0;
+
+    /* Optional: centre the text (feel free to drop if left‑aligned looks better) */
+    text-align: center;
+}

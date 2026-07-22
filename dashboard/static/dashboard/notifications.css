@@ -1,0 +1,117 @@
+/* -------------------------------------------------
+   Notifications – a card‑style list that follows the
+   overall design language (variables, radius, spacing,
+   button look) used throughout the site.
+   ------------------------------------------------- */
+
+/* Container that holds the list of notifications.
+   It is the <div class="notifications-list"> from base.html */
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* space between individual cards */
+    margin-top: 0.5rem;
+}
+
+/* -----------------------------------------------------------------
+   Individual notification “card”.  Mirrors the .site‑message /
+   .profile‑menu__content styling (background, border, radius,
+   shadow) used elsewhere.
+   ----------------------------------------------------------------- */
+.notification {
+    background: var(--card);
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    border-left: 5px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.85rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 0.6rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* -----------------------------------------------------------------
+   The clickable part (button or link) that opens the notification.
+   Styled like a plain link but with the same colour handling as
+   other action links in the UI.
+   ----------------------------------------------------------------- */
+.notification-open {
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+    /* take full width */
+    line-height: 1.4;
+}
+
+/* Make the whole clickable area feel like a button when it is
+   a <button>.  We reuse the generic .btn styling but keep the
+   secondary look (transparent bg, coloured text). */
+.notification-open.btn {
+    background: var(--bg);
+    color: var(--primary);
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.7rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* Hover / focus for both <a> and <button> */
+.notification-open:hover,
+.notification-open:focus {
+    background: rgba(128, 128, 128, 0.12);
+}
+
+/* -----------------------------------------------------------------
+   “Gelesen” button – matches the secondary button style used
+   elsewhere (e.g. .btn‑secondary) but we keep it self‑contained
+   so you don’t have to alter the HTML.
+   ----------------------------------------------------------------- */
+.mark-as-read {
+    background: var(--bg);
+    color: var(--primary);
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.7rem;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+        background 0.12s ease,
+        opacity 0.12s ease;
+}
+
+/* Hover / focus */
+.mark-as-read:hover,
+.mark-as-read:focus {
+    background: rgba(128, 128, 128, 0.12);
+}
+
+/* -----------------------------------------------------------------
+   Optional: a small “unread” indicator (dot) next to the title.
+   If you want to highlight unread notifications you can add
+   the class “unread” to the outer .notification element.
+   ----------------------------------------------------------------- */
+.notification.unread::before {
+    content: "";
+    width: 0.6rem;
+    height: 0.6rem;
+    background: var(--primary);
+    border-radius: 999px;
+    margin-right: 0.4rem;
+    align-self: center;
+}
+
+/* -----------------------------------------------------------------
+   Responsiveness – make sure the notification still looks good
+   on narrow screens.  The grid collapses to a single column.
+   ----------------------------------------------------------------- */
+@media (max-width: 500px) {
+    .notification {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+}

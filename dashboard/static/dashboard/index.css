@@ -13,11 +13,13 @@ main {
     margin-bottom: 2rem;
     text-align: center;
 }
+
 .counter span {
     display: block;
     font-size: 0.9rem;
     color: var(--muted);
 }
+
 .counter strong {
     font-size: 2rem;
     color: var(--primary);
@@ -43,14 +45,17 @@ main {
     text-decoration: none;
     color: var(--text);
 }
+
 .card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
+
 .card h2 {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
 }
+
 .card p {
     font-size: 0.9rem;
     color: var(--muted);
@@ -66,8 +71,13 @@ main {
 }
 
 /* Margin utilities (specific to index) */
-.mt-2 { margin-top: 1rem; }
-.mb-2 { margin-bottom: 1rem; }
+.mt-2 {
+    margin-top: 1rem;
+}
+
+.mb-2 {
+    margin-bottom: 1rem;
+}
 
 /* Card variant – subtle border */
 .card--bordered {
@@ -78,3 +88,91 @@ main {
 .card--shadow {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
 }
+
+
+/* -------------------------------------------------
+   Ranking card – inner table styling
+   ------------------------------------------------- */
+
+/* The container already has the .card style, we only need
+   to make the table look nice inside it. */
+.ranking .ranking-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+    /* vertical gap between rows */
+}
+
+/* Header row – keep it simple, no card background */
+.ranking .ranking-table thead .ranking-row {
+    background: transparent;
+    font-weight: 600;
+}
+
+/* Data rows – look like tiny cards inside the big card */
+.ranking .ranking-table .ranking-row {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 0;
+    /* padding is handled by the cell rules */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.ranking .ranking-table .ranking-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Cell padding & colour – matches the card component */
+.ranking .ranking-table th,
+.ranking .ranking-table td {
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    text-align: left;
+}
+
+/* Right‑align the numeric columns for a cleaner look */
+.ranking .ranking-table th:nth-child(1),
+.ranking .ranking-table td:nth-child(1),
+.ranking .ranking-table th:nth-child(3),
+.ranking .ranking-table td:nth-child(3) {
+    text-align: right;
+}
+
+/* Slightly muted colour for the column titles */
+.ranking .ranking-table thead th {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+/* -------------------------------------------------
+   Ranking card – fine‑tune spacing & alignment
+   ------------------------------------------------- */
+
+/* 1️⃣ Reduce the space between the title and the table */
+.ranking h1 {
+    margin-bottom: 0.5rem;
+    /* 0.5 rem ≈ the “mb-1” utility */
+}
+
+/* 2️⃣ Add extra space *below* the whole ranking card
+   (so the grid of link‑cards sits a bit farther away) */
+.ranking {
+    margin-bottom: 2rem;
+    /* increase from the default 1 rem */
+}
+
+/* 3️⃣ Left‑align the “Rang” column (first column) */
+.ranking .ranking-table th:nth-child(1),
+.ranking .ranking-table td:nth-child(1) {
+    text-align: left;
+    /* override the previous right‑align */
+}
+
+/* -------------------------------------------------
+   (the rest of the ranking styles stay the same –
+    keep the block you already added previously)
+   ------------------------------------------------- */

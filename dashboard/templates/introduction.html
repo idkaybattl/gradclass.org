@@ -8,7 +8,6 @@
 
 {% block content %}
 <main>
-    <h1>Home Page</h1>
     <div class="intro-steps">
         <section id="step-1" class="step">
             <div>
@@ -50,7 +49,7 @@
                 GaLiGrü <br>
                 Moritz (Fechte)
             </div>
-            <button id="to-step-2">Weiter</button>
+            <button id="to-step-2" class="btn btn-primary">Weiter</button>
         </section>
         <section id="step-2" class="step hidden">
             {% include "components/_intro_user_edit.html" with form=form %}

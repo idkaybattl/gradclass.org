@@ -15,22 +15,25 @@
         <strong>{{abikasse_current|default:0}}€ / {{abikasse_goal}}€</strong>
     </section>
 
-    <section class="ranking">
-        <h1>Rangliste</h1>
+    <section class="card ranking">
+        <h1 class="mt-2 mb-2 text-center">Rangliste</h1>
         <table class="ranking-table">
-            <tr class="ranking-row">
-                <th>Rang</th>
-                <th>Schüler</th>
-                <th>Arbeitsstunden</th>
-            </tr>
-
-            {% for entry in ranking %}
-            <tr class="ranking-row">
-                <th class="">{{ entry.rank }}</th>
-                <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
-                <th class="">{{ entry.hours }}</th>
-            </tr>
-            {% endfor %}
+            <thead>
+                <tr class="ranking-row">
+                    <th>Rang</th>
+                    <th>Schüler</th>
+                    <th>Arbeitsstunden</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in ranking %}
+                <tr class="ranking-row">
+                    <th class="">{{ entry.rank }}</th>
+                    <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
+                    <th class="">{{ entry.hours }}</th>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </section>
 
