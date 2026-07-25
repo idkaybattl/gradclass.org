@@ -9,6 +9,12 @@
                     Bearbeiten
                 </button>
                 {% endif %}
+                {% if can_change_password %}
+                <button type="button" class="btn btn-primary" data-popup-open="popup-big"
+                    data-popup-url="{% url 'change-password-popup' user.id %}">
+                    Passwort ändern
+                </button>
+                {% endif %}
             </div>
         </header>
 

@@ -5,8 +5,10 @@ from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.db.models import Q
+from django.http import HttpResponse
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
@@ -154,17 +156,58 @@ def password_set(request):
         user = form.save()
         update_session_auth_hash(request, user)
         return JsonResponse({"success": True})
+    return JsonResponse({"success": False})
 
 
 @login_required
-@require_POST
-def password_change(request):
-    form = PasswordChangeForm(request.user, request.POST)
-    if form.is_valid():
-        user = form.save()
-        update_session_auth_hash(request, user)
-        messages.success(request, "Dein Passwort wurde erfolgreich geändert.")
-        return JsonResponse({"success": True})
+def change_password_popup(request, user_id):
+    if request.method == "POST":
+        user = User.objects.get(pk=user_id)
+        form = PasswordChangeForm(user, request.POST)
+        if form.is_valid():
+            print("valid form")
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Dein Passwort wurde erfolgreich geändert.")
+            # Build the same context user_details uses
+            total_hours = user.profile.total_hours()
+            total_earnings = user.profile.total_earnings()
+            event_participations = set(user.event_participations.all())
+            can_edit = can_edit_user(request, user_id)
+            can_change_password = request.user.is_staff or request.user.id == user_id
+
+            html = render_to_string(
+                "components/_user_details.html",
+                {
+                    "user": user,
+                    "total_hours": total_hours,
+                    "total_earnings": total_earnings,
+                    "event_participations": event_participations,
+                    "can_edit": can_edit,
+                    "can_change_password": can_change_password,
+                    "next_url": get_safe_next_url(request),
+                },
+                request=request,
+            )
+            return HttpResponse(html)
+
+        # ----- FAILURE -----
+        # Render the form again (with errors) and send it back
+        print("invalid form")
+        html = render_to_string(
+            "components/_user_change_password.html",
+            {"user": user, "form": form, "next_url": request.GET.get("next")},
+            request=request,
+        )
+        return HttpResponse(html, status=400)  # 400 triggers htmx “error” handling
+
+    user = User.objects.get(pk=user_id)
+    form = PasswordChangeForm(user)
+    return render(
+        request,
+        "components/_user_change_password.html",
+        {"form": form, "user": user, "next_url": request.GET.get("next")},
+    )
 
 
 @login_required
@@ -526,6 +569,7 @@ def user_details(request, user_id):
     total_earnings = user.profile.total_earnings()
     event_participations = set(user.event_participations.all())
     can_edit = can_edit_user(request, user_id)
+    can_change_password = request.user.is_staff or request.user.id == user_id
 
     return render(
         request,
@@ -536,6 +580,7 @@ def user_details(request, user_id):
             "total_earnings": total_earnings,
             "event_participations": event_participations,
             "can_edit": can_edit,
+            "can_change_password": can_change_password,
             "next_url": get_safe_next_url(request),
         },
     )

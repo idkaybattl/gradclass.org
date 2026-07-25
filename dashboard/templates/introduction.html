@@ -53,6 +53,7 @@
             <form method="post" hx-post="{% url 'set-password' %}" hx-swap="none" hx-validate="true"
                 hx-on::after-request="showStep('step-3', 'step-2')">
                 {% csrf_token %}
+                <p>Tipp: Das gleiche Passwort, wie auf IServ, wäre vielleicht am einfachsten</p>
                 {{ password_form.as_p }}
                 <button type="submit" class="btn btn-primary">Fertig</button>
             </form>

@@ -53,6 +53,7 @@ function renderPopupContent(popup, content) {
   if (title) {
     popup.setAttribute("aria-labelledby", title.id);
   }
+  htmx.process(popup);
   initEventForms(popup);
   window.initParticipantsWidgets?.(popup);
 }
