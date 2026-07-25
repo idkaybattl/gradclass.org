@@ -1,8 +1,9 @@
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.db.models import Q
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -146,13 +147,34 @@ def main_page(request):
 
 
 @login_required
+@require_POST
+def password_set(request):
+    form = SetPasswordForm(request.user, request.POST)
+    if form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        return JsonResponse({"success": True})
+
+
+@login_required
+@require_POST
+def password_change(request):
+    form = PasswordChangeForm(request.user, request.POST)
+    if form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        messages.success(request, "Dein Passwort wurde erfolgreich geändert.")
+        return JsonResponse({"success": True})
+
+
+@login_required
 def introduction(request):
     profile = request.user.profile
 
     if request.method == "POST":
-        form = UserProfileForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
+        profile_form = UserProfileForm(request.POST, instance=profile)
+        if profile_form.is_valid():
+            profile_form.save()
             # Mark the introduction as completed
             profile.has_had_introduction = True
             profile.save(update_fields=["has_had_introduction"])
@@ -163,13 +185,16 @@ def introduction(request):
         # If the form is invalid we fall through to the template rendering
         # so the user can correct the errors.
     else:
-        form = UserProfileForm(instance=profile)
+        profile_form = UserProfileForm(instance=profile)
+
+    password_form = SetPasswordForm(request.user)
 
     return render(
         request,
         "introduction.html",
         {
-            "form": form,
+            "profile_form": profile_form,
+            "password_form": password_form,
             "user": request.user,
             "next_url": get_safe_next_url(request),
         },

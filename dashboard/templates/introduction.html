@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block head %}
+{% block basehead %}
 <link rel="stylesheet" href="{% static 'dashboard/introduction.css' %}" />
 {% endblock %}
 
@@ -12,8 +12,9 @@
         <section id="step-1" class="step">
             <div>
                 Hi {{ request.user.first_name }}, <br>
-                es ist vielleicht ein bisschen verwirrend wofür diese Website sein soll, deswegen eine kleine Erklärung:
                 <br>
+                es ist vielleicht ein bisschen verwirrend wofür diese Website sein soll,
+                deswegen eine kleine Erklärung: <br>
                 <br>
                 um Aktionen zu organisieren, mit denen wir für unseren Jahrgang Geld verdienen wollen,
                 kann man diese auf dieser Website eintragen (Waffelverkauf, Giro, etc.). <br>
@@ -21,7 +22,6 @@
                 Darum bitten wir auch, da die Arbeitsstunden und das verdiente Geld hier nicht nur aufgezeichnet werden,
                 sondern potentiell, über ein Punktesystem, den Preis der Abiball Tickets beeinflussen könnten. <br>
                 Wie genau dies ablaufen wird ist noch nicht entschieden. <br>
-                <br>
                 <details>
                     <summary>Während den Ferien werde ich vermutlich noch einige Features zu der Website hinzufügen.
                     </summary>
@@ -38,21 +38,27 @@
                 </details>
                 <br>
                 Wenn irgendwelche Probleme bei der Website auftreten, oder ihr noch Ideen für die Website habt,
-                damit sie nicht so langweilig bleibt, erstellt gerne ein Issue auf
-                <a href="https://github.com/idkaybattl/gradclass.org/issues">Github</a>, wenn ihr es formell haben
-                wollt,
-                oder meldet euch bei mir persönlich. <br>
-                Der ganze Quellcode liegt übrigens auch, offen, auf <a
+                damit sie nicht so langweilig bleibt, meldet euch bei mir persönlich. <br>
+                Der ganze Quellcode liegt übrigens auch offen auf <a
                     href="https://github.com/idkaybattl/gradclass.org">Github</a>,
                 falls Interesse besteht. <br>
                 <br>
                 GaLiGrü <br>
-                Moritz (Fechte)
+                Moritz (Fechte) <br>
+                <br>
             </div>
             <button id="to-step-2" class="btn btn-primary">Weiter</button>
         </section>
         <section id="step-2" class="step hidden">
-            {% include "components/_intro_user_edit.html" with form=form %}
+            <form method="post" hx-post="{% url 'set-password' %}" hx-swap="none" hx-validate="true"
+                hx-on::after-request="showStep('step-3', 'step-2')">
+                {% csrf_token %}
+                {{ password_form.as_p }}
+                <button type="submit" class="btn btn-primary">Fertig</button>
+            </form>
+        </section>
+        <section id="step-3" class="step hidden">
+            {% include "components/_intro_user_edit.html" with form=profile_form %}
         </section>
     </div>
 </main>

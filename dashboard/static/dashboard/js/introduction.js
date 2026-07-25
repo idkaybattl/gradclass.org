@@ -10,6 +10,7 @@ const backLink = document.getElementById('back-to-step-1');   // ← new
    Helper – show/hide a step
    ----------------------------------------------------------------- */
 function showStep(showId, hideId) {
+  console.log("worked")
   const showEl = document.getElementById(showId);
   const hideEl = document.getElementById(hideId);
   if (showEl) showEl.classList.remove('hidden');
