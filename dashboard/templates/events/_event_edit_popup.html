@@ -1,6 +1,6 @@
 <div class="popup-content" id="edit-{{ event.id }}">
-    <form method="post" class="popup__content popup__content--edit" data-event-form
-        hx-post="{% url 'event-edit' event.id %}" hx-target="#popup-big" hx-swap="innerHTML" hx-validate="true">
+    <form class="popup__content popup__content--edit" data-event-form hx-post="{% url 'event-edit' event.id %}"
+        hx-target="#popup-big" hx-swap="innerHTML" hx-validate="true">
         {% csrf_token %}
         {% if next_url %}
         <input type="hidden" name="next" value="{{ next_url }}" />

@@ -1,4 +1,5 @@
-<div class="popup-content" id="details-{{ event.id }}">
+<div class="popup-content" id="details-{{ event.id }}" hx-get="{% url 'event-details' event.id %}" hx-swap="outerHTML"
+    hx-trigger="refresh">
     <div class="popup__content popup__content--details">
         <header>
             <h2 id="event-title-{{ event.id }}">{{ event.title }}</h2>
@@ -9,8 +10,8 @@
                 {% endif %}
 
                 {% if can_leave %}
-                <form method="post" action="{% url 'event-leave' event.id %}" hx-post="{% url 'event-leave' event.id %}"
-                    hx-target="#popup-big" hx-swap="innerHTML">
+                <form hx-post="{% url 'event-leave' event.id %}" hx-swap="none"
+                    hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')">
                     {% csrf_token %}
                     {% if next_url %}
                     <input type="hidden" name="next" value="{{ next_url }}" />
@@ -18,8 +19,8 @@
                     <button type="submit" class="btn btn-secondary">Teilnahme beenden</button>
                 </form>
                 {% elif can_join %}
-                <form method="post" action="{% url 'event-join' event.id %}" hx-post="{% url 'event-join' event.id %}"
-                    hx-target="#popup-big" hx-swap="innerHTML">
+                <form hx-post="{% url 'event-join' event.id %}" hx-swap="none"
+                    hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')">
                     {% csrf_token %}
                     {% if next_url %}
                     <input type="hidden" name="next" value="{{ next_url }}" />
@@ -29,8 +30,7 @@
                 {% endif %}
 
                 {% if can_delete %}
-                <form method="post" action="{% url 'event-delete' event.id %}"
-                    hx-post="{% url 'event-delete' event.id %}" hx-target="#popup-big" hx-swap="innerHTML">
+                <form method="post" action="{% url 'event-delete' event.id %}">
                     {% csrf_token %}
                     {% if next_url %}
                     <input type="hidden" name="next" value="{{ next_url }}" />
@@ -76,7 +76,7 @@
 
         {% if can_edit %}
         <form action="{% url 'set-earnings' event.id %}" method="post" hx-post="{% url 'set-earnings' event.id %}"
-            hx-target="#popup-big" hx-swap="innerHTML" hx-validate="true">
+            hx-swap="none" hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')" hx-validate="true">
             {% csrf_token %}
             {{ earnings_form.as_p }}
             <button type="submit" class="btn btn-primary">Abschicken</button>
@@ -86,8 +86,8 @@
         {% endif %}
         {% if can_approve_payment %}
         <form action="{% url 'set-earnings-received' event.id %}" method="post"
-            hx-post="{% url 'set-earnings-received' event.id %}" hx-target="#popup-big" hx-swap="innerHTML"
-            hx-validate="true">
+            hx-post="{% url 'set-earnings-received' event.id %}" hx-swap="none"
+            hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')" hx-validate="true">
             {% csrf_token %}
             {{ earnings_received_form.as_p }}
             <button type="submit" class="btn btn-primary">Abschicken</button>

@@ -337,7 +337,9 @@ def edit_event(request, event_id):
 
             messages.success(request, "Projekt erfolgreich bearbeitet.")
 
-            return redirect_next_or(request, "events")
+            return render(
+                request, "events/_event_edit_success_popup.html", {"event": event}
+            )
         else:
             messages.error(request, "Form ist invalide.")
 
@@ -602,7 +604,7 @@ def edit_user(request, user_id):
         if form.is_valid():
             form.save()
             messages.success(request, "Profil erfolgreich aktualisiert.")
-            return redirect_next_or(request, "users")
+            return render(request, "components/_user_edit_success.html", {"user": user})
         else:
             messages.error(request, "Form ist invalide.")
             # render the partial with errors (status 400)

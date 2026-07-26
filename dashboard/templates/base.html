@@ -11,7 +11,7 @@
 <details id="notifications" class="notifications" data-url="{% url 'notifications' %}"
     hx-get="{% url 'notifications' %}" hx-target="#notifications .notifications-list" hx-trigger="toggle, refresh"
     hx-swap="innerHTML">
-    <summary class="notifications-title">Benachrichtigungen</summary>
+    <summary class="notifications-title"><i class="fa-solid fa-bell"></i></summary>
     <div class="notifications__content">
         <button class="btn btn-secondary" id="mark-all-as-read" data-url="{% url 'mark-all-notifications-as-read' %}"
             hx-post="{% url 'mark-all-notifications-as-read' %}" hx-swap="none"

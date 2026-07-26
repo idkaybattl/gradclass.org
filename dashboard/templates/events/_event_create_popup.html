@@ -1,6 +1,5 @@
 <div class="popup-content" id="create-event-popup">
-    <form method="post" class="popup__content popup__content--create" data-event-form action="{% url 'event-create' %}"
-        hx-post="{% url 'event-create' %}" hx-target="#popup-big" hx-swap="innerHTML" hx-validate="true">
+    <form method="post" class="popup__content popup__content--create" data-event-form action="{% url 'event-create' %}">
         {% csrf_token %}
         {% if next_url %}
         <input type="hidden" name="next" value="{{ next_url }}" />

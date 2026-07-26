@@ -1,0 +1,14 @@
+<div class="popup-content" id="edit-success-{{ event.id }}">
+
+    <header>
+        <h2 id="event-edit-title-{{ event.id }}">Aktion bearbeiten</h2>
+        <button type="button" class="btn btn-link" data-popup-open="popup-big"
+            data-popup-url="{% url 'event-details' event.id %}">Zurück</button>
+    </header>
+
+    Bearbeiten erfolgreich.
+
+    <div class="popup__actions">
+        <button type="button" class="btn btn-secondary" data-popup-close>Schließen</button>
+    </div>
+</div>
