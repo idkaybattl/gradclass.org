@@ -5,7 +5,7 @@
 
 
 {% block main %}
-<main class="user-page">
+<main class="events-page">
     <section class="top-bar">
         <h1>Benutzer</h1>
     </section>
@@ -19,7 +19,7 @@
         {% for user in users %}
         {% include "components/_user_card.html" %}
         {% empty %}
-        <article class="empty-users">
+        <article class="empty-events">
             <h2>Keine Nutzer erstellt</h2>
         </article>
         {% endfor %}

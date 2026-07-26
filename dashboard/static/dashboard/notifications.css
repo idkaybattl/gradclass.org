@@ -165,11 +165,19 @@ details.notifications:not([open]) .notifications__content {
 /* -----------------------------------------------------------------
    8️⃣  Responsiveness – keep everything readable on narrow screens
    ----------------------------------------------------------------- */
+
+
 @media (max-width: 500px) {
     details.notifications .notifications__content {
-        right: 0;
-        left: 0;
-        max-width: calc(100vw - 1rem);
+        position: fixed;
+        top: 5rem;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: calc(100vw - 1rem);
+        max-width: min(480px, 100vw - 1rem);
+        min-width: 0;
+        z-index: 1200;
     }
 
     .notification {
