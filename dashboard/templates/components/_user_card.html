@@ -1,4 +1,5 @@
-<button type="button" class="event-card" data-popup-open="popup-big" data-popup-url="{% url 'user-details' user.id %}">
+<button id="user-card" type="button" class="event-card" data-popup-open="popup-big"
+    data-popup-url="{% url 'user-details' user.id %}">
     <strong id="name">{{ user.first_name }} {{ user.last_name }}</strong>
     <p id="mail">{{ user.email }}</p>
 </button>

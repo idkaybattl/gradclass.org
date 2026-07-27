@@ -5,7 +5,7 @@
 
 
 {% block main %}
-<main class="events-page">
+<main class="events-page" id="user-page">
     <section class="top-bar">
         <h1>Benutzer</h1>
     </section>
@@ -15,7 +15,7 @@
             placeholder="Nutzer suchen ..." autocomplete="off" />
     </section>
 
-    <section class="events-grid">
+    <section class="events-grid" id="user-grid">
         {% for user in users %}
         {% include "components/_user_card.html" %}
         {% empty %}

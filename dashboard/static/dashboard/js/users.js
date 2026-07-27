@@ -5,7 +5,7 @@ let allUsers = [];
 function filterEvents(widget) {
   const searchInput = widget.querySelector("[data-user-search]");
   const term = searchInput.value.toLowerCase();
-  const user_grid = widget.querySelector(".events-grid");
+  const user_grid = widget.querySelector("#user-grid");
 
   if (user_grid.querySelector(".empty-users")) { return; }
 
@@ -31,11 +31,11 @@ function filterEvents(widget) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const widget = document.querySelector(".user-page");
+  const widget = document.querySelector("#user-page");
 
   const searchInput = widget.querySelector("[data-user-search]");
   searchInput.addEventListener("input", () => filterEvents(widget));
 
-  allUsers = Array.from(document.querySelectorAll(".user-card"));
+  allUsers = Array.from(document.querySelectorAll("#user-card"));
   filterEvents(widget);
 });
