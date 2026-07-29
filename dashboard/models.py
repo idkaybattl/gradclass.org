@@ -62,7 +62,11 @@ class Abikasse(models.Model):
     goal = models.PositiveIntegerField()
 
     def total_earnings(self):
-        return Event.objects.aggregate(Sum("earnings")).get("earnings__sum", 0)  # pyright: ignore[reportAttributeAccessIssue]
+        return (
+            Event.objects.filter(final=True)  # pyright: ignore[reportAttributeAccessIssue]
+            .aggregate(Sum("earnings"))
+            .get("earnings__sum", 0)
+        )
 
     def save(self, *args, **kwargs):
         # so that there is only one abikasse instance in the database
