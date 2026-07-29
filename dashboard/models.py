@@ -90,7 +90,7 @@ class UserProfile(models.Model):
         return result["total"] or 0
 
     def total_hours(self):
-        result = self.user.event_participations.aggregate(  # pyright: ignore[reportAttributeAccessIssue]
+        result = self.user.event_participations.filter(event__final=True).aggregate(  # pyright: ignore[reportAttributeAccessIssue]
             total=Sum("participation_time")
         )
         return result["total"] or timedelta(0)

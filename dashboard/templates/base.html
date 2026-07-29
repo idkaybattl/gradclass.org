@@ -27,7 +27,7 @@
 <details class="profile-menu">
     <summary class="profile-btn">Profil</summary>
     <div class="profile-menu__content">
-        <a href="/events/" class="profile-menu__link">Meine Aktionen</a>
+        <a href="{% url 'events-own' %}" class="profile-menu__link">Meine Aktionen</a>
         <a data-popup-open="popup-big" data-popup-url="{% url 'user-details' request.user.id %}"
             class="profile-menu__link">Profil</a>
         {% if user.is_staff %}
