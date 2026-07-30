@@ -149,3 +149,5 @@ docker-compose.override.yml
 node_modules/
 npm-debug.log*
 .aider*
+
+staticfiles/
