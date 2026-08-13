@@ -16,25 +16,29 @@
     </section>
 
     <section class="card ranking">
-        <h1 class="mt-2 mb-2 text-center">Rangliste</h1>
-        <table class="ranking-table">
-            <thead>
-                <tr class="ranking-row">
-                    <th>Rang</th>
-                    <th>Schüler</th>
-                    <th>Arbeitsstunden</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in ranking %}
-                <tr class="ranking-row">
-                    <th class="">{{ entry.rank }}</th>
-                    <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
-                    <th class="">{{ entry.hours }}</th>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <details>
+            <summary>
+                <h1 class="mt-2 mb-2 text-center">Rangliste</h1>
+            </summary>
+            <table class="ranking-table">
+                <thead>
+                    <tr class="ranking-row">
+                        <th>Rang</th>
+                        <th>Schüler</th>
+                        <th>Arbeitsstunden</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in ranking %}
+                    <tr class="ranking-row">
+                        <th class="">{{ entry.rank }}</th>
+                        <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
+                        <th class="">{{ entry.hours }}</th>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </details>
     </section>
 
     <!-- Hauptnavigation -->

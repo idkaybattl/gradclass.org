@@ -129,7 +129,7 @@ main {
 /* Cell padding & colour – matches the card component */
 .ranking .ranking-table th,
 .ranking .ranking-table td {
-    padding: 0.75rem 1rem;
+    padding: 0.2rem 0.4rem;
     font-size: .8em;
     color: var(--text);
     text-align: left;
@@ -177,3 +177,52 @@ main {
    (the rest of the ranking styles stay the same –
     keep the block you already added previously)
    ------------------------------------------------- */
+
+
+/* Make the summary a horizontal flex row and center the contents */
+.ranking summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* keep your centered title */
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    /* controls vertical spacing */
+}
+
+/* hide the native browser marker */
+.ranking summary::-webkit-details-marker {
+    display: none;
+}
+
+.ranking summary::marker {
+    display: none;
+}
+
+/* non‑WebKit engines */
+
+/* draw a caret inside the summary so it lines up with the title */
+.ranking summary::after {
+    content: "▾";
+    font-size: 1rem;
+    line-height: 1;
+    transition: transform 180ms ease;
+    display: inline-block;
+}
+
+/* rotate the caret when open */
+.ranking details[open] summary::after {
+    transform: rotate(180deg);
+}
+
+/* keep the visual h1 styling but remove its block margins so it won't push the caret */
+.ranking summary h1 {
+    margin: 0;
+}
+
+/* ensure there's still space between the summary and the table */
+.ranking .ranking-table {
+    margin-top: 0.5rem;
+    /* matches the old h1 bottom margin */
+}

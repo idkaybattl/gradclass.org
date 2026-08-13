@@ -82,7 +82,7 @@
             <button type="submit" class="btn btn-primary">Abschicken</button>
         </form>
         {% else %}
-        Einnahmen: {{ event.earnings|floatformat:2 }} €
+        Einnahmen: {{ event.earnings|floatformat:2|default:"0" }} €
         {% endif %}
         {% if can_approve_payment %}
         <form action="{% url 'set-earnings-received' event.id %}" method="post"

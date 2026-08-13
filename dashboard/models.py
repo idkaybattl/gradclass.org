@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 User = settings.AUTH_USER_MODEL
@@ -94,7 +95,14 @@ class UserProfile(models.Model):
         return result["total"] or 0
 
     def total_hours(self):
-        result = self.user.event_participations.filter(event__final=True).aggregate(  # pyright: ignore[reportAttributeAccessIssue]
-            total=Sum("participation_time")
+        # Build the queryset of relevant EventParticipation objects
+        past_participations = self.user.event_participations.filter(  # pyright: ignore[reportAttributeAccessIssue]
+            event__ending_date__lt=timezone.now(),  # only past events
+            # event__final=True,  # only final events
         )
+
+        # Aggregate the duration
+        result = past_participations.aggregate(total=Sum("participation_time"))
+        # If there are no matching rows, return a zero timedelta
+        return result["total"] or timedelta(0)
         return result["total"] or timedelta(0)

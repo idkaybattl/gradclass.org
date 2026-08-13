@@ -1,6 +1,6 @@
 <p hidden id="notification-count">{{ notifications|length }}</p>
 {% for notification in notifications %}
-<div class="notification">
+<li class="notification">
     {% if notification.open_as_popup %}
     <button type="button" class="notification-open" data-popup-open="popup-big"
         data-popup-url="{% url 'event-details' notification.target.pk %}">
@@ -11,10 +11,9 @@
         <p>{{ notification }}</p>
     </a>
     {% endif %}
-    <button type="button" class="mark-as-read btn btn-secondary"
-        hx-post="{% url 'mark-notification-as-read' notification.id %}" hx-swap="none"
-        hx-on::after-request="htmx.trigger('#notifications','refresh')">
+    <button type="button" class="btn btn-secondary" hx-post="{% url 'mark-notification-as-read' notification.id %}"
+        hx-swap="none" hx-on::after-request="htmx.trigger('#notifications','refresh')">
         Gelesen
     </button>
-</div>
+</li>
 {% endfor %}

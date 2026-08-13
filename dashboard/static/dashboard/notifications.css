@@ -66,28 +66,6 @@ details.notifications:not([open]) .notifications__content {
 }
 
 /* -----------------------------------------------------------------
-   3️⃣  The “Alle gelesen” button (top‑right of the panel)
-   ----------------------------------------------------------------- */
-#mark-all-as-read {
-    align-self: flex-end;
-    /* keep it on the same line as the title */
-    background: var(--bg);
-    color: var(--primary);
-    border: 1px solid rgba(128, 128, 128, 0.35);
-    border-radius: var(--radius);
-    padding: 0.45rem 0.7rem;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-/* Hover / focus */
-#mark-all-as-read:hover,
-#mark-all-as-read:focus {
-    background: rgba(128, 128, 128, 0.12);
-}
-
-/* -----------------------------------------------------------------
    4️⃣  The list of notifications (the inner <div class="notifications-list">)
    ----------------------------------------------------------------- */
 .notifications-list {
@@ -118,7 +96,7 @@ details.notifications:not([open]) .notifications__content {
     /* make it look like a secondary button – the same size as the
        “Gelesen” button next to it */
     background: var(--bg);
-    color: var(--primary);
+    color: var(--text);
     border: 1px solid rgba(128, 128, 128, 0.35);
     border-radius: var(--radius);
     padding: 0.45rem 0.7rem;
@@ -127,6 +105,7 @@ details.notifications:not([open]) .notifications__content {
     cursor: pointer;
     width: 100%;
     display: inline-block;
+    margin: 0 !important;
 }
 
 /* Hover / focus for the open‑button */
@@ -158,8 +137,7 @@ details.notifications:not([open]) .notifications__content {
 #mark-all-as-read,
 .notification-open,
 .mark-as-read {
-    padding-left: 0.9rem;
-    padding-right: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 /* -----------------------------------------------------------------

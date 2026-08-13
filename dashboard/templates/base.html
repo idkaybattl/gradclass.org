@@ -10,35 +10,42 @@
 {% block header %}
 
 {% if user.is_authenticated %}
-<details id="notifications" class="notifications" data-url="{% url 'notifications' %}"
-    hx-get="{% url 'notifications' %}" hx-target="#notifications .notifications-list" hx-trigger="toggle, refresh"
-    hx-swap="innerHTML">
-    <summary class="notifications-title"><i class="fa-solid fa-bell"></i></summary>
-    <div class="notifications__content">
-        <button class="btn btn-secondary" id="mark-all-as-read" data-url="{% url 'mark-all-notifications-as-read' %}"
+<div id="notifications" class="header-menu notifications">
+    <button type="button" class="btn btn-primary notifications-title" aria-expanded="false"
+        data-url="{% url 'notifications' %}" hx-get="{% url 'notifications' %}"
+        hx-target="#notifications .notifications-list" hx-trigger="click, refresh" hx-swap="innerHTML"><i
+            class="fa-solid fa-bell"></i></button>
+    <div class="header-menu-content notifications__content">
+        <button class="btn btn-primary" id="mark-all-as-read" data-url="{% url 'mark-all-notifications-as-read' %}"
             hx-post="{% url 'mark-all-notifications-as-read' %}" hx-swap="none"
             hx-on::after-request="htmx.trigger('#notifications','refresh')">
             Alle gelesen
         </button>
-        <div class="notifications-list">
-        </div>
+        <ul class="notifications-list">
+        </ul>
     </div>
-</details>
-<details class="profile-menu">
-    <summary class="profile-btn">Profil</summary>
-    <div class="profile-menu__content">
-        <a href="{% url 'events-own' %}" class="profile-menu__link">Meine Aktionen</a>
-        <a data-popup-open="popup-big" data-popup-url="{% url 'user-details' request.user.id %}"
-            class="profile-menu__link">Profil</a>
-        {% if user.is_staff %}
-        <a href="/admin/" class="profile-menu__link">Admin Panel</a>
-        {% endif %}
-        <form method="post" action="{% url 'logout' %}" class="profile-menu__logout-form">
-            {% csrf_token %}
-            <button type="submit" class="profile-menu__logout">Logout</button>
-        </form>
+</div>
+<div class="header-menu">
+    <button type="button" class="btn btn-primary profile-btn" aria-expanded="false">Profil</button>
+    <div class="header-menu-content">
+        <ul>
+            <li>
+                <a href="{% url 'events-own' %}" class="profile-menu__link">Meine Aktionen</a>
+            </li>
+            <li><a data-popup-open="popup-big" data-popup-url="{% url 'user-details' request.user.id %}"
+                    class="profile-menu__link">Profil</a></li>
+            {% if user.is_staff %}
+            <li><a href="/admin/" class="profile-menu__link">Admin Panel</a></li>
+            {% endif %}
+            <li>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="profile-menu__link">Logout</button>
+                </form>
+            </li>
+        </ul>
     </div>
-</details>
+</div>
 {% else %}
 <a href="{% url 'login' %}" class="profile-btn">Login</a>
 {% endif %}

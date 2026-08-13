@@ -35,7 +35,9 @@
         <a href="/">
             <img src="{% static 'dashboard/icons/wide logo.svg' %}" alt="Abi 28" class="logo" />
         </a>
-        {% block header %}{% endblock %}
+        <div class="header-items">
+            {% block header %}{% endblock %}
+        </div>
     </header>
 
     {% if messages %}
@@ -53,7 +55,9 @@
     </section>
     {% endif %}
 
-    {% block content %}{% endblock %}
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
 
 
     <footer>
@@ -73,6 +77,7 @@
     <script src="{% static 'dashboard/js/events.js' %}"></script>
     <script src="{% static 'dashboard/js/participants_widget.js' %}"></script>
     <script src="{% static 'dashboard/js/notifications.js' %}"></script>
+    <script src="{% static 'dashboard/js/header_menus_simple.js' %}"></script>
 
     <script src="https://kit.fontawesome.com/62e5358570.js" crossorigin="anonymous"></script>
     {% block scripts %}{% endblock %}
