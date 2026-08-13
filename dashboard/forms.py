@@ -208,12 +208,23 @@ class EventForm(forms.ModelForm):
 
 
 class SetEarningsForm(forms.ModelForm):
+    earnings = forms.DecimalField(
+        label="Einnahmen",
+        min_value=0,
+        initial=0,
+        decimal_places=2,
+    )
+
     class Meta:
         model = Event
         fields = ["earnings"]
 
 
 class SetEarningsReceivedForm(forms.ModelForm):
+    earnings_received = forms.BooleanField(
+        label="Eingezahlt",
+    )
+
     class Meta:
         model = Event
         fields = ["earnings_received"]

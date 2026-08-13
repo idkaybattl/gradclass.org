@@ -308,15 +308,14 @@ a:active {
 
 .popup--open {
     display: grid;
-    align-items: start;
+    align-items: center;
     justify-items: center;
     overflow-y: auto;
 }
 
 .popup-content {
     width: min(720px, 100%);
-    max-height: calc(100vh - 2rem);
-    max-height: calc(100dvh - 2rem);
+    height: 80vh;
     overflow: auto;
     background: var(--card);
     border-radius: var(--radius);
@@ -555,13 +554,6 @@ header img.logo {
    ------------------------------------------------- */
 
 @media (max-width: 720px) {
-
-    .btn-link,
-    .btn-primary {
-        text-align: center;
-        flex: 1;
-    }
-
     .popup__content header {
         flex-direction: column;
         align-items: flex-start;
@@ -838,4 +830,22 @@ header img.logo {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0;
+    /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+    /* Firefox */
+}
+
+input[name="earnings"] {
+    width: 3rem;
 }
