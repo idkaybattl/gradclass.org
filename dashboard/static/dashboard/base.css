@@ -818,3 +818,22 @@ header img.logo {
         transform: none !important;
     }
 }
+
+
+
+/* Steps behave like cards */
+.base-block {
+    margin: 1rem;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.base-block:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}

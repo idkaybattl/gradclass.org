@@ -61,9 +61,8 @@
 
 
     <footer>
-        <p>Bei Problemen, Feature- oder Verbesserungsvorschlägen:
-            <a href="{% url 'contact' %}">Kontakt</a>
-        </p>
+        {% block footer %}
+        {% endblock %}
     </footer>
 
     <!-- Load htmx globally so popup content can use it for submissions -->

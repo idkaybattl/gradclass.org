@@ -5,7 +5,7 @@
 
 
 {% block main %}
-<main class="events-page" id="user-page">
+<div class="events-page" id="user-page">
     <section class="top-bar">
         <h1>Benutzer</h1>
     </section>
@@ -24,7 +24,7 @@
         </article>
         {% endfor %}
     </section>
-</main>
+</div>
 {% endblock %}
 {% block scripts %}
 <script src="{% static 'dashboard/js/users.js' %}"></script>

@@ -8,74 +8,72 @@
 {% endblock %}
 
 {% block main %}
-<main>
-    <!-- Counter -->
-    <section class="counter">
-        <span>Aktueller Stand der Abikasse</span>
-        <strong>{{abikasse_current|floatformat:2|default:0}}€ / {{abikasse_goal|floatformat:2}}€</strong>
-    </section>
+<!-- Counter -->
+<section class="counter">
+    <span>Aktueller Stand der Abikasse</span>
+    <strong>{{abikasse_current|floatformat:2|default:0}}€ / {{abikasse_goal|floatformat:2}}€</strong>
+</section>
 
-    <section class="card ranking">
-        <details>
-            <summary>
-                <h1 class="mt-2 mb-2 text-center">Rangliste</h1>
-            </summary>
-            <table class="ranking-table">
-                <thead>
-                    <tr class="ranking-row">
-                        <th>Rang</th>
-                        <th>Schüler</th>
-                        <th>Arbeitsstunden</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for entry in ranking %}
-                    <tr class="ranking-row">
-                        <th class="">{{ entry.rank }}</th>
-                        <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
-                        <th class="">{{ entry.hours }}</th>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </details>
-    </section>
+<section class="card ranking">
+    <details>
+        <summary>
+            <h1 class="mt-2 mb-2 text-center">Rangliste</h1>
+        </summary>
+        <table class="ranking-table">
+            <thead>
+                <tr class="ranking-row">
+                    <th>Rang</th>
+                    <th>Schüler</th>
+                    <th>Arbeitsstunden</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in ranking %}
+                <tr class="ranking-row">
+                    <th class="">{{ entry.rank }}</th>
+                    <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
+                    <th class="">{{ entry.hours }}</th>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </details>
+</section>
 
-    <!-- Hauptnavigation -->
-    <section class="grid">
-        <a class="card" href="{% url 'events-upcoming' %}">
-            <h2>Anstehende Aktionen</h2>
-            <p>Alle geplanten und anstehenden Aktionen anzeigen</p>
-        </a>
+<!-- Hauptnavigation -->
+<section class="grid">
+    <a class="card" href="{% url 'events-upcoming' %}">
+        <h2>Anstehende Aktionen</h2>
+        <p>Alle geplanten und anstehenden Aktionen anzeigen</p>
+    </a>
 
-        <a class="card" href="{% url 'polls' %}">
-            <h2>Demokratie</h2>
-            <p>Über Mottos, Aktionen & mehr abstimmen</p>
-        </a>
+    <a class="card" href="{% url 'polls' %}">
+        <h2>Demokratie</h2>
+        <p>Über Mottos, Aktionen & mehr abstimmen</p>
+    </a>
 
-        <a class="card" href="{% url 'events-own' %}">
-            <h2>Meine Aktionen</h2>
-            <p>Bereits erledigte Aktionen einsehen</p>
-        </a>
+    <a class="card" href="{% url 'events-own' %}">
+        <h2>Meine Aktionen</h2>
+        <p>Bereits erledigte Aktionen einsehen</p>
+    </a>
 
-        {% if can_view_all_events %}
-        <a class="card" href="{% url 'events' %}">
-            <h2>Alle Aktionen</h2>
-            <p>Alle Aktionen einsehen</p>
-        </a>
-        {% endif %}
+    {% if can_view_all_events %}
+    <a class="card" href="{% url 'events' %}">
+        <h2>Alle Aktionen</h2>
+        <p>Alle Aktionen einsehen</p>
+    </a>
+    {% endif %}
 
-        {% if can_view_users %}
-        <a class="card" href="{% url 'users' %}">
-            <h2>Benutzer</h2>
-            <p>Konten aller Schüler einsehen</p>
-        </a>
-        {% endif %}
+    {% if can_view_users %}
+    <a class="card" href="{% url 'users' %}">
+        <h2>Benutzer</h2>
+        <p>Konten aller Schüler einsehen</p>
+    </a>
+    {% endif %}
 
-        <a class="card" href="https://arnegeigerssteakhouse.m-fe.de" target="_blank">
-            <h2>Arne Geiger's Steakhouse</h2>
-            <p>Nur für exquisite Geschmäcker</p>
-        </a>
-    </section>
-</main>
+    <a class="card" href="https://arnegeigerssteakhouse.m-fe.de" target="_blank">
+        <h2>Arne Geiger's Steakhouse</h2>
+        <p>Nur für exquisite Geschmäcker</p>
+    </a>
+</section>
 {% endblock %}

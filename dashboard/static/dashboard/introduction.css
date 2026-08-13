@@ -2,28 +2,6 @@
     display: none;
 }
 
-main {
-    max-width: 1100px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-}
-
-/* Steps behave like cards */
-.intro-steps .step {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease;
-}
-
-.intro-steps .step:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-
 /* Headings inside a step – keep the same size as .card h2 */
 .intro-steps .step h1,
 .intro-steps .step h2 {

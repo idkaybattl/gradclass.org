@@ -21,7 +21,7 @@ main {
 }
 
 .counter strong {
-    font-size: 2rem;
+    font-size: 1.8rem;
     color: var(--primary);
 }
 
@@ -219,6 +219,7 @@ main {
 /* keep the visual h1 styling but remove its block margins so it won't push the caret */
 .ranking summary h1 {
     margin: 0;
+    font-size: 1.8rem;
 }
 
 /* ensure there's still space between the summary and the table */

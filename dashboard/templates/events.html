@@ -5,7 +5,7 @@
 {% block title %}Aktionen{% endblock %}
 
 {% block main %}
-<main class="events-page">
+<div class="events-page">
     <section class="top-bar">
         <h1>Anstehende Aktionen</h1>
         <div class="top-bar__actions">
@@ -34,7 +34,7 @@
     {% if initial_popup_id %}
     <span hidden data-popup-initial="{{ initial_popup_id }}"></span>
     {% endif %}
-</main>
+</div>
 
 {% endblock %}
 

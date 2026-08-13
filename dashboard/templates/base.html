@@ -58,3 +58,9 @@
 
 <dialog data-popup class="popup-big" id="popup-big" closedby="any"></dialog>
 {% endblock content %}
+
+{% block footer %}
+<p>Bei Problemen, Feature- oder Verbesserungsvorschlägen:
+    <a href="{% url 'contact' %}" style="color: var(--primary);">Kontakt</a>
+</p>
+{% endblock %}
