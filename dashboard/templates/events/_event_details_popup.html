@@ -65,8 +65,15 @@
             </p>
         </section>
 
+        <section class="details-description">
+            <h3>Manager</h3>
+            <a data-popup-open="popup-big" data-popup-url="{% url 'user-details' event.manager.id %}"
+                style="cursor: pointer; color: var(--primary);">
+                {{ event.manager.first_name }} {{ event.manager.last_name }}</a>
+        </section>
+
         <h3>Teilnehmer</h3>
-        <ul class="details-participants">
+        <ul class=" details-participants">
             {% for user in event.participants.all %}
             <li>{{ user.first_name }} {{ user.last_name }}</li>
             {% empty %}

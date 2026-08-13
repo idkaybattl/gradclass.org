@@ -90,6 +90,12 @@ class EventForm(forms.ModelForm):
         required=False,
     )
 
+    manager = forms.ModelChoiceField(
+        label="Manager",
+        queryset=User.objects.none(),
+        required=True,
+    )
+
     def __init__(
         self,
         *args,
@@ -106,11 +112,23 @@ class EventForm(forms.ModelForm):
             participants_queryset = User.objects.all().order_by(username_field)
 
         self.fields["participants"].queryset = participants_queryset
+        self.fields["manager"].queryset = participants_queryset
 
         if users is None:
             users = list(participants_queryset)
 
         self.fields["participants"].widget.set_users(users)
+
+        # set initial manager: on edit use instance.manager, on create default to request_user
+        if self.instance and self.instance.pk:
+            # editing existing event -> use its manager
+            try:
+                self.fields["manager"].initial = self.instance.manager
+            except Exception:
+                pass
+        else:
+            if request_user:
+                self.fields["manager"].initial = request_user
 
     def clean(self):
         cleaned_data = super().clean()
@@ -159,6 +177,20 @@ class EventForm(forms.ModelForm):
                     break
 
         return cleaned_data
+
+    def save(self, commit=True):
+        # ensure manager is set (fallback to request_user or creator)
+        obj = super().save(commit=False)
+        if not getattr(obj, "manager_id", None):
+            if self.request_user:
+                obj.manager = self.request_user
+            elif getattr(obj, "creator", None):
+                obj.manager = obj.creator
+
+        if commit:
+            obj.save()
+            self.save_m2m()
+        return obj
 
     @staticmethod
     def _normalize_title(value):

@@ -24,6 +24,10 @@ class Event(models.Model):
         User, on_delete=models.CASCADE, related_name="created_events"
     )
 
+    manager = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="managed_events"
+    )
+
     participants = models.ManyToManyField(
         User,
         through="EventParticipation",

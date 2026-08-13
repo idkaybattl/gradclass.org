@@ -24,7 +24,9 @@ MAX_PROJECTS_PER_DAY = 10
 
 
 def can_edit_event(user, event):
-    return not event.final and (event.creator_id == user.id or user.is_staff)
+    return not event.final and (
+        event.creator.id == user.id or event.manager.id == user.id or user.is_staff
+    )
 
 
 def can_view_all_events(request):
@@ -377,7 +379,11 @@ def events(request, mode):
 
     elif mode == "own":
         events = (
-            Event.objects.filter(Q(participants=request.user) | Q(creator=request.user))
+            Event.objects.filter(
+                Q(participants=request.user)  # pyright: ignore[reportOperatorIssue]
+                | Q(creator=request.user)
+                | Q(manager=request.user)
+            )
             .distinct()
             .select_related("creator")
             .prefetch_related("participants")
