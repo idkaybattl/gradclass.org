@@ -22,7 +22,7 @@ body {
 
 header {
     background: var(--card);
-    padding: 0.8rem 1.5rem;
+    padding: 0.8rem 0.9rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -581,10 +581,6 @@ header img.logo {
 }
 
 @media (max-width: 600px) {
-    header {
-        padding: 0.85rem 1rem;
-    }
-
     header h1 {
         font-size: 1.2rem;
     }
@@ -836,4 +832,10 @@ header img.logo {
 .base-block:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.inline-form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }

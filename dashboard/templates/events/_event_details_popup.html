@@ -74,25 +74,29 @@
             {% endfor %}
         </ul>
 
-        {% if can_edit %}
-        <form action="{% url 'set-earnings' event.id %}" method="post" hx-post="{% url 'set-earnings' event.id %}"
-            hx-swap="none" hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')" hx-validate="true">
-            {% csrf_token %}
-            {{ earnings_form.as_p }}
-            <button type="submit" class="btn btn-primary">Abschicken</button>
-        </form>
-        {% else %}
-        Einnahmen: {{ event.earnings|floatformat:2|default:"0" }} €
-        {% endif %}
-        {% if can_approve_payment %}
-        <form action="{% url 'set-earnings-received' event.id %}" method="post"
-            hx-post="{% url 'set-earnings-received' event.id %}" hx-swap="none"
-            hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')" hx-validate="true">
-            {% csrf_token %}
-            {{ earnings_received_form.as_p }}
-            <button type="submit" class="btn btn-primary">Abschicken</button>
-        </form>
-        {% endif %}
+        <section class="details-description">
+            {% if can_edit %}
+            <form action="{% url 'set-earnings' event.id %}" method="post" hx-post="{% url 'set-earnings' event.id %}"
+                hx-swap="none" hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')"
+                hx-validate="true" class="inline-form">
+                {% csrf_token %}
+                {{ earnings_form.as_p }}
+                <button type="submit" class="btn btn-primary">Abschicken</button>
+            </form>
+            {% else %}
+            Einnahmen: {{ event.earnings|floatformat:2|default:"0" }} €
+            {% endif %}
+            {% if can_approve_payment %}
+            <form action="{% url 'set-earnings-received' event.id %}" method="post"
+                hx-post="{% url 'set-earnings-received' event.id %}" hx-swap="none"
+                hx-on::after-request="htmx.trigger('#details-{{ event.id }}','refresh')" hx-validate="true"
+                class="inline-form">
+                {% csrf_token %}
+                {{ earnings_received_form.as_p }}
+                <button type="submit" class="btn btn-primary">Abschicken</button>
+            </form>
+            {% endif %}
+        </section>
 
         <button type="button" class="btn btn-secondary" data-popup-close>Schließen</button>
     </div>
