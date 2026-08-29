@@ -13,7 +13,7 @@
     {% endif %}
     <button type="button" class="btn btn-secondary" hx-post="{% url 'mark-notification-as-read' notification.id %}"
         hx-swap="none" hx-on::after-request="htmx.trigger('#notifications','refresh')">
-        Gelesen
+        ✓
     </button>
 </li>
 {% endfor %}
