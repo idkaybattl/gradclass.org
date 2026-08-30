@@ -101,7 +101,7 @@ class Notification(models.Model):
             NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED,
             NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED,
         ) and isinstance(self.target, Event):
-            return reverse("event-detail", kwargs={"event_id": self.target.pk})
+            return reverse("event-details", kwargs={"event_id": self.target.pk})
 
         if self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST:
             return reverse(
