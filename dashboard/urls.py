@@ -47,6 +47,21 @@ urlpatterns = [
         views.set_earnings_received,
         name="set-earnings-received",
     ),
+    path(
+        "events/join-request/<int:join_request_id>/",
+        views.join_request_details,
+        name="join-request-details",
+    ),
+    path(
+        "events/join-request/<int:join_request_id>/accept/",
+        views.accept_join_request,
+        name="accept-join-request",
+    ),
+    path(
+        "events/join-request/<int:join_request_id>/decline/",
+        views.decline_join_request,
+        name="decline-join-request",
+    ),
     # users
     path("users/", views.users, name="users"),
     path("users/<int:user_id>/", views.user_details, name="user-details"),

@@ -110,3 +110,15 @@ class UserProfile(models.Model):
         # If there are no matching rows, return a zero timedelta
         return result["total"] or timedelta(0)
         return result["total"] or timedelta(0)
+
+
+class JoinRequest(models.Model):
+    requestor = models.ForeignKey(User, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("requestor", "event")
+
+    def __str__(self):
+        return f"JoinRequest({self.requestor}, {self.event})"

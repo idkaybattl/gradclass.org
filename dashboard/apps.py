@@ -6,4 +6,4 @@ class AbiConfig(AppConfig):
     name = "dashboard"
 
     def ready(self):
-        import dashboard.signals  # noqa
+        from . import signals  # noqa

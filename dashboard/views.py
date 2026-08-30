@@ -14,8 +14,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
 from .forms import EventForm, SetEarningsForm, SetEarningsReceivedForm, UserProfileForm
-from .models import Abikasse, Event, EventParticipation
-from .notifications import Notification
+from .models import Abikasse, Event, EventParticipation, JoinRequest
+from .notifications import Notification, NotificationVerbChoices
 from .services import save_event
 
 User = get_user_model()
@@ -461,24 +461,85 @@ def event_details(request, event_id):
 def join_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
+    user = request.user
+
     if event.final:
         messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
+        return redirect_next_or(request, "events")
     elif event.starting_date < timezone.now():
         messages.error(request, "Das Projekt liegt in der Vergangenheit")
-
+        return redirect_next_or(request, "events")
     else:
         if event.participants.filter(pk=request.user.pk).exists():
             messages.error(request, "Du nimmst an diesem Projekt bereits teil.")
-        else:
-            if not (request.user == event.creator or request.user.is_staff):
-                pass
-            else:
-                participation = EventParticipation.objects.create(  # pyright: ignore[reportAttributeAccessIssue]
-                    event=event,
-                    user=request.user,
-                )
-                participation.save()
-                messages.success(request, "Du nimmst jetzt Teil.")
+            return redirect_next_or(request, "events")
+
+    if user.is_staff or user.pk == event.creator_id or user.pk == event.manager_id:
+        EventParticipation.objects.get_or_create(event=event, user=user)
+        messages.success(request, "Du nimmst jetzt teil")
+        return redirect_next_or(request, "events")
+
+    jr, created = JoinRequest.objects.get_or_create(requestor=user, event=event)
+    if created:
+        messages.success(request, "Anfrage gesendet")
+    else:
+        messages.info(request, "Du hast bereits angefragt")
+
+    return redirect_next_or(request, "events")
+
+
+@login_required
+@require_GET
+def join_request_details(request, join_request_id):
+    join_request = get_object_or_404(JoinRequest, id=join_request_id)
+    return render(
+        request, "components/_join_request_popup.html", {"join_request": join_request}
+    )
+
+
+@login_required
+@require_POST
+def accept_join_request(request, join_request_id):
+    join_request = get_object_or_404(JoinRequest, id=join_request_id)
+    user = join_request.requestor
+    event = join_request.event
+
+    if event.final:
+        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
+        return redirect_next_or(request, "events")
+
+    EventParticipation.objects.get_or_create(event=event, user=user)
+    messages.success(request, "Du hast die Anfrage angenommen.")
+
+    # remove join request
+    join_request.delete()
+
+    Notification.objects.create(
+        user=user,
+        verb=NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED,
+        target=event,
+    )
+
+    return redirect_next_or(request, "events")
+
+
+@login_required
+@require_POST
+def decline_join_request(request, join_request_id):
+    join_request = get_object_or_404(JoinRequest, id=join_request_id)
+    user = join_request.requestor
+    event = join_request.event
+
+    messages.success(request, "Du hast die Anfrage abgelehnt")
+
+    # remove join request
+    join_request.delete()
+
+    Notification.objects.create(
+        user=user,
+        verb=NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED,
+        target=event,
+    )
 
     return redirect_next_or(request, "events")
 

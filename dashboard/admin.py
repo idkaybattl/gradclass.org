@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 
-from .models import Abikasse, Event, EventParticipation, UserProfile
+from .models import Abikasse, Event, EventParticipation, JoinRequest, UserProfile
 from .notifications import Notification
 
 
@@ -27,3 +27,4 @@ admin.site.register(Event)
 admin.site.register(Abikasse)
 admin.site.register(Notification)
 admin.site.register(EventParticipation)
+admin.site.register(JoinRequest)

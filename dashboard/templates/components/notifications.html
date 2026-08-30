@@ -3,7 +3,7 @@
 <li class="notification">
     {% if notification.open_as_popup %}
     <button type="button" class="notification-open" data-popup-open="popup-big"
-        data-popup-url="{% url 'event-details' notification.target.pk %}">
+        data-popup-url="{{ notification.get_url }}">
         <p>{{ notification }}</p>
     </button>
     {% else %}

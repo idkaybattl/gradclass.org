@@ -223,6 +223,7 @@ class SetEarningsForm(forms.ModelForm):
 class SetEarningsReceivedForm(forms.ModelForm):
     earnings_received = forms.BooleanField(
         label="Eingezahlt",
+        required=False,
     )
 
     class Meta:
@@ -237,7 +238,7 @@ class UserProfileForm(forms.ModelForm):
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     external_mail = forms.EmailField(label="Externe E‑Mail", required=False)
-    phone_number = PhoneNumberField(region="DE")
+    phone_number = PhoneNumberField(region="DE", required=False)
     bio = forms.Textarea()
 
     class Meta:

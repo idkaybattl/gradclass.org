@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.urls import reverse
 
-from .models import Event
+from .models import Event, JoinRequest
 
 User = settings.AUTH_USER_MODEL
 
@@ -83,20 +83,12 @@ class Notification(models.Model):
             title = self.target.title
             return f"Zeitrahmen geändert: {title} von {old_s} - {old_e} zu {new_s} - {new_e}"
         elif self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST and isinstance(
-            self.target, Event
+            self.target, JoinRequest
         ):
-            p = self.payload or {}
-            requestor = p.get("requestor")
-            return f'Teilnahmeanfrage: {requestor} für "{self.target.title}"'
-        elif (
-            self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED
-            and isinstance(self.target, Event)
-        ):
+            return f'Teilnahmeanfrage: {self.target.requestor.first_name} für "{self.target.event.title}"'
+        elif self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED:
             return f'Teilnahmeanfrage angenommen für "{self.target.title}"'
-        elif (
-            self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED
-            and isinstance(self.target, Event)
-        ):
+        elif self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED:
             return f'Teilnahmeanfrage abgelehnt für "{self.target.title}"'
         else:
             return f"{self.verb} {self.target.__str__()}"
@@ -106,18 +98,31 @@ class Notification(models.Model):
             NotificationVerbChoices.ADDED_TO_EVENT,
             NotificationVerbChoices.REMOVED_FROM_EVENT,
             NotificationVerbChoices.TIME_FRAME_CHANGED,
+            NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED,
+            NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED,
         ) and isinstance(self.target, Event):
             return reverse("event-detail", kwargs={"event_id": self.target.pk})
+
+        if self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST:
+            return reverse(
+                "join-request-details", kwargs={"join_request_id": self.target.pk}
+            )
 
         # fallback
         return reverse("main-page")
 
     def open_as_popup(self) -> bool:
-        if self.verb in (
-            NotificationVerbChoices.ADDED_TO_EVENT,
-            NotificationVerbChoices.REMOVED_FROM_EVENT,
-            NotificationVerbChoices.TIME_FRAME_CHANGED,
-        ) and isinstance(self.target, Event):
+        if (
+            self.verb
+            in (
+                NotificationVerbChoices.ADDED_TO_EVENT,
+                NotificationVerbChoices.REMOVED_FROM_EVENT,
+                NotificationVerbChoices.TIME_FRAME_CHANGED,
+            )
+            and isinstance(self.target, Event)
+            or self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST
+            and isinstance(self.target, JoinRequest)
+        ):
             return True
 
         return False
