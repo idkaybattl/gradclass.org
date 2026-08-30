@@ -470,12 +470,15 @@ def join_event(request, event_id):
         if event.participants.filter(pk=request.user.pk).exists():
             messages.error(request, "Du nimmst an diesem Projekt bereits teil.")
         else:
-            participation = EventParticipation.objects.create(  # pyright: ignore[reportAttributeAccessIssue]
-                event=event,
-                user=request.user,
-            )
-            participation.save()
-            messages.success(request, "Du nimmst jetzt Teil.")
+            if not (request.user == event.creator or request.user.is_staff):
+                pass
+            else:
+                participation = EventParticipation.objects.create(  # pyright: ignore[reportAttributeAccessIssue]
+                    event=event,
+                    user=request.user,
+                )
+                participation.save()
+                messages.success(request, "Du nimmst jetzt Teil.")
 
     return redirect_next_or(request, "events")
 

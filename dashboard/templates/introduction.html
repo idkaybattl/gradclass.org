@@ -12,51 +12,52 @@
         <div>
             Hi {{ request.user.first_name }}, <br>
             <br>
-            es ist vielleicht ein bisschen verwirrend wofür diese Website sein soll,
-            deswegen eine kleine Erklärung: <br>
+            Aktionen wie Waffelverkauf, Giro, etc. hier eintragen. <br>
             <br>
-            um Aktionen zu organisieren, mit denen wir für unseren Jahrgang Geld verdienen wollen,
-            kann man diese auf dieser Website eintragen (Waffelverkauf, Giro, etc.). <br>
-            <br>
-            Darum bitten wir auch, da die Arbeitsstunden und das verdiente Geld hier nicht nur aufgezeichnet werden,
-            sondern potentiell, über ein Punktesystem, den Preis der Abiball Tickets beeinflussen könnten. <br>
-            Wie genau dies ablaufen wird ist noch nicht entschieden. <br>
-            <details>
-                <summary>Während den Ferien werde ich vermutlich noch einige Features zu der Website hinzufügen.
-                </summary>
-                <ul>
-                    <li>Eine Kalenderansicht</li>
-                    <li>Ankündigungen</li>
-                    <li>Kommentare/Forum</li>
-                    <li>Todos/Aufgabenverteilung</li>
-                    <li>Eine Galerie, bei der Bilder (Videos?) hochgeladen werden können (für Abibuch und Film z.B.)
-                    </li>
-                    <li>KI?!!</li>
-                    <li>etc.</li>
-                </ul>
-            </details>
-            <br>
-            Wenn irgendwelche Probleme bei der Website auftreten, oder ihr noch Ideen für die Website habt,
-            damit sie nicht so langweilig bleibt, meldet euch bei mir persönlich. <br>
-            Der ganze Quellcode liegt übrigens auch offen auf <a
-                href="https://github.com/idkaybattl/gradclass.org">Github</a>,
-            falls Interesse besteht. <br>
-            <br>
-            Moritz (Fechte) <br>
+            Arbeitstunden und verdientes Geld werden damit aufgezeichnet. <br>
             <br>
         </div>
-        <button id="to-step-2" class="btn btn-primary">Weiter</button>
+        <button id="move-step" data-to="2" data-from="1" class="btn btn-primary">Weiter</button>
     </section>
     <section id="step-2" class="base-block step hidden">
+        <div>
+            <h3>Bitte benutzen: </h3>
+            Das Punktesystem beeinflusst die Preise der Abiball Tickets <br>
+            <br>
+            Wie genau das Punktesystem funktioniert steht noch nicht fest <br> <br>
+        </div>
+        <button id="move-step" data-to="3" data-from="2" class="btn btn-primary">Weiter</button>
+    </section>
+    <section id="step-3" class="base-block step hidden">
+        <div>
+            <h3>Kommende Features:</h3> <br>
+            - Abstimmungen (für Abimotto z.B.) <br>
+            - Galerie (zum hochladen von Fotos und Videos für Abibuch und Abifilm) <br>
+            - Ankündigungen <br>
+            - Kommentare/Forum <br>
+            - Kalenderansicht für Anstehendes <br>
+            - etc. <br> <br>
+        </div>
+        <button id="move-step" data-to="4" data-from="3" class="btn btn-primary">Weiter</button>
+    </section>
+    <section id="step-4" class="base-block step hidden">
+        <div>
+            Bei Problemen oder Ideen, damit die Website nicht so langweilig bleibt, gerne melden. <br>
+            <br>
+            Moritz <br> <br>
+        </div>
+        <button id="move-step" data-to="5" data-from="4" class="btn btn-primary">Weiter</button>
+    </section>
+    <section id="step-5" class="base-block step hidden">
         <form method="post" hx-post="{% url 'set-password' %}" hx-swap="none" hx-validate="true"
-            hx-on::after-request="showStep('step-3', 'step-2')">
+            hx-on::after-request="showStep('step-6', 'step-5')">
             {% csrf_token %}
             <p>Tipp: Das gleiche Passwort, wie auf IServ, wäre vielleicht am einfachsten</p>
             {{ password_form.as_p }}
             <button type="submit" class="btn btn-primary">Fertig</button>
         </form>
     </section>
-    <section id="step-3" class="base-block step hidden">
+    <section id="step-6" class="base-block step hidden">
         {% include "components/_intro_user_edit.html" with form=profile_form %}
     </section>
 </div>

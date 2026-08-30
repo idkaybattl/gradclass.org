@@ -12,9 +12,18 @@ User = settings.AUTH_USER_MODEL
 
 
 class NotificationVerbChoices(models.TextChoices):
-    ADDED_TO_PROJECT = ("added_to_event", "Added to event")
-    REMOVED_FROM_PROJECT = ("removed_from_event", "Removed from event")
+    ADDED_TO_EVENT = ("added_to_event", "Added to event")
+    REMOVED_FROM_EVENT = ("removed_from_event", "Removed from event")
     TIME_FRAME_CHANGED = ("time_frame_changed", "Time frame changed")
+    EVENT_JOIN_REQUEST = ("event_join_request", "Event join request")
+    EVENT_JOIN_REQUEST_ACCEPTED = (
+        "event_join_request_accepted",
+        "Event join request accepted",
+    )
+    EVENT_JOIN_REQUEST_REJECTED = (
+        "event_join_request_rejected",
+        "Event join request rejected",
+    )
 
 
 class Notification(models.Model):
@@ -31,21 +40,20 @@ class Notification(models.Model):
     object_id = models.PositiveIntegerField(null=True, blank=True)
     target = GenericForeignKey("content_type", "object_id")
 
-    # NEW: flexible payload for verb-specific data
     payload = models.JSONField(null=True, blank=True)
 
     is_read = models.BooleanField(default=False)  # pyright: ignore[reportArgumentType]
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        if self.verb == NotificationVerbChoices.ADDED_TO_PROJECT and isinstance(
+        if self.verb == NotificationVerbChoices.ADDED_TO_EVENT and isinstance(
             self.target, Event
         ):
-            return f"Du wurdest zu {self.target.title} hinzugefügt"
-        elif self.verb == NotificationVerbChoices.REMOVED_FROM_PROJECT and isinstance(
+            return f'Hinzugefügt zu "{self.target.title}"'
+        elif self.verb == NotificationVerbChoices.REMOVED_FROM_EVENT and isinstance(
             self.target, Event
         ):
-            return f"Du wurdest aus {self.target.title} entfernt"
+            return f'Entfernt aus "{self.target.title}'
         elif self.verb == NotificationVerbChoices.TIME_FRAME_CHANGED and isinstance(
             self.target, Event
         ):
@@ -74,13 +82,29 @@ class Notification(models.Model):
             new_e = _fmt(new_end)
             title = self.target.title
             return f"Zeitrahmen geändert: {title} von {old_s} - {old_e} zu {new_s} - {new_e}"
+        elif self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST and isinstance(
+            self.target, Event
+        ):
+            p = self.payload or {}
+            requestor = p.get("requestor")
+            return f'Teilnahmeanfrage: {requestor} für "{self.target.title}"'
+        elif (
+            self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED
+            and isinstance(self.target, Event)
+        ):
+            return f'Teilnahmeanfrage angenommen für "{self.target.title}"'
+        elif (
+            self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED
+            and isinstance(self.target, Event)
+        ):
+            return f'Teilnahmeanfrage abgelehnt für "{self.target.title}"'
         else:
             return f"{self.verb} {self.target.__str__()}"
 
     def get_url(self) -> str:
         if self.verb in (
-            NotificationVerbChoices.ADDED_TO_PROJECT,
-            NotificationVerbChoices.REMOVED_FROM_PROJECT,
+            NotificationVerbChoices.ADDED_TO_EVENT,
+            NotificationVerbChoices.REMOVED_FROM_EVENT,
             NotificationVerbChoices.TIME_FRAME_CHANGED,
         ) and isinstance(self.target, Event):
             return reverse("event-detail", kwargs={"event_id": self.target.pk})
@@ -90,8 +114,8 @@ class Notification(models.Model):
 
     def open_as_popup(self) -> bool:
         if self.verb in (
-            NotificationVerbChoices.ADDED_TO_PROJECT,
-            NotificationVerbChoices.REMOVED_FROM_PROJECT,
+            NotificationVerbChoices.ADDED_TO_EVENT,
+            NotificationVerbChoices.REMOVED_FROM_EVENT,
             NotificationVerbChoices.TIME_FRAME_CHANGED,
         ) and isinstance(self.target, Event):
             return True
@@ -107,7 +131,7 @@ def notify_participants(event: Event, old, new):
         # Notify the participant that they have been added to an event
         Notification(
             user=participant,
-            verb=NotificationVerbChoices.ADDED_TO_PROJECT,
+            verb=NotificationVerbChoices.ADDED_TO_EVENT,
             target=event,
         ).save()
 
@@ -115,7 +139,7 @@ def notify_participants(event: Event, old, new):
         # Notify the participant that they have been removed from an event
         Notification(
             user=participant,
-            verb=NotificationVerbChoices.REMOVED_FROM_PROJECT,
+            verb=NotificationVerbChoices.REMOVED_FROM_EVENT,
             target=event,
         ).save()
 
