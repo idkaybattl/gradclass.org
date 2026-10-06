@@ -1,0 +1,44 @@
+.main-grid {
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 2fr 2fr 1fr 1fr;
+    gap: 10px;
+}
+
+.upcoming {
+    grid-row: 1 / 2;
+    grid-column: 1 / 2;
+}
+
+.news {
+    grid-row: 1 / 2;
+    grid-column: 2 / 3;
+}
+
+.fund {
+    grid-row: 2 / 3;
+    grid-column: 1 / 2;
+}
+
+.polls {
+    grid-row: 2 / 3;
+    grid-column: 2 / 3;
+}
+
+.profile {
+    grid-row: 3 / 5;
+    grid-column: 1 / 2;
+}
+
+.gallery {
+    grid-row: 3 / 4;
+    grid-column: 2 / 3;
+}
+
+.tiktok {
+    grid-row: 4 / 5;
+    grid-column: 2 / 3;
+}

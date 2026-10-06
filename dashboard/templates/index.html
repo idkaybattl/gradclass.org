@@ -1,79 +1,33 @@
 {% extends 'base.html' %}
+
 {% load static %}
 
-{% block title %}WHG Abi 2028{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{% static 'dashboard/index.css' %}" />
+{% block base_head %}
+<link rel="stylesheet" href="{% static 'dashboard/css/index.css' %}" />
 {% endblock %}
 
-{% block main %}
-<!-- Counter -->
-<section class="counter">
-    <span>Aktueller Stand der Abikasse</span>
-    <strong>{{abikasse_current|floatformat:2|default:0}}€ / {{abikasse_goal|floatformat:2}}€</strong>
-</section>
+{% block content %}
+<div class="main-grid">
+    <section class="card upcoming">
 
-<section class="card ranking">
-    <details>
-        <summary>
-            <h1 class="mt-2 mb-2 text-center">Rangliste</h1>
-        </summary>
-        <table class="ranking-table">
-            <thead>
-                <tr class="ranking-row">
-                    <th>Rang</th>
-                    <th>Schüler</th>
-                    <th>Arbeitsstunden</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in ranking %}
-                <tr class="ranking-row">
-                    <th class="">{{ entry.rank }}</th>
-                    <th class="">{{ entry.user.first_name }} {{ entry.user.last_name }}</th>
-                    <th class="">{{ entry.hours }}</th>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </details>
-</section>
+    </section>
+    <section class="card news">
 
-<!-- Hauptnavigation -->
-<section class="grid">
-    <a class="card" href="{% url 'events-upcoming' %}">
-        <h2>Anstehende Aktionen</h2>
-        <p>Alle geplanten und anstehenden Aktionen anzeigen</p>
-    </a>
+    </section>
+    <section class="card fund">
 
-    <a class="card" href="{% url 'polls' %}">
-        <h2>Demokratie</h2>
-        <p>Über Mottos, Aktionen & mehr abstimmen</p>
-    </a>
+    </section>
+    <section class="card polls">
 
-    <a class="card" href="{% url 'events-own' %}">
-        <h2>Meine Aktionen</h2>
-        <p>Bereits erledigte Aktionen einsehen</p>
-    </a>
+    </section>
+    <section class="card profile">
 
-    {% if can_view_all_events %}
-    <a class="card" href="{% url 'events' %}">
-        <h2>Alle Aktionen</h2>
-        <p>Alle Aktionen einsehen</p>
-    </a>
-    {% endif %}
+    </section>
+    <section class="card galery">
 
-    {% if can_view_users %}
-    <a class="card" href="{% url 'users' %}">
-        <h2>Benutzer</h2>
-        <p>Konten aller Schüler einsehen</p>
-    </a>
-    {% endif %}
+    </section>
+    <section class="card tiktok">
 
-    <a class="card" href="https://arnegeigerssteakhouse.m-fe.de" target="_blank">
-        <h2>Arne Geiger's Steakhouse</h2>
-        <p>Nur für exquisite Geschmäcker</p>
-    </a>
-</section>
+    </section>
+</div>
 {% endblock %}

@@ -380,7 +380,7 @@ def events(request, mode):
     elif mode == "own":
         events = (
             Event.objects.filter(
-                Q(participants=request.user)  # pyright: ignore[reportOperatorIssue]
+                Q(participants=request.user)
                 | Q(creator=request.user)
                 | Q(manager=request.user)
             )
@@ -403,7 +403,7 @@ def events(request, mode):
         else:
             events = (
                 Event.objects.filter(
-                    Q(participants=request.user)  # pyright: ignore[reportOperatorIssue]
+                    Q(participants=request.user)
                     | Q(creator=request.user)
                     | Q(ending_date__gt=timezone.now())
                 )

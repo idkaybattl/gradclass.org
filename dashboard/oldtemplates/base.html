@@ -1,0 +1,66 @@
+{% extends 'basesbase.html' %}
+
+{% load static %}
+
+{% block basehead %}
+<link rel="stylesheet" href="{% static 'dashboard/notifications.css' %}" />
+{% block head %}{% endblock %}
+{% endblock %}
+
+{% block header %}
+
+{% if user.is_authenticated %}
+<div id="notifications" class="header-menu notifications">
+    <button type="button" class="btn btn-primary notifications-title" aria-expanded="false"
+        data-url="{% url 'notifications' %}" hx-get="{% url 'notifications' %}"
+        hx-target="#notifications .notifications-list" hx-trigger="click, refresh" hx-swap="innerHTML"><i
+            class="fa-solid fa-bell"></i></button>
+    <div class="header-menu-content notifications__content">
+        <button class="btn btn-primary" id="mark-all-as-read" data-url="{% url 'mark-all-notifications-as-read' %}"
+            hx-post="{% url 'mark-all-notifications-as-read' %}" hx-swap="none"
+            hx-on::after-request="htmx.trigger('#notifications','refresh')">
+            Alle gelesen
+        </button>
+        <ul class="notifications-list">
+        </ul>
+    </div>
+</div>
+<div class="header-menu">
+    <button type="button" class="btn btn-primary profile-btn" aria-expanded="false">Profil</button>
+    <div class="header-menu-content">
+        <ul>
+            <li>
+                <a href="{% url 'events-own' %}" class="profile-menu__link">Meine Aktionen</a>
+            </li>
+            <li><a data-popup-open="popup-big" data-popup-url="{% url 'user-details' request.user.id %}"
+                    class="profile-menu__link">Profil</a></li>
+            {% if user.is_staff %}
+            <li><a href="/admin/" class="profile-menu__link">Admin Panel</a></li>
+            {% endif %}
+            <li>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="profile-menu__link">Logout</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
+{% else %}
+<a href="{% url 'login' %}" class="profile-btn">Login</a>
+{% endif %}
+
+
+{% endblock %}
+
+{% block content %}
+{% block main %}{% endblock %}
+
+<dialog data-popup class="popup-big" id="popup-big" closedby="any"></dialog>
+{% endblock content %}
+
+{% block footer %}
+<p>Bei Problemen, Feature- oder Verbesserungsvorschlägen:
+    <a href="{% url 'contact' %}" style="color: var(--primary);">Kontakt</a>
+</p>
+{% endblock %}
