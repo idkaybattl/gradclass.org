@@ -13,11 +13,45 @@
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+    /* iOS Safari < 15.4: height of the visible viewport */
+    height: -webkit-fill-available;
+
+    overflow: hidden;
+    /* clip: like hidden, but does not create a scroll container */
+    overflow: clip;
+    overscroll-behavior: none;
+
+    /* Safari on iPad/landscape must not inflate text */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 body {
     background-color: var(--bg);
+
+    /*
+     * The page must never scroll, so the shell has to match the *visible*
+     * viewport. 100vh in mobile Safari is the large viewport (tall enough to
+     * sit behind the toolbar), which is what pushed the footer off screen.
+     * dvh follows the actual visible viewport; the earlier declarations are
+     * fallbacks for browsers that do not know dvh yet.
+     */
     height: 100vh;
-    width: 100vw;
+    height: -webkit-fill-available;
+    height: 100dvh;
+
+    width: 100%;
     overflow: hidden;
+    overflow: clip;
+    overscroll-behavior: none;
+
+    /* keep the shell clear of the notch and home indicator (viewport-fit=cover) */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
 
     display: flex;
     flex-direction: column;
@@ -29,6 +63,8 @@ body {
 
 /* navbar */
 nav {
+    flex: 0 0 auto;
+
     height: 50px;
     width: 100%;
 
@@ -54,6 +90,12 @@ nav {
     width: 30px;
 }
 
+button.nav-item {
+    background: none;
+    border-style: none;
+    cursor: pointer;
+}
+
 .logo {
     height: 30px;
     width: 30px;
@@ -74,6 +116,7 @@ main {
 .content-container {
     width: 100%;
     height: 100%;
+    min-height: 0;
     padding: var(--base-padding);
 
     display: flex;
@@ -84,11 +127,15 @@ main {
 
 .content-block {
     flex-grow: 1;
+    /* a flex item will not shrink below its content height without this */
+    min-height: 0;
 }
 
 
 /* footer */
 footer {
+    flex: 0 0 auto;
+
     padding: 5px;
 
     display: flex;
@@ -118,13 +165,27 @@ footer {
 
 
 /* overlay */
-.overlay {
-    position: fixed;
-    inset-inline: 0;
-    top: 50px;
-    bottom: 0;
 
-    width: 100%;
+/*
+ * Every overlay lives in this layer. It fills main and clips its children, so a
+ * hidden overlay can sit outside main without being visible or scrollable.
+ */
+.overlay-layer {
+    position: absolute;
+    inset: 0;
+
+    overflow: hidden;
+    overflow: clip;
+
+    pointer-events: none;
+}
+
+/* shared shell for all overlays */
+.overlay {
+    position: absolute;
+    inset: 0;
+
+    width: auto;
     max-width: 800px;
     margin-inline: auto;
 
@@ -132,22 +193,71 @@ footer {
     flex-direction: column;
 
     background: var(--bg);
-    border-style: none solid;
     z-index: 1000;
 
-    transform: translateY(100%);
-    transition: transform 280ms ease, visibility 0s 280ms;
+    pointer-events: auto;
     visibility: hidden;
+    transition: transform 280ms ease, visibility 0s 280ms;
 }
 
 .overlay.open {
-    transform: translateY(0);
     visibility: visible;
     transition: transform 280ms ease;
 }
 
 .overlay.dragging {
     transition: none;
+}
+
+/* bottom sheet: the generic dialog */
+.overlay--sheet {
+    /*
+     * The sheet starts one border-width above main so its top border is hidden
+     * under the navbar while open. Dragging or closing it down makes the
+     * border slide into view without any colour change or corner artifacts.
+     */
+    top: calc(-1 * var(--border-width));
+
+    border-style: solid solid none;
+    transform: translateY(100%);
+}
+
+.overlay--sheet.open {
+    transform: translateY(0);
+}
+
+/* notifications: drops down from the navbar and grows with its content */
+.overlay--notifications {
+    inset: 0 0 auto;
+    height: auto;
+    max-height: 50%;
+
+    border-style: none solid solid;
+    transform: translateY(-100%);
+}
+
+.overlay--notifications.open {
+    transform: translateY(0);
+}
+
+/* menu: slides in from the right, full width on small screens */
+.overlay--menu {
+    inset: 0 0 0 auto;
+    width: 100%;
+    max-width: 420px;
+    margin: 0;
+
+    border-style: none none none solid;
+    transform: translateX(100%);
+}
+
+.overlay--menu.open {
+    transform: translateX(0);
+}
+
+.overlay--menu .overlay-content {
+    /* leave room for the sideways handle */
+    padding-left: 24px;
 }
 
 .overlay-handle {
@@ -173,6 +283,23 @@ footer {
     border-radius: 999px;
 }
 
+/* vertical handle on the inner edge of the menu */
+.overlay-handle--side {
+    position: absolute;
+    top: 50%;
+    left: 0;
+
+    width: 24px;
+    height: 88px;
+
+    transform: translateY(-50%);
+}
+
+.overlay-handle--side::before {
+    width: 5px;
+    height: 44px;
+}
+
 .overlay-close {
     position: absolute;
     top: 6px;
@@ -184,26 +311,31 @@ footer {
     width: 32px;
     height: 32px;
 
-    color: var(--text);
     background: none;
     border-style: none;
     cursor: pointer;
 }
 
-.overlay-close svg {
+.overlay-close img {
     width: 16px;
     height: 16px;
 }
 
 .overlay-content {
-    flex: 1;
+    /* auto basis so the notifications sheet can grow with its content */
+    flex: 1 1 auto;
     min-height: 0;
     padding: var(--base-padding);
     overflow-y: auto;
+    /* do not chain scroll gestures to the (non-scrollable) page */
+    overscroll-behavior: contain;
 }
 
 @media (max-width: 800px) {
+
+    /* full-bleed overlays only need their top/bottom borders */
     .overlay {
-        border-style: none;
+        border-left-style: none;
+        border-right-style: none;
     }
 }

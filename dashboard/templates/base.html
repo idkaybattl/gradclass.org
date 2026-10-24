@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <!-- refresh page every 5 mins -->
     <meta http-equiv="refresh" content="300">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- favicon -->
     <link rel="icon" type="image/png" href="{% static 'dashboard/icons/favicon.ico/favicon-96x96.png' %}"
@@ -39,15 +39,17 @@
         </a>
         <div class="nav-items">
             {% if user.is_authenticated %}
-            <a class="nav-item">
-                <img src="{% static 'dashboard/icons/bell.svg' %}" alt="Mitteilungen" class="logo" />
-            </a>
+            <button type="button" class="nav-item" data-overlay-toggle="notifications-overlay"
+                aria-controls="notifications-overlay" aria-expanded="false" aria-label="Mitteilungen">
+                <img src="{% static 'dashboard/icons/bell.svg' %}" alt="" class="logo" />
+            </button>
             <a class="nav-item">
                 <img src="{% static 'dashboard/icons/circle.svg' %}" alt="Profil" class="logo" />
             </a>
-            <a class="nav-item">
-                <img src="{% static 'dashboard/icons/menu.svg' %}" alt="Menu" class="logo" />
-            </a>
+            <button type="button" class="nav-item" data-overlay-toggle="menu-overlay" aria-controls="menu-overlay"
+                aria-expanded="false" aria-label="Menü">
+                <img src="{% static 'dashboard/icons/menu.svg' %}" alt="" class="logo" />
+            </button>
             {% endif %}
         </div>
     </nav>
@@ -80,15 +82,31 @@
                 {% endif %}
             </footer>
         </div>
-        <div class="overlay" role="dialog" aria-label="Dialog">
-            <div class="overlay-handle" aria-hidden="true"></div>
-            <button type="button" class="overlay-close" aria-label="Schließen">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    aria-hidden="true">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-            </button>
-            <div class="overlay-content"></div>
+        <div class="overlay-layer">
+            <!-- Notifications: drops down from the navbar. -->
+            <div class="overlay overlay--notifications" id="notifications-overlay" data-dismiss="up" role="dialog"
+                aria-label="Mitteilungen">
+                <button type="button" class="overlay-close" aria-label="Schließen">
+                    <img src="{% static 'dashboard/icons/close.svg' %}" alt="" />
+                </button>
+                <div class="overlay-content"></div>
+                <div class="overlay-handle" aria-hidden="true"></div>
+            </div>
+
+            <!-- Generic dialog: a sheet from the bottom. -->
+            <div class="overlay overlay--sheet" id="overlay" data-dismiss="down" role="dialog" aria-label="Dialog">
+                <div class="overlay-handle" aria-hidden="true"></div>
+                <button type="button" class="overlay-close" aria-label="Schließen">
+                    <img src="{% static 'dashboard/icons/close.svg' %}" alt="" />
+                </button>
+                <div class="overlay-content"></div>
+            </div>
+
+            <!-- Menu: slides in from the right. -->
+            <div class="overlay overlay--menu" id="menu-overlay" data-dismiss="right" role="dialog" aria-label="Menü">
+                <div class="overlay-handle overlay-handle--side" aria-hidden="true"></div>
+                <div class="overlay-content"></div>
+            </div>
         </div>
     </main>
 
