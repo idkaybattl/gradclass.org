@@ -1,5 +1,13 @@
 :root {
+    --font-sans: "BioRhyme", system-ui, sans-serif;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+
     --border-width: 2.5pt;
     --text: #320f5e;
     --bg: #9db7af;
+    --primary: #b64123;
+    --on-primary: #fff;
 }

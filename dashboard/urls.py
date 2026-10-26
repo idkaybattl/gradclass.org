@@ -1,10 +1,14 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from . import views
+from . import forms, views
 
 urlpatterns = [
-    path("login/", auth_views.LoginView.as_view(), name="login"),
+    path(
+        "login/",
+        auth_views.LoginView.as_view(authentication_form=forms.LoginForm),
+        name="login",
+    ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("set_password/", views.password_set, name="set-password"),
     path("", views.main_page, name="main-page"),

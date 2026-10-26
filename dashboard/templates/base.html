@@ -21,8 +21,12 @@
     <link rel="manifest" href="{% static 'dashboard/icons/favicon.ico/site.webmanifest' %}" />
 
     <!-- styling -->
+    <link rel="preload" href="{% static 'dashboard/fonts/BioRhyme/BioRhyme-Variable.woff2' %}" as="font"
+        type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'dashboard/css/fonts.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/vars.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/css/components.css' %}" />
 
     <title>{% block 'title' %}WHG Abi 2028 Verwaltung {% endblock %}</title>
 
@@ -60,9 +64,9 @@
                 {% block content %}
                 {% endblock %}
             </div>
+            {% if user.is_authenticated %}
             <footer>
                 <!-- Contact, Instagram, Tiktok -->
-                {% if user.is_authenticated %}
                 <div class="footer-items">
                     <a href="{% url 'contact' %}" class="footer-item" aria-label="Kontakt">
                         <span class="logo" style="--icon: url('{% static 'dashboard/icons/phone.svg' %}')"></span>
@@ -79,16 +83,13 @@
                         <span class="logo" style="--icon: url('{% static 'dashboard/icons/tiktok.svg' %}')"></span>
                     </a>
                 </div>
-                {% endif %}
             </footer>
+            {% endif %}
         </div>
         <div class="overlay-layer">
             <!-- Notifications: drops down from the navbar. -->
             <div class="overlay overlay--notifications" id="notifications-overlay" data-dismiss="up" role="dialog"
                 aria-label="Mitteilungen">
-                <button type="button" class="overlay-close" aria-label="Schließen">
-                    <span class="logo" style="--icon: url('{% static 'dashboard/icons/close.svg' %}')"></span>
-                </button>
                 <div class="overlay-content"></div>
                 <div class="overlay-handle" aria-hidden="true"></div>
             </div>
@@ -106,16 +107,19 @@
             <div class="overlay overlay--menu" id="menu-overlay" data-dismiss="right" role="dialog" aria-label="Menü">
                 <div class="overlay-handle overlay-handle--side" aria-hidden="true"></div>
                 <div class="overlay-content">
-                    <a>Profil</a> <!-- (Konto?) -->
-                    <a>Aktionen</a>
-                    <a>Zitate</a>
-                    <a>Gallerie</a>
-                    <a>Umfragen</a> <!-- (Abstimmungen?) (Könnens auch bei Demokratie belassen) -->
-                    <a>Abikasse</a>
-                    <a>Forum</a>
-                    <a>Nutzer</a>
-                    <a>Admin</a>
-                    <a>Logout</a>
+                    <a class="menu-link">Profil</a> <!-- (Konto?) -->
+                    <a class="menu-link">Aktionen</a>
+                    <a class="menu-link">Zitate</a>
+                    <a class="menu-link">Gallerie</a>
+                    <a class="menu-link">Umfragen</a> <!-- (Abstimmungen?) (Könnens auch bei Demokratie belassen) -->
+                    <a class="menu-link">Abikasse</a>
+                    <a class="menu-link">Forum</a>
+                    <a class="menu-link">Nutzer</a>
+                    <a class="menu-link">Admin</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="menu-link">Logout</button>
+                    </form>
                     <!-- Damn sind das viele und ich hab das Gefühl ich hab welche vergessen -->
                 </div>
             </div>

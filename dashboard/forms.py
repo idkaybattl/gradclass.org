@@ -1,11 +1,20 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import AuthenticationForm
 from django.utils import timezone
 from phonenumber_field.formfields import PhoneNumberField
 
 from .models import Event, UserProfile
 
 User = get_user_model()
+
+
+class LoginForm(AuthenticationForm):
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        "invalid_login": "Anmeldung fehlgeschlagen. Benutzername oder Passwort ist falsch.",
+        "inactive": "Dieses Konto ist deaktiviert.",
+    }
 
 
 class ParticipantsWidget(forms.Widget):

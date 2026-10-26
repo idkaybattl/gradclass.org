@@ -13,6 +13,14 @@
     box-sizing: border-box;
 }
 
+/* form controls do not inherit the page font on their own */
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
 html {
     height: 100%;
     /* iOS Safari < 15.4: height of the visible viewport */
@@ -31,6 +39,8 @@ html {
 body {
     background-color: var(--bg);
     color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
 
     /*
      * The page must never scroll, so the shell has to match the *visible*
@@ -59,6 +69,13 @@ body {
     justify-content: space-between;
 
     --base-padding: 15px;
+}
+
+
+h1,
+h2,
+h3 {
+    font-size: var(--font-size-xl);
 }
 
 
@@ -265,7 +282,8 @@ footer {
 
 .overlay--menu .overlay-content {
     /* leave room for the sideways handle */
-    padding-left: 24px;
+    padding-left: 32px;
+    text-align: right;
 }
 
 .overlay-handle {
@@ -297,14 +315,14 @@ footer {
     top: 50%;
     left: 0;
 
-    width: 24px;
+    width: 32px;
     height: 88px;
 
     transform: translateY(-50%);
 }
 
 .overlay-handle--side::before {
-    width: 5px;
+    width: 10px;
     height: 44px;
 }
 
@@ -337,6 +355,29 @@ footer {
     overflow-y: auto;
     /* do not chain scroll gestures to the (non-scrollable) page */
     overscroll-behavior: contain;
+}
+
+
+/* menu */
+.menu-link {
+    display: block;
+    width: 100%;
+    padding: 12px 0;
+
+    border-width: 0 0 var(--border-width);
+    border-bottom-style: dashed;
+    border-radius: 0;
+
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-link:hover {
+    opacity: 0.6;
 }
 
 @media (max-width: 800px) {

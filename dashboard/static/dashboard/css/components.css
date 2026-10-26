@@ -1,0 +1,68 @@
+/* buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+
+    border-style: solid;
+    border-radius: 0;
+
+    background: var(--text);
+    color: var(--bg);
+
+    font: inherit;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* fields */
+.field {
+    display: grid;
+    gap: 6px;
+    font-size: var(--font-size-sm);
+}
+
+.field>label {
+    font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    padding: 10px;
+
+    border-style: solid;
+    border-radius: 0;
+
+    background: transparent;
+    color: inherit;
+
+    font: inherit;
+    font-size: var(--font-size-base);
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+/* errors */
+.errorlist {
+    padding: 8px 10px;
+    border-style: solid;
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: var(--font-size-sm);
+    list-style: none;
+}

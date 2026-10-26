@@ -1,0 +1,30 @@
+.login-page {
+    height: 100%;
+    display: flex;
+    overflow-y: auto;
+}
+
+.login-card {
+    width: min(100%, 360px);
+    margin: auto;
+    padding: 24px;
+}
+
+.login-feedback {
+    margin-top: 16px;
+    padding: 8px 10px;
+    border-style: solid;
+    font-size: var(--font-size-sm);
+}
+
+.login-form {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+@media (max-width: 400px) {
+    .login-card {
+        padding: 18px;
+    }
+}
