@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-phone preview-icon"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="48"
+   height="48"
+   viewBox="0 0 48 48"
+   version="1.1"
+   id="svg1"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer1-2"><path
+       id="path5"
+       style="fill:none;stroke:#000000;stroke-width:3.99999"
+       d="m 25.60988,30.125378 -7.73539,-7.73544 -0.846272,-3.98474 3.201885,-2.113605 V 7.4350906 L 17.617467,4.9997518 H 7.7475052 l -2.6126368,5.2034922 4.9822476,17.714995 9.964495,9.96456 17.714881,4.98228 5.203461,-2.612653 V 30.3824 l -2.435324,-2.612653 h -8.856445 l -2.43559,3.094573 z" /></g></svg>
