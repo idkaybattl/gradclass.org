@@ -30,6 +30,7 @@ html {
 
 body {
     background-color: var(--bg);
+    color: var(--text);
 
     /*
      * The page must never scroll, so the shell has to match the *visible*
@@ -96,9 +97,16 @@ button.nav-item {
     cursor: pointer;
 }
 
+/* Icons are masked so they take the text colour; each element passes its
+   own icon via the --icon custom property (set inline where it is used). */
 .logo {
+    display: block;
     height: 30px;
     width: 30px;
+
+    background-color: var(--text);
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
 }
 
 .card {
@@ -316,7 +324,7 @@ footer {
     cursor: pointer;
 }
 
-.overlay-close img {
+.overlay-close .logo {
     width: 16px;
     height: 16px;
 }

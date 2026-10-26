@@ -34,21 +34,21 @@
 <body>
 
     <nav>
-        <a href="/" class="nav-item">
-            <img src="{% static 'dashboard/icons/hanging-square.svg' %}" alt="Abi 28" class="logo" />
+        <a href="/" class="nav-item" aria-label="Abi 28">
+            <span class="logo" style="--icon: url('{% static 'dashboard/icons/hanging-square.svg' %}')"></span>
         </a>
         <div class="nav-items">
             {% if user.is_authenticated %}
             <button type="button" class="nav-item" data-overlay-toggle="notifications-overlay"
                 aria-controls="notifications-overlay" aria-expanded="false" aria-label="Mitteilungen">
-                <img src="{% static 'dashboard/icons/bell.svg' %}" alt="" class="logo" />
+                <span class="logo" style="--icon: url('{% static 'dashboard/icons/bell.svg' %}')"></span>
             </button>
-            <a class="nav-item">
-                <img src="{% static 'dashboard/icons/circle.svg' %}" alt="Profil" class="logo" />
+            <a class="nav-item" aria-label="Profil">
+                <span class="logo" style="--icon: url('{% static 'dashboard/icons/circle.svg' %}')"></span>
             </a>
             <button type="button" class="nav-item" data-overlay-toggle="menu-overlay" aria-controls="menu-overlay"
                 aria-expanded="false" aria-label="Menü">
-                <img src="{% static 'dashboard/icons/menu.svg' %}" alt="" class="logo" />
+                <span class="logo" style="--icon: url('{% static 'dashboard/icons/menu.svg' %}')"></span>
             </button>
             {% endif %}
         </div>
@@ -64,19 +64,19 @@
                 <!-- Contact, Instagram, Tiktok -->
                 {% if user.is_authenticated %}
                 <div class="footer-items">
-                    <a href="{% url 'contact' %}" class="footer-item">
-                        <img src="{% static 'dashboard/icons/phone.svg' %}" alt="Kontakt" class="logo">
+                    <a href="{% url 'contact' %}" class="footer-item" aria-label="Kontakt">
+                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/phone.svg' %}')"></span>
                     </a>
                 </div>
                 <div class="footer-items">
-                    <a class="footer-item">
-                        <img src="{% static 'dashboard/icons/images.svg' %}" alt="Gallerie" class="logo">
+                    <a class="footer-item" aria-label="Gallerie">
+                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/images.svg' %}')"></span>
                     </a>
-                    <a class="footer-item">
-                        <img src="{% static 'dashboard/icons/instagram.svg' %}" alt="Gallerie" class="logo">
+                    <a class="footer-item" aria-label="Instagram">
+                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/instagram.svg' %}')"></span>
                     </a>
-                    <a class="footer-item">
-                        <img src="{% static 'dashboard/icons/tiktok.svg' %}" alt="Gallerie" class="logo">
+                    <a class="footer-item" aria-label="TikTok">
+                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/tiktok.svg' %}')"></span>
                     </a>
                 </div>
                 {% endif %}
@@ -87,7 +87,7 @@
             <div class="overlay overlay--notifications" id="notifications-overlay" data-dismiss="up" role="dialog"
                 aria-label="Mitteilungen">
                 <button type="button" class="overlay-close" aria-label="Schließen">
-                    <img src="{% static 'dashboard/icons/close.svg' %}" alt="" />
+                    <span class="logo" style="--icon: url('{% static 'dashboard/icons/close.svg' %}')"></span>
                 </button>
                 <div class="overlay-content"></div>
                 <div class="overlay-handle" aria-hidden="true"></div>
@@ -97,7 +97,7 @@
             <div class="overlay overlay--sheet" id="overlay" data-dismiss="down" role="dialog" aria-label="Dialog">
                 <div class="overlay-handle" aria-hidden="true"></div>
                 <button type="button" class="overlay-close" aria-label="Schließen">
-                    <img src="{% static 'dashboard/icons/close.svg' %}" alt="" />
+                    <span class="logo" style="--icon: url('{% static 'dashboard/icons/close.svg' %}')"></span>
                 </button>
                 <div class="overlay-content"></div>
             </div>
