@@ -265,10 +265,10 @@ footer {
     transform: translateY(0);
 }
 
-/* menu: slides in from the right, full width on small screens */
+/* menu: slides in from the right */
 .overlay--menu {
     inset: 0 0 0 auto;
-    width: 100%;
+    width: calc(100% - 60px);
     max-width: 420px;
     margin: 0;
 
@@ -281,8 +281,7 @@ footer {
 }
 
 .overlay--menu .overlay-content {
-    /* leave room for the sideways handle */
-    padding-left: 32px;
+    padding: 0 0 0 28px;
     text-align: right;
 }
 
@@ -293,7 +292,8 @@ footer {
     align-items: center;
     justify-content: center;
 
-    height: 28px;
+    width: 100%;
+    height: 44px;
 
     cursor: grab;
     touch-action: none;
@@ -312,17 +312,14 @@ footer {
 /* vertical handle on the inner edge of the menu */
 .overlay-handle--side {
     position: absolute;
-    top: 50%;
-    left: 0;
+    inset: 0 auto 0 0px;
 
-    width: 32px;
-    height: 88px;
-
-    transform: translateY(-50%);
+    width: 24px;
+    height: auto;
 }
 
 .overlay-handle--side::before {
-    width: 10px;
+    width: 5px;
     height: 44px;
 }
 
@@ -362,7 +359,7 @@ footer {
 .menu-link {
     display: block;
     width: 100%;
-    padding: 12px 0;
+    padding: 12px;
 
     border-width: 0 0 var(--border-width);
     border-bottom-style: dashed;
@@ -371,6 +368,7 @@ footer {
     background: none;
     color: inherit;
     font: inherit;
+    font-size: var(--font-size-lg);
     text-align: inherit;
     text-decoration: none;
     cursor: pointer;
@@ -386,5 +384,10 @@ footer {
     .overlay {
         border-left-style: none;
         border-right-style: none;
+    }
+
+    /* the menu still has a gap on the left, so keep its border */
+    .overlay--menu {
+        border-left-style: solid;
     }
 }
