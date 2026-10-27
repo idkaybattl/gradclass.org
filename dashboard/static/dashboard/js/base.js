@@ -36,6 +36,7 @@ function openOverlayElement(overlay, markup) {
   activeOverlay = overlay;
 
   setTriggersExpanded(overlay, true);
+  overlay.dispatchEvent(new CustomEvent("overlay:open", { bubbles: true }));
 }
 
 function closeOverlayElement(overlay) {

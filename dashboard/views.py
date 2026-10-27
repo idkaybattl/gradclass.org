@@ -15,7 +15,11 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .forms import EventForm, SetEarningsForm, SetEarningsReceivedForm, UserProfileForm
 from .models import Abikasse, Event, EventParticipation, JoinRequest
-from .notifications import Notification, NotificationVerbChoices
+from .notifications import (
+    Notification,
+    NotificationVerbChoices,
+    get_unread_notifications,
+)
 from .services import save_event
 
 User = get_user_model()
@@ -63,6 +67,30 @@ def redirect_next_or(request, fallback, **kwargs):
         return redirect(next_url)
 
     return redirect(fallback, **kwargs)
+
+
+def is_htmx_request(request):
+    return request.headers.get("HX-Request") == "true"
+
+
+def render_notifications(request):
+    notifications = list(get_unread_notifications(request.user))
+    return render(
+        request,
+        "components/notifications.html",
+        {
+            "notifications": notifications,
+            "unread_count": len(notifications),
+            "oob": is_htmx_request(request),
+        },
+    )
+
+
+def notification_action_response(request):
+    if is_htmx_request(request):
+        return render_notifications(request)
+
+    return redirect_next_or(request, "main-page")
 
 
 def get_event_creation_limit_error(user):
@@ -249,32 +277,27 @@ def introduction(request):
 @login_required
 @require_GET
 def notifications(request):
-    user = request.user
-    notifications = Notification.objects.filter(user=user, is_read=False).order_by(
-        "-created_at"
-    )
-    return render(
-        request, "components/notifications.html", {"notifications": notifications}
-    )
+    return render_notifications(request)
 
 
 @login_required
 @require_POST
 def mark_all_notifications_as_read(request):
-    user = request.user
-    notifications = Notification.objects.filter(user=user, is_read=False)
-    notifications.update(is_read=True)
-    return JsonResponse({"success": True})
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return notification_action_response(request)
 
 
 @login_required
 @require_POST
 def mark_notification_as_read(request, notification_id):
-    user = request.user
-    notification = Notification.objects.get(id=notification_id, user=user)
-    notification.is_read = True
-    notification.save()
-    return JsonResponse({"success": True})
+    notification = get_object_or_404(
+        Notification, id=notification_id, user=request.user
+    )
+    if not notification.is_read:
+        notification.is_read = True
+        notification.save(update_fields=["is_read"])
+
+    return notification_action_response(request)
 
 
 @login_required

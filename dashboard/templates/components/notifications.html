@@ -1,0 +1,43 @@
+{% if oob %}
+{% include "components/_notifications_button.html" with aria_expanded="true" %}
+{% endif %}
+
+<div class="notifications">
+    <div class="notifications__header">
+        <h2 class="notifications__title">Mitteilungen</h2>
+        {% if notifications %}
+        <form method="post" action="{% url 'mark-all-notifications-as-read' %}"
+            hx-post="{% url 'mark-all-notifications-as-read' %}" hx-target="#notifications-content" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button type="submit" class="notifications__action"
+                aria-label="Alle Mitteilungen als gelesen markieren">Alle als gelesen</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if loading %}
+    <p>Mitteilungen werden geladen …</p>
+    {% elif notifications %}
+    <ul class="notifications__list">
+        {% for notification in notifications %}
+        <li class="notification-item">
+            <div class="notification-item__main">
+                <a class="notification-item__link" href="{{ notification.get_url }}">{{ notification }}</a>
+                <time class="notification-item__time" datetime="{{ notification.created_at|date:'c' }}">
+                    {{ notification.created_at|date:"d.m.Y H:i" }}
+                </time>
+            </div>
+            <form method="post" action="{% url 'mark-notification-as-read' notification.pk %}"
+                hx-post="{% url 'mark-notification-as-read' notification.pk %}" hx-target="#notifications-content"
+                hx-swap="innerHTML">
+                {% csrf_token %}
+                <button type="submit" class="notifications__action"
+                    aria-label="Mitteilung als gelesen markieren">Gelesen</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Keine ungelesenen Mitteilungen.</p>
+    {% endif %}
+</div>

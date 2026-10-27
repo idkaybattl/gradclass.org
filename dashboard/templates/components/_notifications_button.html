@@ -1,0 +1,10 @@
+{% load static %}
+
+<button type="button" class="nav-item" id="notifications-button" data-overlay-toggle="notifications-overlay"
+    aria-controls="notifications-overlay" aria-expanded="{{ aria_expanded|default:'false' }}"
+    aria-label="Mitteilungen{% if unread_count %}, {{ unread_count }} ungelesen{% endif %}" hx-swap-oob="outerHTML">
+    <span class="logo" style="--icon: url('{% static 'dashboard/icons/bell.svg' %}')"></span>
+    {% if unread_count %}
+    <span class="notification-badge" aria-hidden="true"></span>
+    {% endif %}
+</button>

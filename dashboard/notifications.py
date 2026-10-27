@@ -46,6 +46,9 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        if self.target is None:
+            return "Diese Mitteilung ist nicht mehr verfügbar."
+
         if self.verb == NotificationVerbChoices.ADDED_TO_EVENT and isinstance(
             self.target, Event
         ):
@@ -53,7 +56,7 @@ class Notification(models.Model):
         elif self.verb == NotificationVerbChoices.REMOVED_FROM_EVENT and isinstance(
             self.target, Event
         ):
-            return f'Entfernt aus "{self.target.title}'
+            return f'Entfernt aus "{self.target.title}"'
         elif self.verb == NotificationVerbChoices.TIME_FRAME_CHANGED and isinstance(
             self.target, Event
         ):
@@ -94,6 +97,9 @@ class Notification(models.Model):
             return f"{self.verb} {self.target.__str__()}"
 
     def get_url(self) -> str:
+        if self.target is None:
+            return reverse("main-page")
+
         if self.verb in (
             NotificationVerbChoices.ADDED_TO_EVENT,
             NotificationVerbChoices.REMOVED_FROM_EVENT,
@@ -103,7 +109,9 @@ class Notification(models.Model):
         ) and isinstance(self.target, Event):
             return reverse("event-details", kwargs={"event_id": self.target.pk})
 
-        if self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST:
+        if self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST and isinstance(
+            self.target, JoinRequest
+        ):
             return reverse(
                 "join-request-details", kwargs={"join_request_id": self.target.pk}
             )
@@ -126,6 +134,14 @@ class Notification(models.Model):
             return True
 
         return False
+
+
+def get_unread_notifications(user):
+    return (
+        Notification.objects.filter(user=user, is_read=False)
+        .select_related("content_type")
+        .order_by("-created_at")
+    )
 
 
 def notify_participants(event: Event, old, new):

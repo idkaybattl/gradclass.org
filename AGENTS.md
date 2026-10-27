@@ -27,6 +27,7 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 
 - `gradclassorg/` — settings and root URLs.
 - `dashboard/views.py` — function-based views.
+- `dashboard/context_processors.py` — template-wide unread notification count.
 - `dashboard/forms.py` — forms and widgets.
 - `dashboard/models.py` — models.
 - `dashboard/services.py` — multi-step domain logic (e.g. `save_event`).
@@ -88,6 +89,7 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
 - Font: self-hosted BioRhyme. Do not add a Google Fonts CDN link.
 - Mobile-first and responsive. Preserve the overlay/menu drag behaviour in `base.css` and `base.js`.
 - Use `{% static %}` for assets. Run `collectstatic` after static changes.
+- Overlays dispatch `overlay:open`; use it with `hx-trigger` to lazy-load overlay content.
 - Icons use `.logo` with the inline `--icon` pattern; follow it.
 - Icons, fonts, and vendored libraries are assets, not code to edit.
 

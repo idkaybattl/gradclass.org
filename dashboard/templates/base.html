@@ -43,10 +43,7 @@
         </a>
         <div class="nav-items">
             {% if user.is_authenticated %}
-            <button type="button" class="nav-item" data-overlay-toggle="notifications-overlay"
-                aria-controls="notifications-overlay" aria-expanded="false" aria-label="Mitteilungen">
-                <span class="logo" style="--icon: url('{% static 'dashboard/icons/bell.svg' %}')"></span>
-            </button>
+            {% include "components/_notifications_button.html" %}
             <a class="nav-item" aria-label="Profil">
                 <span class="logo" style="--icon: url('{% static 'dashboard/icons/circle.svg' %}')"></span>
             </a>
@@ -89,8 +86,11 @@
         <div class="overlay-layer">
             <!-- Notifications: drops down from the navbar. -->
             <div class="overlay overlay--notifications" id="notifications-overlay" data-dismiss="up" role="dialog"
-                aria-label="Mitteilungen">
-                <div class="overlay-content"></div>
+                aria-label="Mitteilungen" hx-get="{% url 'notifications' %}" hx-trigger="overlay:open"
+                hx-target="#notifications-content" hx-swap="innerHTML">
+                <div class="overlay-content" id="notifications-content">
+                    {% include "components/notifications.html" with loading=True oob=False %}
+                </div>
                 <div class="overlay-handle" aria-hidden="true"></div>
             </div>
 
@@ -125,6 +125,7 @@
         </div>
     </main>
 
+    <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
     <script src="{% static 'dashboard/js/base.js' %}" defer></script>
 
 </body>
