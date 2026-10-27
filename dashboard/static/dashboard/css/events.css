@@ -1,0 +1,121 @@
+.events-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    width: 100%;
+    max-width: 1100px;
+    height: 100%;
+    min-height: 0;
+    margin-inline: auto;
+}
+
+.events-page>h1 {
+    flex: 0 0 auto;
+}
+
+.events-toolbar {
+    flex: 0 0 auto;
+
+    display: grid;
+    gap: 10px;
+}
+
+.events-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.events-switcher {
+    display: flex;
+
+    border-style: solid;
+}
+
+.events-switcher__button {
+    padding: 8px 12px;
+
+    border-style: none;
+    border-radius: 0;
+
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.events-switcher__button+.events-switcher__button {
+    border-left-style: solid;
+}
+
+.events-switcher__button[aria-pressed="true"] {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.events-switcher__button:not([aria-pressed="true"]):hover {
+    opacity: 0.6;
+}
+
+.events-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    align-content: start;
+}
+
+.event-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    padding: 14px;
+}
+
+.event-card__title {
+    font-size: var(--font-size-base);
+    color: var(--primary);
+    overflow-wrap: anywhere;
+}
+
+.event-card__time {
+    font-size: var(--font-size-sm);
+}
+
+.event-card__description {
+    font-size: var(--font-size-sm);
+    overflow-wrap: anywhere;
+}
+
+.events-empty {
+    grid-column: 1 / -1;
+    padding: 14px;
+
+    border-style: dashed;
+
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 600px) {
+    .events-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .events-switcher {
+        width: 100%;
+    }
+
+    .events-switcher__button {
+        flex: 1;
+    }
+}

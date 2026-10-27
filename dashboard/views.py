@@ -4,7 +4,6 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
-from django.db.models import Q
 from django.http import HttpResponse
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -31,10 +30,6 @@ def can_edit_event(user, event):
     return not event.final and (
         event.creator.id == user.id or event.manager.id == user.id or user.is_staff
     )
-
-
-def can_view_all_events(request):
-    return request.user.is_staff
 
 
 def can_view_users(request):
@@ -171,7 +166,6 @@ def main_page(request):
         {
             "abikasse_current": abikasse.total_earnings(),
             "abikasse_goal": abikasse.goal,
-            "can_view_all_events": can_view_all_events(request),
             "can_view_users": can_view_users(request),
             "ranking": ranking,
         },
@@ -391,59 +385,28 @@ def edit_event(request, event_id):
 @login_required
 @require_GET
 def events(request, mode):
-    if mode == "upcoming":
-        events = (
-            Event.objects.filter(ending_date__gt=timezone.now())
-            .distinct()
-            .select_related("creator")
-            .prefetch_related("participants")
-            .order_by("starting_date")
+    now = timezone.now()
+    events = list(
+        Event.objects.select_related("creator")
+        .prefetch_related("participants")
+        .order_by("starting_date")
+    )
+
+    for event in events:
+        event.is_upcoming = event.ending_date > now
+        event.is_own = (
+            event.creator_id == request.user.pk
+            or event.manager_id == request.user.pk
+            or request.user in event.participants.all()
         )
-
-    elif mode == "own":
-        events = (
-            Event.objects.filter(
-                Q(participants=request.user)
-                | Q(creator=request.user)
-                | Q(manager=request.user)
-            )
-            .distinct()
-            .select_related("creator")
-            .prefetch_related("participants")
-            .order_by("starting_date")
-        )
-
-    # mode "all"
-    else:
-        if request.user.is_staff:
-            events = (
-                Event.objects.all()
-                .distinct()
-                .select_related("creator")
-                .prefetch_related("participants")
-                .order_by("starting_date")
-            )
-        else:
-            events = (
-                Event.objects.filter(
-                    Q(participants=request.user)
-                    | Q(creator=request.user)
-                    | Q(ending_date__gt=timezone.now())
-                )
-                .distinct()
-                .select_related("creator")
-                .prefetch_related("participants")
-                .order_by("starting_date")
-            )
-
-    can_view_all_events = request.user.is_staff
 
     return render(
         request,
         "events.html",
         {
             "events": events,
-            "can_view_all_events": can_view_all_events,
+            "initial_filter": mode if mode in {"upcoming", "past"} else "all",
+            "own_only": mode == "own",
         },
     )
 

@@ -81,7 +81,7 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
 ## Frontend rules
 
 - Design tokens: `dashboard/static/dashboard/css/vars.css`.
-- Shared components: `dashboard/static/dashboard/css/components.css` — `.btn`, `.field`, `.errorlist`.
+- Shared components: `dashboard/static/dashboard/css/components.css` — `.btn`, `.field`, `.input`, `.checkbox`, `.errorlist`.
 - Page styles: `base.css` (shell, nav, footer, overlays, menu), `index.css`, `login.css`.
 - Use the existing tokens and components. Do not hardcode colours, font sizes, or border widths. Font sizes use `--font-size-sm/base/lg/xl`.
 - Style: flat, square corners, one border thickness (`--border-width`). Avoid

@@ -107,7 +107,7 @@
             <div class="overlay overlay--menu" id="menu-overlay" data-dismiss="right" role="dialog" aria-label="Menü">
                 <div class="overlay-handle overlay-handle--side" aria-hidden="true"></div>
                 <div class="overlay-content">
-                    <a class="menu-link">Aktionen</a>
+                    <a class="menu-link" href="{% url 'events' %}">Aktionen</a>
                     <a class="menu-link">Zitate</a>
                     <a class="menu-link">Gallerie</a>
                     <a class="menu-link">Umfragen</a> <!-- (Abstimmungen?) (Könnens auch bei Demokratie belassen) -->
@@ -127,6 +127,7 @@
 
     <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
     <script src="{% static 'dashboard/js/base.js' %}" defer></script>
+    {% block scripts %}{% endblock %}
 
 </body>
 

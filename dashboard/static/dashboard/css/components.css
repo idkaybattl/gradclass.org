@@ -33,7 +33,9 @@
     font-weight: 600;
 }
 
-.field input,
+/* text inputs, selects and textareas */
+.input,
+.field input:not([type="checkbox"]):not([type="radio"]),
 .field select,
 .field textarea {
     width: 100%;
@@ -49,9 +51,48 @@
     font-size: var(--font-size-base);
 }
 
-.field input:focus-visible,
+.input:focus-visible,
+.field input:not([type="checkbox"]):not([type="radio"]):focus-visible,
 .field select:focus-visible,
 .field textarea:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+/* checkbox: a square control with the same border as everything else */
+.checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.checkbox>input {
+    appearance: none;
+    -webkit-appearance: none;
+
+    flex: 0 0 auto;
+
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+
+    border-style: solid;
+    border-radius: 0;
+
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+}
+
+.checkbox>input:checked {
+    background: var(--primary);
+}
+
+.checkbox>input:focus-visible {
     outline: var(--border-width) solid var(--text);
     outline-offset: 2px;
 }

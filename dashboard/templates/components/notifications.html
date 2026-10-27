@@ -10,7 +10,7 @@
             hx-post="{% url 'mark-all-notifications-as-read' %}" hx-target="#notifications-content" hx-swap="innerHTML">
             {% csrf_token %}
             <button type="submit" class="notifications__action"
-                aria-label="Alle Mitteilungen als gelesen markieren">Alle als gelesen</button>
+                aria-label="Alle Mitteilungen als gelesen markieren">Alle gelesen</button>
         </form>
         {% endif %}
     </div>

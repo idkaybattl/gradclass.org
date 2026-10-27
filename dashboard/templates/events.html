@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Aktionen{% endblock %}
+
+{% block base_head %}
+<link rel="stylesheet" href="{% static 'dashboard/css/events.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="events-page" data-events-page>
+    <h1>Aktionen</h1>
+
+    <div class="events-toolbar">
+        <input type="search" class="input" data-events-search placeholder="Aktionen durchsuchen …"
+            aria-label="Aktionen durchsuchen" autocomplete="off" />
+
+        <div class="events-controls">
+            <div class="events-switcher" role="group" aria-label="Aktionen anzeigen">
+                <button type="button" class="events-switcher__button" data-events-filter="upcoming"
+                    aria-pressed="{% if initial_filter == 'upcoming' %}true{% else %}false{% endif %}">
+                    Anstehend
+                </button>
+                <button type="button" class="events-switcher__button" data-events-filter="all"
+                    aria-pressed="{% if initial_filter == 'all' %}true{% else %}false{% endif %}">
+                    Alle
+                </button>
+                <button type="button" class="events-switcher__button" data-events-filter="past"
+                    aria-pressed="{% if initial_filter == 'past' %}true{% else %}false{% endif %}">
+                    Vergangen
+                </button>
+            </div>
+
+            <label class="checkbox">
+                <input type="checkbox" data-events-own {% if own_only %}checked{% endif %} />
+                Nur meine Aktionen
+            </label>
+        </div>
+    </div>
+
+    <div class="events-grid" data-events-grid>
+        {% for event in events %}
+        {% include "events/_event_card.html" %}
+        {% endfor %}
+
+        <p class="events-empty" data-events-empty {% if events %}hidden{% endif %}>
+            Keine Aktionen gefunden.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'dashboard/js/search.js' %}" defer></script>
+<script src="{% static 'dashboard/js/events.js' %}" defer></script>
+{% endblock %}

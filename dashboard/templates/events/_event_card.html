@@ -1,0 +1,19 @@
+<article class="card event-card" data-event-card data-upcoming="{{ event.is_upcoming|yesno:'true,false' }}"
+    data-own="{{ event.is_own|yesno:'true,false' }}" data-starting-date="{{ event.starting_date|date:'c' }}"
+    data-description="{{ event.description }}">
+    <h2 class="event-card__title">{{ event.title }}</h2>
+    <p class="event-card__time">
+        {% if event.starting_date|date:"Y-m-d" == event.ending_date|date:"Y-m-d" %}
+        <time datetime="{{ event.starting_date|date:'c' }}">{{ event.starting_date|date:"d.m.Y, H:i" }}</time>
+        –
+        <time datetime="{{ event.ending_date|date:'c' }}">{{ event.ending_date|date:"H:i" }} Uhr</time>
+        {% else %}
+        <time datetime="{{ event.starting_date|date:'c' }}">{{ event.starting_date|date:"d.m.Y, H:i" }} Uhr</time>
+        –
+        <time datetime="{{ event.ending_date|date:'c' }}">{{ event.ending_date|date:"d.m.Y, H:i" }} Uhr</time>
+        {% endif %}
+    </p>
+    {% if event.description %}
+    <p class="event-card__description">{{ event.description|truncatewords:24 }}</p>
+    {% endif %}
+</article>
