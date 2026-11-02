@@ -1,0 +1,124 @@
+.user-search {
+    display: grid;
+    gap: 8px;
+}
+
+.user-search__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0;
+    list-style: none;
+}
+
+.user-search__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 4px 8px;
+
+    border-style: solid;
+    border-radius: 0;
+
+    font-size: var(--font-size-sm);
+}
+
+.user-search__remove {
+    padding: 0;
+
+    background: none;
+    border-style: none;
+
+    color: inherit;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.user-search__remove:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+.user-search__controls {
+    display: grid;
+    gap: 6px;
+}
+
+.user-search__label {
+    display: grid;
+    gap: 4px;
+
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.user-search__input {
+    width: 100%;
+    padding: 8px 10px;
+
+    border-style: solid;
+    border-radius: 0;
+
+    background: transparent;
+    color: inherit;
+
+    font: inherit;
+    font-size: var(--font-size-base);
+}
+
+.user-search__input:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+.user-search__results {
+    max-height: 12rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    padding: 0;
+
+    border-style: solid;
+    border-radius: 0;
+
+    list-style: none;
+}
+
+.user-search__results[hidden],
+.user-search__empty[hidden] {
+    display: none;
+}
+
+.user-search__option {
+    padding: 8px 10px;
+
+    border-width: 0 0 var(--border-width);
+    border-bottom-style: dashed;
+
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.user-search__option:last-child {
+    border-bottom-style: none;
+}
+
+.user-search__option:hover,
+.user-search__option.is-active {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.user-search__empty {
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 720px) {
+    .user-search__chip {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

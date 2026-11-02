@@ -1,10 +1,12 @@
 import re
 from datetime import timedelta
+from decimal import Decimal
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.forms import inlineformset_factory
 from django.utils import timezone
 from phonenumber_field.formfields import PhoneNumberField
@@ -23,22 +25,30 @@ class LoginForm(AuthenticationForm):
     }
 
 
-class ParticipantsWidget(forms.Widget):
-    template_name = "widgets/participants_widget.html"
+class UserSearchWidget(forms.Widget):
+    template_name = "widgets/user_search_widget.html"
+    multiple = False
 
     class Media:
-        css = {"all": ("dashboard/participants_widget.css",)}
-        js = ("dashboard/js/participants_widget.js", "dashboard/js/search.js")
+        css = {"all": ("dashboard/css/user_search_widget.css",)}
+        js = (
+            "dashboard/js/search.js",
+            "dashboard/js/user-picker.js",
+        )
 
-    def __init__(self, attrs=None):
+    def __init__(self, attrs=None, multiple=None):
         super().__init__(attrs)
+        if multiple is not None:
+            self.multiple = multiple
         self.users = []
 
     def set_users(self, users):
         self.users = users
 
     def value_from_datadict(self, data, files, name):
-        return data.getlist(name)
+        if self.multiple:
+            return data.getlist(name)
+        return data.get(name)
 
     def id_for_label(self, id_):
         if not id_:
@@ -46,13 +56,18 @@ class ParticipantsWidget(forms.Widget):
         return f"{id_}_search"
 
     def format_value(self, value):
-        if value is None:
+        if value is None or value == "":
             return []
 
         if hasattr(value, "all"):
             value = value.all()
 
-        return [str(item.pk if hasattr(item, "pk") else item) for item in value]
+        if isinstance(value, (list, tuple)):
+            items = value
+        else:
+            items = [value]
+
+        return [str(item.pk if hasattr(item, "pk") else item) for item in items]
 
     def _label_for_user(self, user):
         return user.get_full_name() or user.get_username()
@@ -74,11 +89,22 @@ class ParticipantsWidget(forms.Widget):
             {
                 "name": name,
                 "value": formatted_value,
+                "values": formatted_value,
+                "multiple": self.multiple,
                 "selected_users": selected_users,
                 "available_users": available_users,
+                "all_users": all_users,
             }
         )
         return context
+
+
+class ParticipantsWidget(UserSearchWidget):
+    multiple = True
+
+
+class ManagerPickerWidget(UserSearchWidget):
+    multiple = False
 
 
 class EventForm(forms.ModelForm):
@@ -108,6 +134,7 @@ class EventForm(forms.ModelForm):
     manager = forms.ModelChoiceField(
         label="Manager",
         queryset=User.objects.none(),
+        widget=ManagerPickerWidget(),
         required=True,
     )
 
@@ -116,34 +143,40 @@ class EventForm(forms.ModelForm):
         *args,
         users=None,
         participants_queryset=None,
+        manager_queryset=None,
         request_user=None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.request_user = request_user
 
+        username_field = User.USERNAME_FIELD
         if participants_queryset is None:
-            username_field = User.USERNAME_FIELD
             participants_queryset = User.objects.all().order_by(username_field)
 
         self.fields["participants"].queryset = participants_queryset
-        self.fields["manager"].queryset = participants_queryset
 
         if users is None:
             users = list(participants_queryset)
 
         self.fields["participants"].widget.set_users(users)
 
-        # set initial manager: on edit use instance.manager, on create default to request_user
+        if manager_queryset is None:
+            manager_filter = Q(is_active=True)
+            if self.instance and self.instance.pk and self.instance.manager_id:
+                # An existing inactive manager must stay selectable on edit.
+                manager_filter |= Q(pk=self.instance.manager_id)
+            manager_queryset = User.objects.filter(manager_filter).order_by(
+                username_field
+            )
+
+        self.fields["manager"].queryset = manager_queryset
+        self.fields["manager"].widget.set_users(list(manager_queryset))
+
         if self.instance and self.instance.pk:
-            # editing existing event -> use its manager
-            try:
-                self.fields["manager"].initial = self.instance.manager
-            except Exception:
-                pass
-        else:
-            if request_user:
-                self.fields["manager"].initial = request_user
+            self.fields["manager"].initial = self.instance.manager_id
+        elif request_user:
+            self.fields["manager"].initial = request_user.pk
 
     def clean(self):
         cleaned_data = super().clean()
@@ -215,6 +248,7 @@ class EventForm(forms.ModelForm):
         model = Event
         fields = [
             "title",
+            "manager",
             "description",
             "starting_date",
             "ending_date",
@@ -313,16 +347,42 @@ ParticipationTimeFormSet = inlineformset_factory(
 )
 
 
+class EarningsField(forms.DecimalField):
+    """Decimal input that accepts both German commas and dots."""
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+
+        if isinstance(value, str):
+            value = value.strip().replace("€", "").replace(" ", "")
+            if "," in value:
+                # Treat dots as thousands separators when a comma is present.
+                value = value.replace(".", "").replace(",", ".")
+
+        return super().to_python(value)
+
+    def prepare_value(self, value):
+        if value in self.empty_values:
+            return ""
+
+        if isinstance(value, Decimal):
+            return f"{value:.2f}".replace(".", ",")
+
+        return value
+
+
 class SetEarningsForm(forms.ModelForm):
-    earnings = forms.DecimalField(
+    earnings = EarningsField(
         label="Einnahmen",
         min_value=0,
         initial=0,
         decimal_places=2,
-        widget=forms.NumberInput(
+        widget=forms.TextInput(
             attrs={
                 "aria-label": "Einnahmen in Euro",
-                "step": "0.01",
+                "inputmode": "decimal",
+                "autocomplete": "off",
                 "class": "input",
             }
         ),
@@ -331,6 +391,13 @@ class SetEarningsForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = ["earnings"]
+
+    def clean_earnings(self):
+        value = self.cleaned_data.get("earnings")
+        if value is None:
+            return value
+
+        return value.quantize(Decimal("0.01"))
 
 
 class SetEarningsReceivedForm(forms.ModelForm):

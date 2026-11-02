@@ -118,18 +118,21 @@ STATUS_FEEDBACK = {
     "request-accepted": ("success", "Anfrage angenommen."),
     "request-declined": ("success", "Anfrage abgelehnt."),
     "deleted": ("success", "Aktion gelöscht."),
+    "updated": ("success", "Aktion erfolgreich bearbeitet"),
     "edit-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu bearbeiten."),
     "delete-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu löschen."),
 }
 
 
-def get_feedback(status):
+def get_feedback(status, **extra):
     entry = STATUS_FEEDBACK.get(status)
     if entry is None:
         return None
 
     kind, title = entry
-    return {"kind": kind, "title": title, "message": ""}
+    feedback: dict[str, object] = {"kind": kind, "title": title, "message": ""}
+    feedback.update(extra)
+    return feedback
 
 
 def render_feedback(request, feedback, *, status=200):
@@ -410,10 +413,22 @@ def create_event(request):
 
 @login_required
 def edit_event(request, event_id):
-    event = get_object_or_404(Event, pk=event_id)
-    if not can_edit_event(request.user, event) or event.final:
-        messages.error(request, "Du darfst diese Aktion nicht bearbeiten")
-        return redirect_next_or(request, "events")
+    event = get_object_or_404(
+        Event.objects.select_related("creator", "manager"), pk=event_id
+    )
+    if not can_edit_event(request.user, event):
+        feedback = get_feedback(
+            "edit-denied",
+            action_url=event_detail_url(event),
+            action_label="Zur Aktion",
+            action_htmx=True,
+        )
+        if is_htmx_request(request):
+            return render_feedback(request, feedback)
+
+        return redirect(event_detail_url(event, "edit-denied"))
+
+    back_url = get_safe_back_url(request) or event_detail_url(event)
 
     if request.method == "POST":
         form = EventForm(
@@ -424,33 +439,38 @@ def edit_event(request, event_id):
         )
 
         if form.is_valid():
-            save_event(form, request.user)
+            saved_event = save_event(form, request.user)
 
-            messages.success(request, "Projekt erfolgreich bearbeitet.")
+            if is_htmx_request(request):
+                return render_feedback(
+                    request,
+                    get_feedback(
+                        "updated",
+                        action_url=event_detail_url(saved_event),
+                        action_label="Zur Aktion",
+                        action_htmx=True,
+                    ),
+                )
 
-            return render(
-                request, "events/_event_edit_success_popup.html", {"event": event}
-            )
-        else:
-            messages.error(request, "Form ist invalide.")
-
-        return render(
-            request,
-            "events/_event_edit_popup.html",
-            {"form": form, "event": event, "next_url": get_safe_next_url(request)},
-        )
-
+            return redirect(event_detail_url(saved_event, "updated"))
     else:
         form = EventForm(
             instance=event,
             prefix=str(event.id),
             request_user=request.user,
         )
-        return render(
-            request,
-            "events/_event_edit_popup.html",
-            {"form": form, "event": event, "next_url": get_safe_next_url(request)},
-        )
+
+    return render(
+        request,
+        "events/_event_form.html",
+        {
+            "form": form,
+            "event": event,
+            "mode": "edit",
+            "back_url": back_url,
+            "next_url": get_safe_next_url(request),
+        },
+    )
 
 
 @login_required

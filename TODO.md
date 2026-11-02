@@ -76,14 +76,14 @@ in the same container instead:
 
 # 2. Editing events
 
-- [ ] **Fix the `save_event` creator bug before adding the edit UI.**
+- [x] **Fix the `save_event` creator bug before adding the edit UI.**
   `services.save_event(form, user)` always sets `event.creator = user`. On edit
   that reassigns the creator to the editor (manager or staff). Set `creator`
   only when `form.instance.pk` is falsy, or create/update through two explicit
   helpers.
-- [ ] Wrap `save_event` in `transaction.atomic()` so participant updates,
+- [x] Wrap `save_event` in `transaction.atomic()` so participant updates,
   participation-time clamping and notifications are all-or-nothing.
-- [ ] `edit_event` view:
+- [x] `edit_event` view:
   - Permission: `can_edit_event(user, event)` (which already includes
     `not event.final`). Remove the redundant `or event.final`.
   - GET: `EventForm(instance=event, prefix=str(event.id),
@@ -96,7 +96,7 @@ in the same container instead:
     preserved `next_url`.
   - Do not show the old `_event_edit_success_popup.html`; supersede it with the
     shared feedback partial.
-- [ ] `templates/events/_event_form.html` for edit:
+- [x] `templates/events/_event_form.html` for edit:
   - Header “Aktion bearbeiten”; left-hand back to details, no close button in
     the header.
   - Hidden `next`.
@@ -106,7 +106,7 @@ in the same container instead:
     the sheet; the left back controls panel navigation and the X dismisses.
   - Do not rely on the old `form_action` / `event_id` hidden inputs; the URL
     carries the action.
-- [ ] `templates/events/_event_form_fields.html`:
+- [x] `templates/events/_event_form_fields.html`:
   - Render `form.non_field_errors` and each field explicitly:
     title, manager (searchable picker), description, starting_date, ending_date,
     participants.
@@ -114,7 +114,7 @@ in the same container instead:
     `{{ field }}`; the component CSS already styles inputs inside `.field`.
   - Participants field goes in a `participants` wrapper using the widget
     partial (step 3); the manager field uses the picker below.
-- [ ] **Replace the manager `<select>` with a searchable single-user picker.**
+- [x] **Replace the manager `<select>` with a searchable single-user picker.**
   This is shared by create and edit, so implement it once in the form field.
   - Add a `ManagerPickerWidget` in `forms.py` (or `widgets.py` after the view
     refactor) and use it for `EventForm.manager`.
@@ -145,10 +145,10 @@ in the same container instead:
   - If the user count grows beyond a few hundred, replace the client-side list
     with an HTMX search endpoint (`/users/search/?q=`) later; keep the same widget
     markup so only the data source changes.
-- [ ] Add tests for the manager picker: search filters users, selecting a result
+- [x] Add tests for the manager picker: search filters users, selecting a result
   updates the hidden input, create defaults to the request user, edit shows the
   existing manager, and a missing manager re-renders with an error.
-- [ ] Port the old date validation from `oldstatics/js/events.js` to
+- [x] Port the old date validation from `oldstatics/js/events.js` to
   `static/dashboard/js/event-form.js`:
   - `endInput.min = startInput.value`.
   - Custom validity “Das Ende muss nach dem Beginn liegen.”
@@ -156,7 +156,7 @@ in the same container instead:
     `htmx:afterSwap`, guard with `dataset.eventFormInitialized`.
   - Field names are prefixed (`<prefix>-starting_date`), so match with
     `input[name$="starting_date"]` / `ending_date`.
-- [ ] Add a “Bearbeiten” button in the detail header and on user-owned event
+- [x] Add a “Bearbeiten” button in the detail header and on user-owned event
   cards if the old UI exposed it; it should open the edit form in the same sheet.
 
 ---

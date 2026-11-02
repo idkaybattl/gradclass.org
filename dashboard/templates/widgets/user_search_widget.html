@@ -1,0 +1,52 @@
+<div class="user-search" data-user-search-widget data-multiple="{{ widget.multiple|yesno:'true,false' }}"
+    data-field-name="{{ widget.name }}">
+    <div class="user-search__selected" data-selected-user>
+        {% if widget.multiple %}
+        <ul class="user-search__chips" data-selected-list>
+            {% for user in widget.selected_users %}
+            <li class="user-search__chip" data-user-id="{{ user.id }}" data-user-label="{{ user.label }}">
+                <span>{{ user.label }}</span>
+                <button type="button" class="user-search__remove" data-remove-user="{{ user.id }}"
+                    aria-label="{{ user.label }} entfernen">Entfernen</button>
+            </li>
+            {% empty %}
+            <li class="user-search__empty" data-empty-selected>keine Teilnehmer</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="user-search__chips" data-selected-list>
+            {% for user in widget.selected_users %}
+            <span class="user-search__chip" data-user-id="{{ user.id }}" data-user-label="{{ user.label }}">
+                <span>{{ user.label }}</span>
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="user-search__controls">
+        <label class="user-search__label" for="{{ widget.attrs.id }}_search">
+            Nutzer suchen
+            <input type="search" id="{{ widget.attrs.id }}_search" class="user-search__input" data-user-search
+                role="combobox" aria-autocomplete="list" aria-expanded="false"
+                aria-controls="{{ widget.attrs.id }}-results" aria-haspopup="listbox" autocomplete="off"
+                placeholder="Nutzer suchen …" />
+        </label>
+
+        <ul class="user-search__results" id="{{ widget.attrs.id }}-results" data-user-results role="listbox" hidden>
+            {% for user in widget.all_users %}
+            <li class="user-search__option" id="{{ widget.attrs.id }}-option-{{ user.id }}" role="option"
+                data-user-id="{{ user.id }}" data-user-label="{{ user.label }}" aria-selected="false">{{ user.label }}
+            </li>
+            {% endfor %}
+        </ul>
+
+        <p class="user-search__empty" data-user-empty hidden>Keine Nutzer gefunden.</p>
+    </div>
+
+    <div data-hidden-inputs>
+        {% for value in widget.values %}
+        <input type="hidden" name="{{ widget.name }}" value="{{ value }}" data-hidden-user="{{ value }}" />
+        {% endfor %}
+    </div>
+</div>

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
@@ -6,7 +7,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .durations import split_duration
-from .forms import DurationHMField, DurationHMInput, ParticipationTimeFormSet
+from .forms import (
+    DurationHMField,
+    DurationHMInput,
+    EventForm,
+    ParticipationTimeFormSet,
+    SetEarningsForm,
+)
 from .models import Event, EventParticipation, JoinRequest
 from .notifications import Notification, NotificationVerbChoices
 
@@ -583,3 +590,214 @@ class ParticipationTimeViewTests(TestCase):
         self.assertEqual(
             self.user.profile.total_hours(), timedelta(hours=1, minutes=30)
         )
+
+
+class EventEditViewTests(TestCase):
+    def setUp(self):
+        self.creator = User.objects.create_user(username="creator", password="password")
+        self.manager = User.objects.create_user(username="manager", password="password")
+        self.other = User.objects.create_user(username="other", password="password")
+
+        self.start = timezone.now() + timedelta(days=1)
+        self.end = self.start + timedelta(hours=2)
+        self.event = Event.objects.create(
+            title="Sommerfest",
+            description="Gemeinsam feiern.",
+            starting_date=self.start,
+            ending_date=self.end,
+            creator=self.creator,
+            manager=self.manager,
+        )
+
+        self.client.force_login(self.manager)
+
+    def edit_data(self, **overrides):
+        data = {
+            f"{self.event.pk}-title": self.event.title,
+            f"{self.event.pk}-description": self.event.description,
+            f"{self.event.pk}-starting_date": timezone.localtime(self.start).strftime(
+                "%Y-%m-%dT%H:%M"
+            ),
+            f"{self.event.pk}-ending_date": timezone.localtime(self.end).strftime(
+                "%Y-%m-%dT%H:%M"
+            ),
+            f"{self.event.pk}-manager": str(self.manager.pk),
+        }
+        data.update(overrides)
+        return data
+
+    def test_edit_form_shows_existing_manager(self):
+        response = self.client.get(
+            reverse("event-edit", args=[self.event.pk]), HTTP_HX_REQUEST="true"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Aktion bearbeiten")
+        self.assertContains(response, "data-user-search")
+        self.assertContains(response, f'name="{self.event.pk}-manager"')
+        self.assertContains(
+            response,
+            f'value="{self.manager.pk}" data-hidden-user="{self.manager.pk}"',
+        )
+        self.assertNotContains(response, "<html")
+
+    def test_manager_picker_only_lists_active_users(self):
+        User.objects.create_user(
+            username="active-user",
+            password="password",
+            first_name="Aktive",
+            last_name="Person",
+        )
+        User.objects.create_user(
+            username="inactive-user",
+            password="password",
+            first_name="Inaktive",
+            last_name="Person",
+            is_active=False,
+        )
+
+        form = EventForm(instance=self.event, request_user=self.manager)
+        manager_html = str(form["manager"])
+
+        self.assertIn("Aktive Person", manager_html)
+        self.assertNotIn("Inaktive Person", manager_html)
+        self.assertIn("data-user-results", manager_html)
+
+    def test_create_form_defaults_manager_to_request_user(self):
+        form = EventForm(request_user=self.manager)
+
+        manager_html = str(form["manager"])
+
+        self.assertIn(
+            f'value="{self.manager.pk}" data-hidden-user="{self.manager.pk}"',
+            manager_html,
+        )
+
+    def test_missing_manager_rerenders_with_error_and_keeps_creator(self):
+        data = self.edit_data(**{f"{self.event.pk}-manager": ""})
+
+        response = self.client.post(
+            reverse("event-edit", args=[self.event.pk]),
+            data,
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("manager", response.context["form"].errors)
+        self.assertContains(response, "Aktion bearbeiten")
+
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.creator, self.creator)
+        self.assertEqual(self.event.manager, self.manager)
+
+    def test_edit_updates_event_without_reassigning_creator(self):
+        response = self.client.post(
+            reverse("event-edit", args=[self.event.pk]),
+            self.edit_data(**{f"{self.event.pk}-title": "Sommerfest neu"}),
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('event-details', args=[self.event.pk])}?status=updated",
+            fetch_redirect_response=False,
+        )
+
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.title, "Sommerfest neu")
+        self.assertEqual(self.event.creator, self.creator)
+        self.assertEqual(self.event.manager, self.manager)
+
+    def test_edit_removes_participants(self):
+        self.event.participants.add(self.other)
+
+        response = self.client.post(
+            reverse("event-edit", args=[self.event.pk]), self.edit_data()
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('event-details', args=[self.event.pk])}?status=updated",
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(self.event.participants.filter(pk=self.other.pk).exists())
+
+    def test_edit_can_change_manager(self):
+        response = self.client.post(
+            reverse("event-edit", args=[self.event.pk]),
+            self.edit_data(**{f"{self.event.pk}-manager": str(self.other.pk)}),
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('event-details', args=[self.event.pk])}?status=updated",
+            fetch_redirect_response=False,
+        )
+
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.manager, self.other)
+        self.assertEqual(self.event.creator, self.creator)
+
+    def test_edit_htmx_success_returns_feedback_with_action(self):
+        response = self.client.post(
+            reverse("event-edit", args=[self.event.pk]),
+            self.edit_data(**{f"{self.event.pk}-title": "Sommerfest neu"}),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Aktion erfolgreich bearbeitet")
+        self.assertContains(response, "Zur Aktion")
+        self.assertContains(
+            response, f'hx-get="{reverse("event-details", args=[self.event.pk])}"'
+        )
+
+    def test_final_event_cannot_be_edited(self):
+        self.event.final = True
+        self.event.save(update_fields=["final"])
+
+        response = self.client.get(reverse("event-edit", args=[self.event.pk]))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('event-details', args=[self.event.pk])}?status=edit-denied",
+            fetch_redirect_response=False,
+        )
+
+    def test_unrelated_user_cannot_edit_event(self):
+        self.client.force_login(self.other)
+
+        response = self.client.get(
+            reverse("event-edit", args=[self.event.pk]), HTTP_HX_REQUEST="true"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "Du bist nicht berechtigt, diese Aktion zu bearbeiten."
+        )
+
+
+class EarningsFormTests(TestCase):
+    def test_accepts_comma_and_dot_and_quantizes_to_two_places(self):
+        for raw_value in ("13,1", "13.1"):
+            with self.subTest(raw_value=raw_value):
+                form = SetEarningsForm(data={"earnings": raw_value})
+
+                self.assertTrue(form.is_valid())
+                self.assertEqual(form.cleaned_data["earnings"], Decimal("13.10"))
+
+    def test_prepares_existing_value_with_two_decimal_places(self):
+        user = User.objects.create_user(username="user", password="password")
+        event = Event.objects.create(
+            title="Aktion",
+            description="",
+            starting_date=timezone.now(),
+            ending_date=timezone.now() + timedelta(hours=1),
+            creator=user,
+            manager=user,
+            earnings=Decimal("13.1"),
+        )
+
+        earnings_html = str(SetEarningsForm(instance=event)["earnings"])
+
+        self.assertIn('value="13,10"', earnings_html)
+        self.assertIn('inputmode="decimal"', earnings_html)

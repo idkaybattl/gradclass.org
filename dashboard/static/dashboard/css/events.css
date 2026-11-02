@@ -131,6 +131,17 @@
     font-size: var(--font-size-sm);
 }
 
+.event-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.event-form__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
 /* event detail overlay */
 .event-detail {
     display: flex;

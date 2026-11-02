@@ -1,0 +1,37 @@
+{{ form.non_field_errors }}
+
+<p class="field">
+    {{ form.title.errors }}
+    {{ form.title.label_tag }}
+    {{ form.title }}
+</p>
+
+<p class="field">
+    {{ form.manager.errors }}
+    {{ form.manager.label_tag }}
+    {{ form.manager }}
+</p>
+
+<p class="field">
+    {{ form.description.errors }}
+    {{ form.description.label_tag }}
+    {{ form.description }}
+</p>
+
+<p class="field">
+    {{ form.starting_date.errors }}
+    {{ form.starting_date.label_tag }}
+    {{ form.starting_date }}
+</p>
+
+<p class="field">
+    {{ form.ending_date.errors }}
+    {{ form.ending_date.label_tag }}
+    {{ form.ending_date }}
+</p>
+
+<div class="field participants-field">
+    {{ form.participants.errors }}
+    {{ form.participants.label_tag }}
+    {{ form.participants }}
+</div>

@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{% static 'dashboard/css/base.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/components.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/events.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/css/user_search_widget.css' %}" />
 
     <title>{% block 'title' %}WHG Abi 2028 Verwaltung {% endblock %}</title>
 
@@ -128,6 +129,9 @@
 
     <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
     <script src="{% static 'dashboard/js/htmx-setup.js' %}" defer></script>
+    <script src="{% static 'dashboard/js/search.js' %}" defer></script>
+    <script src="{% static 'dashboard/js/user-picker.js' %}" defer></script>
+    <script src="{% static 'dashboard/js/event-form.js' %}" defer></script>
     <script src="{% static 'dashboard/js/base.js' %}" defer></script>
     {% block scripts %}{% endblock %}
 

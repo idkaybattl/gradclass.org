@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from .models import Event, EventParticipation
 from .notifications import notify_participants, notify_time_frame_changed
 
@@ -18,9 +20,12 @@ def update_participants(event, selected_users):
             )
 
 
+@transaction.atomic
 def save_event(form, user):
+    is_creation = not form.instance.pk
+
     # Adjust participation times when the event timeframe changes
-    if form.instance.pk:
+    if not is_creation:
         # Load a fresh copy from the database to capture the pre-save values.
         # Accessing `form.instance` can yield the same in-memory object that the
         # form may already have modified, so read from DB to get the real old
@@ -37,7 +42,8 @@ def save_event(form, user):
         old = set()
 
     event = form.save(commit=False)
-    event.creator = user
+    if is_creation:
+        event.creator = user
     event.save()
 
     update_participants(event, form.cleaned_data["participants"])
