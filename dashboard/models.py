@@ -56,7 +56,8 @@ class EventParticipation(models.Model):
         unique_together = ("event", "user")
 
     def save(self, *args, **kwargs):
-        if not self.participation_time:
+        # `timedelta(0)` is falsy; only a missing value means "use the full event".
+        if self.participation_time is None:
             self.participation_time = (
                 self.event.ending_date - self.event.starting_date  # pyright: ignore[reportAttributeAccessIssue]
             )

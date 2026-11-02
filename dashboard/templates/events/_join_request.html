@@ -1,0 +1,21 @@
+{% include "components/_overlay_header.html" with title="Teilnahmeanfrage" back_url=back_url %}
+
+<div class="join-request">
+    <p>
+        <strong>{{ join_request.requestor.get_full_name|default:join_request.requestor.username }}</strong>
+        möchte <strong>{{ join_request.event.title }}</strong> beitreten.
+    </p>
+
+    <div class="join-request__actions">
+        <form method="post" action="{% url 'accept-join-request' join_request.pk %}"
+            hx-post="{% url 'accept-join-request' join_request.pk %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button type="submit" class="btn" hx-disabled-elt="this">Annehmen</button>
+        </form>
+        <form method="post" action="{% url 'decline-join-request' join_request.pk %}"
+            hx-post="{% url 'decline-join-request' join_request.pk %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button type="submit" class="btn" hx-disabled-elt="this">Ablehnen</button>
+        </form>
+    </div>
+</div>

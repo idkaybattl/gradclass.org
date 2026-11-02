@@ -1,10 +1,16 @@
+import re
+from datetime import timedelta
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory
 from django.utils import timezone
 from phonenumber_field.formfields import PhoneNumberField
 
-from .models import Event, UserProfile
+from .durations import format_duration, split_duration
+from .models import Event, EventParticipation, UserProfile
 
 User = get_user_model()
 
@@ -216,12 +222,110 @@ class EventForm(forms.ModelForm):
         ]
 
 
+class DurationHMInput(forms.Widget):
+    template_name = "widgets/duration_hm.html"
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        hours, minutes = split_duration(value)
+        context["widget"]["hours"] = {"name": f"{name}_hours", "value": hours}
+        context["widget"]["minutes"] = {
+            "name": f"{name}_minutes",
+            "value": minutes,
+        }
+        return context
+
+    def value_from_datadict(self, data, files, name):
+        hours = data.get(f"{name}_hours")
+        minutes = data.get(f"{name}_minutes")
+        if not hours and not minutes:
+            return None
+
+        hours = hours or "0"
+        try:
+            minutes = f"{int(minutes or 0):02d}"
+        except (TypeError, ValueError):
+            minutes = minutes or "0"
+        return f"{hours}:{minutes}"
+
+
+class DurationHMField(forms.DurationField):
+    """Duration field backing the two-input hours/minutes widget."""
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        if isinstance(value, timedelta):
+            return value
+
+        match = re.fullmatch(r"(?P<hours>\d+):(?P<minutes>[0-5]\d)", str(value).strip())
+        if match is None:
+            raise ValidationError(
+                "Bitte gültige Stunden und Minuten angeben.",
+                code="invalid",
+            )
+
+        return timedelta(
+            hours=int(match.group("hours")),
+            minutes=int(match.group("minutes")),
+        )
+
+    def prepare_value(self, value):
+        if isinstance(value, timedelta):
+            return format_duration(value)
+        return "" if value is None else value
+
+
+class ParticipationTimeForm(forms.ModelForm):
+    participation_time = DurationHMField(
+        label="Arbeitszeit",
+        required=False,
+        widget=DurationHMInput(),
+    )
+
+    class Meta:
+        model = EventParticipation
+        fields = ["participation_time"]
+
+    def clean_participation_time(self):
+        value = self.cleaned_data.get("participation_time")
+        if value is None:
+            value = timedelta(0)
+
+        event = getattr(self.instance, "event", None)
+        if event is not None:
+            event_duration = event.ending_date - event.starting_date
+            if value > event_duration:
+                raise ValidationError(
+                    "Die Arbeitszeit darf nicht länger als die Aktion sein.",
+                    code="too_long",
+                )
+
+        return value
+
+
+ParticipationTimeFormSet = inlineformset_factory(
+    Event,
+    EventParticipation,
+    form=ParticipationTimeForm,
+    extra=0,
+    can_delete=False,
+)
+
+
 class SetEarningsForm(forms.ModelForm):
     earnings = forms.DecimalField(
         label="Einnahmen",
         min_value=0,
         initial=0,
         decimal_places=2,
+        widget=forms.NumberInput(
+            attrs={
+                "aria-label": "Einnahmen in Euro",
+                "step": "0.01",
+                "class": "input",
+            }
+        ),
     )
 
     class Meta:

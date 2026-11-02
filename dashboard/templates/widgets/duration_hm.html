@@ -1,0 +1,10 @@
+<span class="duration-input">
+    <input type="number" class="duration-input__number" name="{{ widget.hours.name }}"
+        value="{{ widget.hours.value|default_if_none:'' }}" min="0" step="1" inputmode="numeric" aria-label="Stunden"
+        autocomplete="off" />
+    <span class="duration-input__unit" aria-hidden="true">h</span>
+    <input type="number" class="duration-input__number" name="{{ widget.minutes.name }}"
+        value="{{ widget.minutes.value|default_if_none:'' }}" min="0" max="59" step="1" inputmode="numeric"
+        aria-label="Minuten" autocomplete="off" />
+    <span class="duration-input__unit" aria-hidden="true">min</span>
+</span>

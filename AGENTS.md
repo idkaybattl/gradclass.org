@@ -49,7 +49,8 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
   `@require_GET` / `@require_POST`, `get_object_or_404`.
 - Keep views thin. Put multi-step business logic in `services.py`; keep
   validation and field definitions in `forms.py`.
-- Use `django.contrib.messages` for user feedback.
+- App actions use the feedback pattern below, not `django.contrib.messages`.
+  Messages are only for flows whose destination is a full page load.
 - For HTMX responses, render partials with
   `render_to_string(..., request=request)`. Use `JsonResponse` only for small
   success/error endpoints.
@@ -77,6 +78,29 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
   `next_url`. Use a 2xx unless response handling is configured to swap 4xx.
 - Do not use `next` for actions that only close a popup or refresh a fragment.
 - URL-encode `next` when placing it in a link; hidden inputs are autoescaped.
+
+## Overlays and HTMX fragments
+
+- `data-overlay-toggle="<id>"` toggles an overlay; `data-overlay-open="<id>"`
+  only opens/navigates it. Use the latter for detail, back and notification links.
+- The bottom sheet is navigation, not routing: **no history entries**. “Zurück”
+  is an explicit `hx-get` to the previous panel; browser back is not used to
+  reopen it unless this decision is changed here.
+- Back and close are different controls. “Zurück” is on the left of the panel
+  header and only renders when `back_url` is valid. The shell’s `.overlay-close`
+  (X) is the only close control, top-right. Never render a second close button
+  in a panel.
+- Overlay partials are fragments: no `{% extends %}`, `<html>`, navbar, footer or
+  overlay shell. They may only depend on context passed by their own view. Load
+  their CSS/JS from `base.html`, not from the fragment.
+- Validate `back`/`next` through `get_safe_back_url` / `get_safe_next_url`.
+  `next` is a redirect hint; `back` only navigates one overlay level.
+- `redirect_next_or` is the only place that chooses between a normal redirect
+  and `HX-Redirect`. Use `render_page_or_partial` for views that also render a
+  full-page fallback.
+- Invalid HTMX forms re-render with status 200 and preserved `next_url`.
+- App actions use server-rendered feedback (`components/_feedback.html`) and
+  `?status=` flags on non-HTMX redirects, not `django.contrib.messages`.
 
 ## Frontend rules
 

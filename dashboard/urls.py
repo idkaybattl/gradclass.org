@@ -52,6 +52,11 @@ urlpatterns = [
         name="set-earnings-received",
     ),
     path(
+        "events/<int:event_id>/participation-times/",
+        views.set_participation_times,
+        name="set-participation-times",
+    ),
+    path(
         "events/join-request/<int:join_request_id>/",
         views.join_request_details,
         name="join-request-details",

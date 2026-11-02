@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="{% static 'dashboard/css/vars.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/base.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/css/events.css' %}" />
 
     <title>{% block 'title' %}WHG Abi 2028 Verwaltung {% endblock %}</title>
 
@@ -100,7 +101,7 @@
                 <button type="button" class="overlay-close" aria-label="Schließen">
                     <span class="logo" style="--icon: url('{% static 'dashboard/icons/close.svg' %}')"></span>
                 </button>
-                <div class="overlay-content"></div>
+                <div class="overlay-content" id="overlay-content"></div>
             </div>
 
             <!-- Menu: slides in from the right. -->
@@ -126,6 +127,7 @@
     </main>
 
     <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
+    <script src="{% static 'dashboard/js/htmx-setup.js' %}" defer></script>
     <script src="{% static 'dashboard/js/base.js' %}" defer></script>
     {% block scripts %}{% endblock %}
 

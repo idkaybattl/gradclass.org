@@ -1,14 +1,18 @@
-const eventsPage = document.querySelector("[data-events-page]");
+function initEventsList(root = document) {
+  const page = root.matches?.("[data-events-page]")
+    ? root
+    : root.querySelector?.("[data-events-page]");
+  const grid = page?.querySelector("[data-events-grid]");
+  const emptyState = page?.querySelector("[data-events-empty]");
+  const searchInput = page?.querySelector("[data-events-search]");
+  const ownToggle = page?.querySelector("[data-events-own]");
+  if (!page || !grid || !emptyState || !searchInput || !ownToggle) return;
+  if (page.dataset.eventsInitialized === "true") return;
 
-if (eventsPage) {
-  const grid = eventsPage.querySelector("[data-events-grid]");
-  const emptyState = eventsPage.querySelector("[data-events-empty]");
-  const searchInput = eventsPage.querySelector("[data-events-search]");
-  const ownToggle = eventsPage.querySelector("[data-events-own]");
-  const filterButtons = Array.from(
-    eventsPage.querySelectorAll("[data-events-filter]")
-  );
+  const filterButtons = Array.from(page.querySelectorAll("[data-events-filter]"));
   const allCards = Array.from(grid.querySelectorAll("[data-event-card]"));
+
+  page.dataset.eventsInitialized = "true";
 
   let activeFilter =
     filterButtons.find(
@@ -70,3 +74,15 @@ if (eventsPage) {
 
   render();
 }
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => initEventsList(document));
+} else {
+  initEventsList(document);
+}
+
+// The events list is a normal page, but keep the initialiser idempotent so a
+// future HTMX-swapped variant works without a second code path.
+document.addEventListener("htmx:afterSwap", (event) => {
+  initEventsList(event.detail.target);
+});

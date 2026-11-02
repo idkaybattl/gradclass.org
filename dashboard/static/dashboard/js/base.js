@@ -20,11 +20,35 @@ function setTriggersExpanded(overlay, expanded) {
     .forEach((trigger) => trigger.setAttribute("aria-expanded", String(expanded)));
 }
 
-function openOverlayElement(overlay, markup) {
+function focusOverlayPanel(overlay) {
+  const target =
+    overlay.querySelector("[data-overlay-title]") ??
+    overlay.querySelector(".overlay-close");
+  if (target instanceof HTMLElement) target.focus({ preventScroll: true });
+}
+
+function getReturnFocus(opener) {
+  if (opener instanceof HTMLElement) return opener;
+  if (activeOverlay?._returnFocus instanceof HTMLElement) {
+    return activeOverlay._returnFocus;
+  }
+  return document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+}
+
+function openOverlayElement(overlay, markup, opener) {
   if (!overlay) return;
 
+  // Keep the first opener around while navigating between panels in the sheet.
+  if (!overlay.classList.contains("open")) {
+    overlay._returnFocus = getReturnFocus(opener);
+  }
+
   // Opening a second overlay closes the first one.
-  if (activeOverlay && activeOverlay !== overlay) closeOverlayElement(activeOverlay);
+  if (activeOverlay && activeOverlay !== overlay) {
+    closeOverlayElement(activeOverlay, { restoreFocus: false });
+  }
 
   const content = overlay.querySelector(".overlay-content");
   if (markup !== undefined && content) content.innerHTML = markup;
@@ -37,16 +61,27 @@ function openOverlayElement(overlay, markup) {
 
   setTriggersExpanded(overlay, true);
   overlay.dispatchEvent(new CustomEvent("overlay:open", { bubbles: true }));
+  focusOverlayPanel(overlay);
 }
 
-function closeOverlayElement(overlay) {
+function closeOverlayElement(overlay, { restoreFocus = true } = {}) {
   if (!overlay) return;
 
+  const returnFocus = overlay._returnFocus;
   overlay.classList.remove("open", "dragging");
   overlay.style.transform = "";
 
   if (activeOverlay === overlay) activeOverlay = null;
   setTriggersExpanded(overlay, false);
+  overlay._returnFocus = null;
+
+  if (
+    restoreFocus &&
+    returnFocus instanceof HTMLElement &&
+    document.contains(returnFocus)
+  ) {
+    returnFocus.focus({ preventScroll: true });
+  }
 }
 
 // Kept for callers of the original single-overlay API.
@@ -68,11 +103,20 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  const trigger = element.closest("[data-overlay-toggle]");
+  const trigger = element.closest("[data-overlay-open]");
   if (trigger) {
-    const overlay = document.getElementById(trigger.dataset.overlayToggle);
+    const overlay = document.getElementById(trigger.dataset.overlayOpen);
+    if (overlay) {
+      openOverlayElement(overlay, undefined, trigger);
+      return;
+    }
+  }
+
+  const toggle = element.closest("[data-overlay-toggle]");
+  if (toggle) {
+    const overlay = document.getElementById(toggle.dataset.overlayToggle);
     if (overlay === activeOverlay) closeOverlayElement(overlay);
-    else openOverlayElement(overlay);
+    else openOverlayElement(overlay, undefined, toggle);
     return;
   }
 
@@ -84,6 +128,19 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeOverlayElement(activeOverlay);
+});
+
+// A swapped panel starts at the top and focuses its heading.
+document.addEventListener("htmx:afterSwap", (event) => {
+  const target = event.detail.target;
+  if (!(target instanceof Element)) return;
+
+  const content = target.closest(".overlay-content");
+  if (!content) return;
+
+  content.scrollTop = 0;
+  const heading = content.querySelector("[data-overlay-title]");
+  if (heading instanceof HTMLElement) heading.focus({ preventScroll: true });
 });
 
 /* Drag to dismiss */

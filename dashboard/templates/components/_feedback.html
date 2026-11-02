@@ -1,0 +1,12 @@
+<section class="feedback feedback--{{ feedback.kind|default:'info' }}" role="status" aria-live="polite">
+    <h2 class="feedback__title" data-overlay-title tabindex="-1">{{ feedback.title }}</h2>
+    {% if feedback.message %}
+    <p class="feedback__message">{{ feedback.message }}</p>
+    {% endif %}
+    {% if feedback.action_url %}
+    <div class="feedback__actions">
+        <a class="btn" href="{{ feedback.action_url }}" {% if feedback.action_htmx %}data-overlay-open="overlay"
+            hx-get="{{ feedback.action_url }}" hx-target="#overlay-content" hx-swap="innerHTML" {% endif %}>{{ feedback.action_label }}</a>
+    </div>
+    {% endif %}
+</section>

@@ -1,18 +1,29 @@
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.http import HttpResponse
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
-from .forms import EventForm, SetEarningsForm, SetEarningsReceivedForm, UserProfileForm
+from .forms import (
+    EventForm,
+    ParticipationTimeFormSet,
+    SetEarningsForm,
+    SetEarningsReceivedForm,
+    UserProfileForm,
+)
 from .models import Abikasse, Event, EventParticipation, JoinRequest
 from .notifications import (
     Notification,
@@ -32,6 +43,14 @@ def can_edit_event(user, event):
     )
 
 
+def can_manage_join_requests(user, event):
+    return user.is_staff or user.pk in {event.manager_id, event.creator_id}
+
+
+def can_manage_participation_times(user):
+    return user.is_staff
+
+
 def can_view_users(request):
     # currently everybody can view all users
     return True
@@ -41,31 +60,85 @@ def can_edit_user(request, user_id):
     return request.user.is_staff or request.user.id == user_id
 
 
-def get_safe_next_url(request):
-    next_url = request.POST.get("next") or request.GET.get("next")
-    if not next_url:
+def _get_safe_url(request, value):
+    if not value:
         return None
 
     if url_has_allowed_host_and_scheme(
-        next_url,
+        value,
         allowed_hosts={request.get_host()},
         require_https=request.is_secure(),
     ):
-        return next_url
+        return value
 
     return None
 
 
+def get_safe_next_url(request):
+    return _get_safe_url(request, request.POST.get("next") or request.GET.get("next"))
+
+
+def get_safe_back_url(request):
+    return _get_safe_url(request, request.GET.get("back"))
+
+
 def redirect_next_or(request, fallback, **kwargs):
     next_url = get_safe_next_url(request)
-    if next_url:
-        return redirect(next_url)
+    url = next_url or reverse(fallback, kwargs=kwargs)
 
-    return redirect(fallback, **kwargs)
+    if is_htmx_request(request):
+        response = HttpResponse(status=204)
+        response["HX-Redirect"] = url
+        return response
+
+    return redirect(url)
 
 
 def is_htmx_request(request):
     return request.headers.get("HX-Request") == "true"
+
+
+def render_page_or_partial(request, page_template, partial_template, context):
+    template = partial_template if is_htmx_request(request) else page_template
+    return render(request, template, context)
+
+
+STATUS_FEEDBACK = {
+    "joined": ("success", "Du nimmst jetzt teil"),
+    "requested": ("success", "Anfrage gesendet"),
+    "already-requested": ("info", "Du hast bereits angefragt"),
+    "already-participant": ("error", "Du nimmst an diesem Projekt bereits teil."),
+    "not-participant": ("error", "Du nimmst an diesem Projekt nicht teil."),
+    "final": ("error", "Dieses Projekt ist bereits abgeschlossen."),
+    "past": ("error", "Das Projekt liegt in der Vergangenheit."),
+    "left": ("success", "Teilnahme beendet."),
+    "earnings": ("success", "Einnahmen gesetzt."),
+    "earnings-received": ("success", "Einnahmenstatus aktualisiert."),
+    "participation-times": ("success", "Arbeitszeiten gespeichert."),
+    "request-accepted": ("success", "Anfrage angenommen."),
+    "request-declined": ("success", "Anfrage abgelehnt."),
+    "deleted": ("success", "Aktion gelöscht."),
+    "edit-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu bearbeiten."),
+    "delete-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu löschen."),
+}
+
+
+def get_feedback(status):
+    entry = STATUS_FEEDBACK.get(status)
+    if entry is None:
+        return None
+
+    kind, title = entry
+    return {"kind": kind, "title": title, "message": ""}
+
+
+def render_feedback(request, feedback, *, status=200):
+    return render(
+        request,
+        "components/_feedback.html",
+        {"feedback": feedback},
+        status=status,
+    )
 
 
 def render_notifications(request):
@@ -223,7 +296,7 @@ def change_password_popup(request, user_id):
             {"user": user, "form": form, "next_url": request.GET.get("next")},
             request=request,
         )
-        return HttpResponse(html, status=400)  # 400 triggers htmx “error” handling
+        return HttpResponse(html, status=200)
 
     user = User.objects.get(pk=user_id)
     form = PasswordChangeForm(user)
@@ -332,7 +405,6 @@ def create_event(request):
         request,
         "events/_event_create_popup.html",
         {"form": form, "next_url": get_safe_next_url(request)},
-        status=400,
     )
 
 
@@ -366,7 +438,6 @@ def edit_event(request, event_id):
             request,
             "events/_event_edit_popup.html",
             {"form": form, "event": event, "next_url": get_safe_next_url(request)},
-            status=400,
         )
 
     else:
@@ -386,59 +457,157 @@ def edit_event(request, event_id):
 @require_GET
 def events(request, mode):
     now = timezone.now()
-    events = list(
-        Event.objects.select_related("creator")
+    event_list = list(
+        Event.objects.select_related("creator", "manager")
         .prefetch_related("participants")
         .order_by("starting_date")
     )
 
-    for event in events:
+    for event in event_list:
+        participant_ids = {participant.pk for participant in event.participants.all()}
         event.is_upcoming = event.ending_date > now
         event.is_own = (
             event.creator_id == request.user.pk
             or event.manager_id == request.user.pk
-            or request.user in event.participants.all()
+            or request.user.pk in participant_ids
         )
 
     return render(
         request,
         "events.html",
         {
-            "events": events,
+            "events": event_list,
             "initial_filter": mode if mode in {"upcoming", "past"} else "all",
             "own_only": mode == "own",
+            "feedback": get_feedback(request.GET.get("status")),
         },
     )
+
+
+def event_detail_url(event, status=None):
+    url = reverse("event-details", kwargs={"event_id": event.pk})
+    if status:
+        url = f"{url}?{urlencode({'status': status})}"
+    return url
+
+
+def event_details_context(
+    request,
+    event,
+    *,
+    earnings_form=None,
+    earnings_received_form=None,
+    participation_time_formset=None,
+    back_url=None,
+    status=None,
+    feedback=None,
+):
+    user = request.user
+    participants = list(event.participants.all())
+    participant_ids = {participant.pk for participant in participants}
+    is_participant = user.pk in participant_ids
+    can_edit = can_edit_event(user, event)
+    can_manage_times = can_manage_participation_times(user)
+
+    if earnings_form is None:
+        earnings_form = SetEarningsForm(instance=event)
+    if earnings_received_form is None:
+        earnings_received_form = SetEarningsReceivedForm(instance=event)
+    if participation_time_formset is None and can_manage_times:
+        participation_time_formset = ParticipationTimeFormSet(
+            instance=event,
+            queryset=EventParticipation.objects.filter(event=event)
+            .select_related("user", "event")
+            .order_by("user__first_name", "user__last_name", "user__username"),
+        )
+    if feedback is None:
+        feedback = get_feedback(status)
+
+    edit_url = f"{reverse('event-edit', kwargs={'event_id': event.pk})}?{urlencode({'back': reverse('event-details', kwargs={'event_id': event.pk})})}"
+    detail_url = reverse("event-details", kwargs={"event_id": event.pk})
+    participation_times_open = bool(
+        participation_time_formset
+        and participation_time_formset.is_bound
+        and (
+            participation_time_formset.errors
+            or participation_time_formset.non_form_errors
+        )
+    )
+
+    return {
+        "event": event,
+        "title": event.title,
+        "participants": participants,
+        "can_edit": can_edit,
+        "is_participant": is_participant,
+        "can_delete": can_edit,
+        "can_leave": is_participant and not event.final,
+        "can_join": not is_participant and not event.final,
+        "can_approve_payment": user.is_staff,
+        "can_manage_participation_times": can_manage_times,
+        "earnings_form": earnings_form,
+        "earnings_received_form": earnings_received_form,
+        "participation_time_formset": participation_time_formset,
+        "next_url": get_safe_next_url(request),
+        "back_url": back_url,
+        "detail_url": detail_url,
+        "edit_url": edit_url,
+        "action_label": "Bearbeiten" if can_edit else "",
+        "action_url": edit_url if can_edit else "",
+        "action_overlay": can_edit,
+        "participation_times_open": participation_times_open,
+        "feedback": feedback,
+    }
+
+
+def render_event_details(request, event, **overrides):
+    context = event_details_context(request, event, **overrides)
+    return render_page_or_partial(
+        request,
+        "events/detail.html",
+        "events/_event_details.html",
+        context,
+    )
+
+
+def event_action_response(request, event, status):
+    if is_htmx_request(request):
+        return render_event_details(request, event, status=status)
+
+    return redirect(event_detail_url(event, status))
+
+
+def join_request_action_response(request, event, feedback, status):
+    if is_htmx_request(request):
+        return render_feedback(request, feedback)
+
+    return redirect(event_detail_url(event, status))
+
+
+def mark_join_request_notification_read(join_request):
+    content_type = ContentType.objects.get_for_model(JoinRequest)
+    Notification.objects.filter(
+        content_type=content_type,
+        object_id=join_request.pk,
+        verb=NotificationVerbChoices.EVENT_JOIN_REQUEST,
+    ).update(is_read=True)
 
 
 @login_required
 @require_GET
 def event_details(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-    can_edit = can_edit_event(request.user, event)
-    is_participant = event.participants.filter(pk=request.user.pk).exists()
-    can_delete = can_edit
-    can_leave = is_participant and not event.final
-    can_join = not is_participant and not event.final
-    can_approve_payment = request.user.is_staff
-    earnings_form = SetEarningsForm(instance=event)
-    earnings_received_form = SetEarningsReceivedForm(instance=event)
+    event = get_object_or_404(
+        Event.objects.select_related("creator", "manager").prefetch_related(
+            "participants"
+        ),
+        id=event_id,
+    )
 
-    return render(
+    return render_event_details(
         request,
-        "events/_event_details_popup.html",
-        {
-            "event": event,
-            "can_edit": can_edit,
-            "is_participant": is_participant,
-            "can_delete": can_delete,
-            "can_leave": can_leave,
-            "can_join": can_join,
-            "can_approve_payment": can_approve_payment,
-            "next_url": get_safe_next_url(request),
-            "earnings_form": earnings_form,
-            "earnings_received_form": earnings_received_form,
-        },
+        event,
+        back_url=get_safe_back_url(request),
+        status=request.GET.get("status"),
     )
 
 
@@ -446,88 +615,139 @@ def event_details(request, event_id):
 @require_POST
 def join_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
-
     user = request.user
 
     if event.final:
-        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
-        return redirect_next_or(request, "events")
-    elif event.starting_date < timezone.now():
-        messages.error(request, "Das Projekt liegt in der Vergangenheit")
-        return redirect_next_or(request, "events")
-    else:
-        if event.participants.filter(pk=request.user.pk).exists():
-            messages.error(request, "Du nimmst an diesem Projekt bereits teil.")
-            return redirect_next_or(request, "events")
+        return event_action_response(request, event, "final")
+    if timezone.now() >= event.starting_date:
+        return event_action_response(request, event, "past")
+    if event.participants.filter(pk=user.pk).exists():
+        return event_action_response(request, event, "already-participant")
 
-    if user.is_staff or user.pk == event.creator_id or user.pk == event.manager_id:
+    if user.is_staff or user.pk in {event.creator_id, event.manager_id}:
         EventParticipation.objects.get_or_create(event=event, user=user)
-        messages.success(request, "Du nimmst jetzt teil")
-        return redirect_next_or(request, "events")
+        return event_action_response(request, event, "joined")
 
-    jr, created = JoinRequest.objects.get_or_create(requestor=user, event=event)
-    if created:
-        messages.success(request, "Anfrage gesendet")
-    else:
-        messages.info(request, "Du hast bereits angefragt")
-
-    return redirect_next_or(request, "events")
+    _, created = JoinRequest.objects.get_or_create(requestor=user, event=event)
+    return event_action_response(
+        request,
+        event,
+        "requested" if created else "already-requested",
+    )
 
 
 @login_required
 @require_GET
 def join_request_details(request, join_request_id):
-    join_request = get_object_or_404(JoinRequest, id=join_request_id)
-    return render(
-        request, "components/_join_request_popup.html", {"join_request": join_request}
+    join_request = get_object_or_404(
+        JoinRequest.objects.select_related(
+            "requestor", "event__creator", "event__manager"
+        ),
+        id=join_request_id,
+    )
+    if not can_manage_join_requests(request.user, join_request.event):
+        raise PermissionDenied
+
+    return render_page_or_partial(
+        request,
+        "events/join_request.html",
+        "events/_join_request.html",
+        {
+            "join_request": join_request,
+            "event": join_request.event,
+            "back_url": get_safe_back_url(request),
+        },
     )
 
 
 @login_required
 @require_POST
 def accept_join_request(request, join_request_id):
-    join_request = get_object_or_404(JoinRequest, id=join_request_id)
-    user = join_request.requestor
+    join_request = get_object_or_404(
+        JoinRequest.objects.select_related("requestor", "event"),
+        id=join_request_id,
+    )
     event = join_request.event
+    if not can_manage_join_requests(request.user, event):
+        raise PermissionDenied
+
+    requestor = join_request.requestor
 
     if event.final:
-        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
-        return redirect_next_or(request, "events")
+        return join_request_action_response(
+            request,
+            event,
+            {
+                "kind": "error",
+                "title": "Dieses Projekt ist bereits abgeschlossen.",
+                "message": "",
+                "action_label": "Zur Aktion",
+                "action_url": reverse("event-details", kwargs={"event_id": event.pk}),
+                "action_htmx": True,
+            },
+            "final",
+        )
 
-    EventParticipation.objects.get_or_create(event=event, user=user)
-    messages.success(request, "Du hast die Anfrage angenommen.")
+    with transaction.atomic():
+        EventParticipation.objects.get_or_create(event=event, user=requestor)
+        mark_join_request_notification_read(join_request)
+        join_request.delete()
+        Notification.objects.create(
+            user=requestor,
+            verb=NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED,
+            target=event,
+        )
 
-    # remove join request
-    join_request.delete()
-
-    Notification.objects.create(
-        user=user,
-        verb=NotificationVerbChoices.EVENT_JOIN_REQUEST_ACCEPTED,
-        target=event,
+    return join_request_action_response(
+        request,
+        event,
+        {
+            "kind": "success",
+            "title": "Anfrage angenommen.",
+            "message": "Die Teilnahme wurde eingetragen.",
+            "action_label": "Zur Aktion",
+            "action_url": reverse("event-details", kwargs={"event_id": event.pk}),
+            "action_htmx": True,
+        },
+        "request-accepted",
     )
-
-    return redirect_next_or(request, "events")
 
 
 @login_required
 @require_POST
 def decline_join_request(request, join_request_id):
-    join_request = get_object_or_404(JoinRequest, id=join_request_id)
-    user = join_request.requestor
-    event = join_request.event
-
-    messages.success(request, "Du hast die Anfrage abgelehnt")
-
-    # remove join request
-    join_request.delete()
-
-    Notification.objects.create(
-        user=user,
-        verb=NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED,
-        target=event,
+    join_request = get_object_or_404(
+        JoinRequest.objects.select_related("requestor", "event"),
+        id=join_request_id,
     )
+    event = join_request.event
+    if not can_manage_join_requests(request.user, event):
+        raise PermissionDenied
 
-    return redirect_next_or(request, "events")
+    requestor = join_request.requestor
+
+    with transaction.atomic():
+        mark_join_request_notification_read(join_request)
+        join_request.delete()
+        Notification.objects.create(
+            user=requestor,
+            verb=NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED,
+            target=event,
+        )
+
+    return join_request_action_response(
+        request,
+        event,
+        {
+            "kind": "success",
+            "title": "Anfrage abgelehnt.",
+            "message": "Die Anfrage wurde abgelehnt.",
+            "action_label": "Zur Aktion",
+            "action_url": reverse("event-details", kwargs={"event_id": event.pk}),
+            "action_htmx": True,
+        },
+        "request-declined",
+    )
 
 
 @login_required
@@ -536,16 +756,12 @@ def leave_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     if event.final:
-        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
-    else:
-        if not event.participants.filter(pk=request.user.pk).exists():
-            messages.error(request, "Du nimmst an diesem Projekt nicht teil.")
-        else:
-            messages.success(request, "Du hast deine Teilnahme beendet.")
-        # remove participant in either case just in case
-        event.participants.remove(request.user)
+        return event_action_response(request, event, "final")
+    if not event.participants.filter(pk=request.user.pk).exists():
+        return event_action_response(request, event, "not-participant")
 
-    return redirect_next_or(request, "events")
+    EventParticipation.objects.filter(event=event, user=request.user).delete()
+    return event_action_response(request, event, "left")
 
 
 @login_required
@@ -553,15 +769,29 @@ def leave_event(request, event_id):
 def delete_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if event.final:
-        messages.error(request, "Dieses Projekt ist bereits abgeschlossen.")
-    elif not request.user.is_staff and not request.user == event.creator:
-        messages.error(request, "Du bist nicht berechtigt das Projekt zu löschen")
-    else:
-        event.delete()
-        messages.success(request, "Projekt erfolgreich gelöscht")
+    if not can_edit_event(request.user, event):
+        return event_action_response(
+            request,
+            event,
+            "final" if event.final else "delete-denied",
+        )
 
-    return redirect_next_or(request, "events-upcoming")
+    event.delete()
+
+    if is_htmx_request(request):
+        return render_feedback(
+            request,
+            {
+                "kind": "success",
+                "title": "Aktion gelöscht.",
+                "message": "Die Aktion wurde gelöscht.",
+                "action_label": "Zur Liste",
+                "action_url": reverse("events"),
+                "action_htmx": False,
+            },
+        )
+
+    return redirect(f"{reverse('events')}?{urlencode({'status': 'deleted'})}")
 
 
 @login_required
@@ -570,16 +800,14 @@ def set_event_earnings(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     if not can_edit_event(request.user, event):
-        messages.error(request, "Du bist nicht berechtigt das Projekt zu bearbeiten.")
-    else:
-        form = SetEarningsForm(
-            request.POST, instance=get_object_or_404(Event, id=event_id)
-        )
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Einnahmen erfolgreich gesetzt.")
+        return event_action_response(request, event, "edit-denied")
 
-    return redirect_next_or(request, "events-own")
+    form = SetEarningsForm(request.POST, instance=event)
+    if form.is_valid():
+        form.save()
+        return event_action_response(request, event, "earnings")
+
+    return render_event_details(request, event, earnings_form=form)
 
 
 @login_required
@@ -588,19 +816,46 @@ def set_earnings_received(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     if not request.user.is_staff:
-        messages.error(request, "Du bist nicht berechtigt das Projekt zu bearbeiten.")
+        return event_action_response(request, event, "edit-denied")
 
-    else:
-        form = SetEarningsReceivedForm(
-            request.POST, instance=get_object_or_404(Event, id=event_id)
-        )
-        if form.is_valid():
-            event = form.save(commit=False)
-            event.final = event.earnings_received
-            event.save()
-            messages.success(request, "Einnahmen erfolgreich gesetzt.")
+    form = SetEarningsReceivedForm(request.POST, instance=event)
+    if form.is_valid():
+        event = form.save(commit=False)
+        # Unchecking "Eingezahlt" reopens the event; final tracks approval.
+        event.final = event.earnings_received
+        event.save()
+        return event_action_response(request, event, "earnings-received")
 
-    return redirect_next_or(request, "events")
+    return render_event_details(request, event, earnings_received_form=form)
+
+
+@login_required
+@require_POST
+def set_participation_times(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    if not can_manage_participation_times(request.user):
+        raise PermissionDenied
+
+    queryset = (
+        EventParticipation.objects.filter(event=event)
+        .select_related("user", "event")
+        .order_by("user__first_name", "user__last_name", "user__username")
+    )
+    formset = ParticipationTimeFormSet(
+        request.POST,
+        instance=event,
+        queryset=queryset,
+    )
+    if formset.is_valid():
+        formset.save()
+        return event_action_response(request, event, "participation-times")
+
+    return render_event_details(
+        request,
+        event,
+        participation_time_formset=formset,
+    )
 
 
 @login_required
@@ -668,7 +923,6 @@ def edit_user(request, user_id):
                 request,
                 "components/_user_edit.html",
                 {"form": form, "user": user, "next_url": get_safe_next_url(request)},
-                status=400,
             )
 
     else:

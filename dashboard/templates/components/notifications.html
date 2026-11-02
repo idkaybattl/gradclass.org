@@ -22,7 +22,13 @@
         {% for notification in notifications %}
         <li class="notification-item">
             <div class="notification-item__main">
+                {% if notification.open_as_popup %}
+                <button type="button" class="notification-item__link notification-item__trigger"
+                    data-overlay-open="overlay" hx-get="{{ notification.get_url }}" hx-target="#overlay-content"
+                    hx-swap="innerHTML">{{ notification }}</button>
+                {% else %}
                 <a class="notification-item__link" href="{{ notification.get_url }}">{{ notification }}</a>
+                {% endif %}
                 <time class="notification-item__time" datetime="{{ notification.created_at|date:'c' }}">
                     {{ notification.created_at|date:"d.m.Y H:i" }}
                 </time>

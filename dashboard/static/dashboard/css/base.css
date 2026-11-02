@@ -444,6 +444,18 @@ footer {
     text-decoration: underline;
 }
 
+/* popup notifications are buttons, but must look like the text links */
+.notification-item__trigger {
+    padding: 0;
+
+    background: none;
+    border-style: none;
+
+    font: inherit;
+    text-align: inherit;
+    cursor: pointer;
+}
+
 .notification-item__time {
     font-size: var(--font-size-sm);
     opacity: 0.7;

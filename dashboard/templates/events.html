@@ -4,13 +4,19 @@
 
 {% block title %}Aktionen{% endblock %}
 
-{% block base_head %}
-<link rel="stylesheet" href="{% static 'dashboard/css/events.css' %}" />
-{% endblock %}
-
 {% block content %}
 <div class="events-page" data-events-page>
-    <h1>Aktionen</h1>
+    <div class="events-page__header">
+        <h1>Aktionen</h1>
+        <div class="events-page__actions">
+            <a class="btn" href="{% url 'event-create' %}" data-overlay-open="overlay" hx-get="{% url 'event-create' %}"
+                hx-target="#overlay-content" hx-swap="innerHTML">Neue Aktion</a>
+        </div>
+    </div>
+
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
 
     <div class="events-toolbar">
         <input type="search" class="input" data-events-search placeholder="Aktionen durchsuchen …"
