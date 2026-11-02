@@ -163,7 +163,7 @@ in the same container instead:
 
 # 3. Creating events
 
-- [ ] `create_event` view:
+- [x] `create_event` view:
   - Keep the rate limit (`get_event_creation_limit_error`). On limit: return
     `components/_feedback.html` with an error variant and “Zur Liste” for HTMX;
     the X closes. Non-HTMX redirects to the events page with
@@ -176,41 +176,41 @@ in the same container instead:
     (navigates to the events page). Non-HTMX: redirect to the full-page detail
     wrapper with `?status=created`.
   - On failure render the form with status 200 and preserved `next_url`.
-- [ ] `templates/events/_event_form.html` for create:
+- [x] `templates/events/_event_form.html` for create:
   - Header “Neue Aktion erstellen”; no back button because there is no previous
     overlay panel. The X dismisses the sheet.
   - Same fields partial as edit.
   - Submit label “Erstellen”. No separate “Abbrechen” button that closes the
     sheet.
-- [ ] Wire the “Neue Aktion” button on the events page to
+- [x] Wire the “Neue Aktion” button on the events page to
   `data-overlay-open="overlay"` + `hx-get="{% url 'event-create' %}"` +
   `hx-target="#overlay-content"`. Render the button only when
   `can_create_event` is true (see the future restriction below).
-- [ ] **Port the participants widget to the active template set.**
+- [x] **Port the participants widget to the active template set.**
   `EventForm` points at `widgets/participants_widget.html`, but that file only
   exists under `oldtemplates/`. The create/edit form currently raises
   `TemplateDoesNotExist`.
-  - Create `templates/widgets/participants_widget.html` based on the old
+  - [x] Create `templates/widgets/participants_widget.html` based on the old
     template, keeping: `data-participants-widget`, `data-field-name`,
     selected list with remove buttons, search input, available list, hidden
     inputs, and the `<template>` used for cloning.
-  - Create `static/dashboard/css/participants.css` using tokens only:
+  - [x] Create `static/dashboard/css/participants.css` using tokens only:
     no border radius, `--border-width`, `--text`, `--bg`, `--primary`,
     `--font-size-*`. Do not copy the old rounded/grey `rgba(...)` styles.
-  - Create `static/dashboard/js/participants.js` from the old
+  - [x] Create `static/dashboard/js/participants.js` from the old
     `participants_widget.js`, using the new `searchItems` helper:
     - `initParticipantsWidget(root)` + `initParticipantsWidgets(root)`.
     - Re-initialise on `DOMContentLoaded` and `htmx:afterSwap`.
     - Keep add/remove, search filtering, empty states, duplicate prevention,
       hidden-input updates.
-  - Update `ParticipantsWidget.Media` to the new paths **or** remove `Media`
+  - [x] Update `ParticipantsWidget.Media` to the new paths **or** remove `Media`
     and load the assets globally (recommended, because the form is loaded into
     an overlay; a `<script>` inside swapped content is fragile).
-- [ ] Ensure `ParticipantsWidget` works with form prefixes: `widget.name` is
+- [x] Ensure `ParticipantsWidget` works with form prefixes: `widget.name` is
   already prefixed by Django; do not hard-code `participants`.
-- [ ] The manager picker is shared with edit; see Section 2. On create it
+- [x] The manager picker is shared with edit; see Section 2. On create it
   defaults to `request.user`; on edit it defaults to `instance.manager`.
-- [ ] **Future restriction: only staff may create events.**
+- [x] **Future restriction: only staff may create events.**
   - Add `can_create_event(user)` now as the single hook. Initially return `True`
     for every user so behavior does not change yet.
   - Use it for the `create_event` view check and for the “Neue Aktion” button
@@ -221,7 +221,7 @@ in the same container instead:
   - Add a test that a non-staff user is denied once the restriction is enabled.
   - Decide whether the existing rate limit still applies to staff; if only staff
     can create, non-staff limits usually become irrelevant.
-- [ ] Add a test that POSTing a valid form creates exactly one event and one
+- [x] Add a test that POSTing a valid form creates exactly one event and one
   participation set, that invalid input re-renders the form with errors, and
   that the success response contains the feedback panel.
 

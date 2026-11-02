@@ -37,6 +37,11 @@ MAX_PROJECTS_PER_HOUR = 5
 MAX_PROJECTS_PER_DAY = 10
 
 
+def can_create_event(user):
+    # Single hook for the future staff-only restriction; no behavior change yet.
+    return True
+
+
 def can_edit_event(user, event):
     return not event.final and (
         event.creator.id == user.id or event.manager.id == user.id or user.is_staff
@@ -118,7 +123,10 @@ STATUS_FEEDBACK = {
     "request-accepted": ("success", "Anfrage angenommen."),
     "request-declined": ("success", "Anfrage abgelehnt."),
     "deleted": ("success", "Aktion gelöscht."),
+    "created": ("success", "Aktion erfolgreich erstellt"),
     "updated": ("success", "Aktion erfolgreich bearbeitet"),
+    "rate-limited": ("error", "Erstellungslimit erreicht"),
+    "create-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu erstellen."),
     "edit-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu bearbeiten."),
     "delete-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu löschen."),
 }
@@ -131,6 +139,19 @@ def get_feedback(status, **extra):
 
     kind, title = entry
     feedback: dict[str, object] = {"kind": kind, "title": title, "message": ""}
+
+    action_url = extra.pop("action_url", None)
+    action_label = extra.pop("action_label", None)
+    action_htmx = extra.pop("action_htmx", False)
+    if action_url and "actions" not in extra:
+        extra["actions"] = [
+            {
+                "label": action_label or "Weiter",
+                "url": action_url,
+                "htmx": action_htmx,
+            }
+        ]
+
     feedback.update(extra)
     return feedback
 
@@ -377,37 +398,71 @@ def calendar(request):
 
 @login_required
 def create_event(request):
+    if not can_create_event(request.user):
+        feedback = get_feedback(
+            "create-denied",
+            action_url=reverse("events"),
+            action_label="Zur Liste",
+        )
+        if is_htmx_request(request):
+            return render_feedback(request, feedback)
+
+        return redirect(f"{reverse('events')}?{urlencode({'status': 'create-denied'})}")
+
     rate_limit_error = get_event_creation_limit_error(request.user)
     if rate_limit_error:
-        messages.error(request, rate_limit_error)
-        return redirect_next_or(request, "events")
+        feedback = get_feedback(
+            "rate-limited",
+            message=rate_limit_error,
+            action_url=reverse("events"),
+            action_label="Zur Liste",
+        )
+        if is_htmx_request(request):
+            return render_feedback(request, feedback)
+
+        return redirect(f"{reverse('events')}?{urlencode({'status': 'rate-limited'})}")
 
     if request.method == "GET":
         form = EventForm(prefix="new", request_user=request.user)
-        return render(
-            request,
-            "events/_event_create_popup.html",
-            {
-                "form": form,
-                "next_url": get_safe_next_url(request),
-            },
+    else:
+        form = EventForm(
+            data=request.POST,
+            prefix="new",
+            request_user=request.user,
         )
 
-    data = request.POST
-    form = EventForm(data=data, prefix="new", request_user=request.user)
+        if form.is_valid():
+            event = save_event(form, request.user)
 
-    if form.is_valid():
-        save_event(form, request.user)
-        messages.success(request, "Projekt erfolgreich erstellt.")
+            if is_htmx_request(request):
+                return render_feedback(
+                    request,
+                    get_feedback(
+                        "created",
+                        actions=[
+                            {
+                                "label": "Zur Aktion",
+                                "url": event_detail_url(event),
+                                "htmx": True,
+                            },
+                            {
+                                "label": "Zur Liste",
+                                "url": reverse("events"),
+                            },
+                        ],
+                    ),
+                )
 
-        return redirect_next_or(request, "events")
-    else:
-        messages.error(request, "Form ist invalide.")
+            return redirect(event_detail_url(event, "created"))
 
     return render(
         request,
-        "events/_event_create_popup.html",
-        {"form": form, "next_url": get_safe_next_url(request)},
+        "events/_event_form.html",
+        {
+            "form": form,
+            "mode": "create",
+            "next_url": get_safe_next_url(request),
+        },
     )
 
 
@@ -499,6 +554,7 @@ def events(request, mode):
             "events": event_list,
             "initial_filter": mode if mode in {"upcoming", "past"} else "all",
             "own_only": mode == "own",
+            "can_create_event": can_create_event(request.user),
             "feedback": get_feedback(request.GET.get("status")),
         },
     )

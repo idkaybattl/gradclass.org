@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
@@ -16,6 +17,7 @@ from .forms import (
 )
 from .models import Event, EventParticipation, JoinRequest
 from .notifications import Notification, NotificationVerbChoices
+from .views import MAX_PROJECTS_PER_HOUR
 
 User = get_user_model()
 
@@ -590,6 +592,155 @@ class ParticipationTimeViewTests(TestCase):
         self.assertEqual(
             self.user.profile.total_hours(), timedelta(hours=1, minutes=30)
         )
+
+
+class EventCreateViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="student", password="password")
+        self.other = User.objects.create_user(username="other", password="password")
+        self.client.force_login(self.user)
+
+    def create_data(self, **overrides):
+        start = timezone.localtime(timezone.now() + timedelta(days=1))
+        end = start + timedelta(hours=2)
+        data = {
+            "new-title": "Neue Aktion",
+            "new-description": "Gemeinsam anpacken.",
+            "new-starting_date": start.strftime("%Y-%m-%dT%H:%M"),
+            "new-ending_date": end.strftime("%Y-%m-%dT%H:%M"),
+            "new-manager": str(self.user.pk),
+            "new-participants": [str(self.other.pk)],
+        }
+        data.update(overrides)
+        return data
+
+    def create_existing_event(self, index):
+        now = timezone.now()
+        return Event.objects.create(
+            title=f"Bestehende Aktion {index}",
+            description="",
+            starting_date=now + timedelta(days=1),
+            ending_date=now + timedelta(days=1, hours=1),
+            creator=self.user,
+            manager=self.user,
+        )
+
+    def test_create_form_renders_fragment_without_back_button(self):
+        response = self.client.get(reverse("event-create"), HTTP_HX_REQUEST="true")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Neue Aktion erstellen")
+        self.assertContains(response, "Erstellen")
+        self.assertNotContains(response, "<html")
+        self.assertNotContains(response, "overlay-panel-back")
+
+    def test_create_form_defaults_manager_to_request_user(self):
+        response = self.client.get(reverse("event-create"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'value="{self.user.pk}" data-hidden-user="{self.user.pk}"',
+        )
+
+    def test_valid_post_creates_event_with_participants_and_feedback(self):
+        response = self.client.post(
+            reverse("event-create"),
+            self.create_data(),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Aktion erfolgreich erstellt")
+        self.assertContains(response, "Zur Aktion")
+        self.assertContains(response, "Zur Liste")
+
+        self.assertEqual(Event.objects.count(), 1)
+        event = Event.objects.get()
+        self.assertEqual(event.creator, self.user)
+        self.assertEqual(event.manager, self.user)
+        self.assertEqual(list(event.participants.all()), [self.other])
+        self.assertEqual(EventParticipation.objects.filter(event=event).count(), 1)
+        self.assertContains(
+            response, f'hx-get="{reverse("event-details", args=[event.pk])}"'
+        )
+
+    def test_valid_post_redirects_to_detail_without_htmx(self):
+        response = self.client.post(reverse("event-create"), self.create_data())
+
+        event = Event.objects.get()
+        self.assertRedirects(
+            response,
+            f"{reverse('event-details', args=[event.pk])}?status=created",
+            fetch_redirect_response=False,
+        )
+
+    def test_invalid_post_rerenders_form_with_errors(self):
+        response = self.client.post(
+            reverse("event-create"),
+            self.create_data(**{"new-title": ""}),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("title", response.context["form"].errors)
+        self.assertContains(response, "Neue Aktion erstellen")
+        self.assertEqual(Event.objects.count(), 0)
+
+    def test_rate_limit_returns_feedback_for_htmx(self):
+        for index in range(MAX_PROJECTS_PER_HOUR):
+            self.create_existing_event(index)
+
+        response = self.client.post(
+            reverse("event-create"),
+            self.create_data(),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Du kannst maximal")
+        self.assertContains(response, "Zur Liste")
+        self.assertEqual(Event.objects.count(), MAX_PROJECTS_PER_HOUR)
+
+    def test_rate_limit_redirects_with_status_without_htmx(self):
+        for index in range(MAX_PROJECTS_PER_HOUR):
+            self.create_existing_event(index)
+
+        response = self.client.post(reverse("event-create"), self.create_data())
+
+        self.assertRedirects(
+            response,
+            f"{reverse('events')}?status=rate-limited",
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(Event.objects.count(), MAX_PROJECTS_PER_HOUR)
+
+    @patch("dashboard.views.can_create_event", return_value=False)
+    def test_restricted_user_is_denied_creation(self, _can_create_event):
+        response = self.client.post(
+            reverse("event-create"),
+            self.create_data(),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "Du bist nicht berechtigt, diese Aktion zu erstellen."
+        )
+        self.assertEqual(Event.objects.count(), 0)
+
+    @patch("dashboard.views.can_create_event", return_value=False)
+    def test_events_page_hides_create_button_without_permission(
+        self, _can_create_event
+    ):
+        response = self.client.get(reverse("events"))
+
+        self.assertNotContains(response, "Neue Aktion")
+
+    def test_events_page_shows_create_button_by_default(self):
+        response = self.client.get(reverse("events"))
+
+        self.assertContains(response, "Neue Aktion")
 
 
 class EventEditViewTests(TestCase):

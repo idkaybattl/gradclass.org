@@ -3,10 +3,12 @@
     {% if feedback.message %}
     <p class="feedback__message">{{ feedback.message }}</p>
     {% endif %}
-    {% if feedback.action_url %}
+    {% if feedback.actions %}
     <div class="feedback__actions">
-        <a class="btn" href="{{ feedback.action_url }}" {% if feedback.action_htmx %}data-overlay-open="overlay"
-            hx-get="{{ feedback.action_url }}" hx-target="#overlay-content" hx-swap="innerHTML" {% endif %}>{{ feedback.action_label }}</a>
+        {% for action in feedback.actions %}
+        <a class="btn" href="{{ action.url }}" {% if action.htmx %}data-overlay-open="overlay" hx-get="{{ action.url }}"
+            hx-target="#overlay-content" hx-swap="innerHTML" {% endif %}>{{ action.label }}</a>
+        {% endfor %}
     </div>
     {% endif %}
 </section>

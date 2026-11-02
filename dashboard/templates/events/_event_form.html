@@ -14,12 +14,14 @@
     {% if mode == "edit" %}
     {% include "components/_overlay_header.html" with title="Aktion bearbeiten" back_url=back_url %}
     {% else %}
-    {% include "components/_overlay_header.html" with title="Neue Aktion erstellen" back_url=back_url %}
+    {% include "components/_overlay_header.html" with title="Neue Aktion erstellen" %}
     {% endif %}
 
     {% include "events/_event_form_fields.html" %}
 
     <div class="event-form__actions">
-        <button type="submit" class="btn" hx-disabled-elt="this">{% if mode == "edit" %}Fertig{% else %}Erstellen{% endif %}</button>
+        <button type="submit" class="btn" hx-disabled-elt="this">
+            {% if mode == "edit" %}Fertig{% else %}Erstellen{% endif %}
+        </button>
     </div>
 </form>
