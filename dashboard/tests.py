@@ -17,7 +17,7 @@ from .forms import (
 )
 from .models import Event, EventParticipation, JoinRequest
 from .notifications import Notification, NotificationVerbChoices
-from .views import MAX_PROJECTS_PER_HOUR
+from .views.events import MAX_PROJECTS_PER_HOUR
 
 User = get_user_model()
 
@@ -715,7 +715,7 @@ class EventCreateViewTests(TestCase):
         )
         self.assertEqual(Event.objects.count(), MAX_PROJECTS_PER_HOUR)
 
-    @patch("dashboard.views.can_create_event", return_value=False)
+    @patch("dashboard.views.events.can_create_event", return_value=False)
     def test_restricted_user_is_denied_creation(self, _can_create_event):
         response = self.client.post(
             reverse("event-create"),
@@ -729,7 +729,7 @@ class EventCreateViewTests(TestCase):
         )
         self.assertEqual(Event.objects.count(), 0)
 
-    @patch("dashboard.views.can_create_event", return_value=False)
+    @patch("dashboard.views.events.can_create_event", return_value=False)
     def test_events_page_hides_create_button_without_permission(
         self, _can_create_event
     ):

@@ -232,7 +232,7 @@ in the same container instead:
 Do this after the event flows (steps 1–3) are stable, before adding the remaining
 pages. It keeps the move from churning code that is still being written.
 
-- [ ] Convert `dashboard/views.py` into a package:
+- [x] Convert `dashboard/views.py` into a package:
 
   ```
   dashboard/
@@ -247,35 +247,37 @@ pages. It keeps the move from churning code that is still being written.
     permissions.py         # can_edit_event, can_view_users, can_edit_user,
                            # can_manage_join_request, can_delete_event
     http_helpers.py        # get_safe_next_url, redirect_next_or,
-                           # is_htmx_request, render_page_or_partial,
-                           # feedback status-flag mapping
+                           # is_htmx_request, render_page_or_partial
+    feedback.py            # STATUS_FEEDBACK, get_feedback, render_feedback
     services.py            # unchanged
   ```
 
-- [ ] Move helper functions out of the view module:
+- [x] Move helper functions out of the view module:
   - `get_safe_next_url`, `redirect_next_or`, `is_htmx_request`,
-    `render_page_or_partial`, `feedback_status` → `http_helpers.py`.
+    `render_page_or_partial` → `http_helpers.py`.
+  - `STATUS_FEEDBACK`, `get_feedback`, `render_feedback` → `feedback.py`
+    (feedback renders templates and is not an HTTP concern).
   - `can_edit_event`, `can_view_users`, `can_edit_user`,
     `can_manage_join_request`, `can_delete_event` → `permissions.py`.
   - `get_event_creation_limit_error`, `MAX_PROJECTS_PER_*` → `views/events.py`
     or a small `event_limits.py` if reused.
   - `event_details_context` → `views/events.py` (or `event_context.py`).
-- [ ] Update `dashboard/urls.py` imports explicitly, e.g.:
+- [x] Update `dashboard/urls.py` imports explicitly, e.g.:
   ```python
   from .views import auth, core, events, notifications, users
   ```
   and use `events.events`, `users.user_details`, etc. Avoid relying on
   `from . import views` re-exports; explicit imports make the split obvious.
-- [ ] Keep every URL name unchanged so templates, tests and notifications keep
+- [x] Keep every URL name unchanged so templates, tests and notifications keep
   working.
-- [ ] Make `dashboard/http_helpers.py` the **only** place that reads `next` and
+- [x] Make `dashboard/http_helpers.py` the **only** place that reads `next` and
   the **only** place that emits `HX-Redirect`.
-- [ ] Check for circular imports: `permissions.py` imports models only;
+- [x] Check for circular imports: `permissions.py` imports models only;
   `http_helpers.py` imports Django only; view modules import both.
-- [ ] Update `AGENTS.md` after the split:
+- [x] Update `AGENTS.md` after the split:
   - Replace `dashboard/views.py — function-based views` with the package layout.
   - Add the overlay trigger convention and the 200-vs-400 rule.
-- [ ] Keep tests passing while moving functions in small commits/patches; run
+- [x] Keep tests passing while moving functions in small commits/patches; run
   `manage.py check` after the URL import change.
 
 ---
@@ -825,4 +827,5 @@ dashboard/
     notifications.py
   permissions.py
   http_helpers.py
+  feedback.py
 ```

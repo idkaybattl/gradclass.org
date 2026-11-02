@@ -26,7 +26,11 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 ## Structure
 
 - `gradclassorg/` — settings and root URLs.
-- `dashboard/views.py` — function-based views.
+- `dashboard/views/` — function-based views split by feature: `core.py`,
+  `auth.py`, `events.py`, `users.py`, `notifications.py`.
+- `dashboard/permissions.py` — permission checks shared by views.
+- `dashboard/http_helpers.py` — `next`/`back` validation and HTMX redirects.
+- `dashboard/feedback.py` — status-flag feedback messages and rendering.
 - `dashboard/context_processors.py` — template-wide unread notification count.
 - `dashboard/forms.py` — forms and widgets.
 - `dashboard/models.py` — models.
