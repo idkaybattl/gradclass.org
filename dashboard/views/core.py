@@ -28,6 +28,7 @@ def main_page(request):
 
 
 @login_required
+@require_GET
 @introduction_required
 def calendar(request):
     return render(request, "calendar.html")

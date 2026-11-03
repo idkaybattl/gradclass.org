@@ -146,8 +146,8 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
 - Run `collectstatic` after static changes, and **before running the full test
   suite**. Tests use the static manifest and fail with `Missing staticfiles
   manifest entry` for any new or changed asset that has not been collected.
-- The automated test suite is still minimal; add tests where practical when
-  fixing logic.
+- Add tests only for behavior that could break silently or has regressed
+  before. Skip tests for trivial template, CSS, or copy changes.
 
 ## Maintenance
 

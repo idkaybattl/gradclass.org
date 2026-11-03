@@ -1403,3 +1403,29 @@ class IntroductionViewTests(TestCase):
         self.assertContains(response, "errorlist")
         self.user.profile.refresh_from_db()
         self.assertFalse(self.user.profile.has_had_introduction)
+
+
+class StaticPageViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="student", password="password")
+        self.user.profile.has_had_introduction = True
+        self.user.profile.save(update_fields=["has_had_introduction"])
+        self.client.force_login(self.user)
+
+    def test_stub_pages_render_in_the_shell(self):
+        for url_name, heading in (
+            ("calendar", "Kalender"),
+            ("polls", "Demokratie"),
+            ("contact", "Kontakt"),
+        ):
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "<html")
+                self.assertContains(response, f"<h1>{heading}</h1>")
+
+    def test_events_page_links_to_the_calendar_stub(self):
+        response = self.client.get(reverse("events"))
+
+        self.assertContains(response, f'href="{reverse("calendar")}"')

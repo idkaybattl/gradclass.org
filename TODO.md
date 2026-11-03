@@ -480,17 +480,17 @@ pages. It keeps the move from churning code that is still being written.
 These are small, but their templates are missing, so direct URLs currently raise
 `TemplateDoesNotExist`.
 
-- [ ] `templates/calendar.html`: the old page was a “Feature kommt noch” stub
+- [x] `templates/calendar.html`: the old page was a “Feature kommt noch” stub
   with some unused caleandar markup. Create a clean stub using the new shell
   and tokens. The `calendar` view already exists.
-- [ ] `templates/contact.html`: port the old contact content (Moritz Fechte,
+- [x] `templates/contact.html`: port the old contact content (Moritz Fechte,
   phone, IServ, mail, GitHub link) into the new shell. Verify with the user
   before publishing personal phone/email if it changed.
-- [ ] `templates/polls.html`: “Demokratie” stub with the old message (“Feature
+- [x] `templates/polls.html`: “Demokratie” stub with the old message (“Feature
   ist noch in der Entwicklung …”).
-- [ ] Add navigation entry points for the stubs only where the old UI had them
+- [x] Add navigation entry points for the stubs only where the old UI had them
   (menu and/or home cards).
-- [ ] Run `manage.py check` after adding templates; missing templates are not
+- [x] Run `manage.py check` after adding templates; missing templates are not
   caught by `check`, so render each URL with the test client.
 
 ---

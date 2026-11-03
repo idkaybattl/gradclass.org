@@ -22,6 +22,12 @@
     color: var(--text);
 }
 
+/* secondary action: same shape, no fill until hovered */
+.btn--secondary {
+    background: transparent;
+    color: inherit;
+}
+
 /* fields */
 .field {
     display: grid;
@@ -205,4 +211,48 @@ textarea::placeholder {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+/* static content page: title plus a bordered text block */
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    min-height: 0;
+    margin-inline: auto;
+}
+
+.page>h1 {
+    flex: 0 0 auto;
+}
+
+.page__body {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+}
+
+.page__body h2 {
+    font-size: var(--font-size-lg);
+}
+
+.page__body a {
+    color: var(--primary);
+}
+
+.page__contact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    list-style: none;
 }

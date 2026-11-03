@@ -9,6 +9,7 @@
     <div class="events-page__header">
         <h1>Aktionen</h1>
         <div class="events-page__actions">
+            <a class="btn btn--secondary" href="{% url 'calendar' %}">Kalender</a>
             {% if can_create_event %}
             <a class="btn" href="{% url 'event-create' %}" data-overlay-open="overlay" hx-get="{% url 'event-create' %}"
                 hx-target="#overlay-content" hx-swap="innerHTML">Neue Aktion</a>
