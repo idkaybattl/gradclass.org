@@ -617,7 +617,7 @@ These are small, but their templates are missing, so direct URLs currently raise
   URLs, `/users/`, `/users/<id>/`, `/users/<id>/edit/`,
   `/users/<id>/change_password_popup/`, `/introduction/`, `/calendar/`,
   `/contact/`, `/polls/`, notifications.
-- [ ] Manual flows in the browser (desktop + narrow mobile):
+- [x] Manual flows in the browser (desktop + narrow mobile):
   - Navigate to events from home and menu; switch filters; search; open details
     in the sheet; join/leave/delete; set earnings (editor and staff); adjust
     participation times as staff; close and reopen; confirm the list
@@ -729,6 +729,134 @@ event coordinators, ordinary students, and different visibility rules. The futur
 
 This becomes the next major work item after the parity rewrite, before the
 broader multi-class generalisation work (config, Docker, setup, i18n).
+
+
+# next stuff:
+
+- title card
+  - "Hi" 
+  - which then moves to the side
+  - as "oder so" appears in small next to it
+  - animation of animal walking climbing below/over it
+- Abikasse:
+  - its own page
+  - editing of the goal value
+  - adding to the current income:
+    - possibly a model for additional income that gets a description and an amount
+  - still needs deciding: should the base 30euro a semester be in the available money from the beginning or come in as the semesters go on and the money gets payed??
+- Profile:
+  - profile picture:
+    - from the krita file
+    - randomly generated for each account
+    - in future manual selection of all the elements
+  - calculation of current Abiball ticket price:
+    - point system:
+      - 1 point per school work hour
+      - 2 points per freetime work hour
+      - rounded down
+      - 1 point x euro in personal income
+        - x still needs to be voted on
+        - personal income as in fraction of total workhours of all workers at event * event income accumulated over all participated events
+    - sum of remaining costs + all points of all users in euro
+    - then divide by amount of tickets
+    - then subtract personal points in euro distributed over all tickets for them and family
+- audit logging
+- password reset without contacting admin?
+- calender
+- allow admins to put in news/announcements
+  - they get priority and get moved up on the grid item
+  - newest first
+  - can decide how long they stay up
+- notifications:
+  - go over when they should be sent
+  - fcm (android and ios notifications) !important btw
+- datenschutz and shit
+- gallery:
+  - uploading images
+  - and videos
+  - on desktop slideshow of recent gallery posts
+  - poster is public
+  - getting date from image/video metadata?
+  - make them connectable to events
+    - events need an upload button
+  - full page:
+    - most recent posts in grid
+    - top right upload button
+      - form
+      - upload button
+      - takes in images and videos
+      - need limits on size and length
+      - caption
+      - changing the date from the metadata if necessary
+    - clicking on item shows poster on top
+    - item below
+    - caption and date bottom
+  - is upvoting downvoting eventually useful for filtering?
+    - leaning towards no
+  - is moderation for nsfw necessary?
+- polls
+  - full page
+  - should support multi question polls
+  - and single question polls
+  - also single question polls with people suggesting the possible choices
+  - creating poll:
+    - choosing between 
+    - multi question:
+      - title
+      - description
+      - finish date
+      - questions:
+        - question
+        - input types
+          - text
+          - number in range
+          - multiple choice:
+            - when a new choice field gets filled in a new empty one should appear below it
+        - when a full question is filled a new form should appear below it
+      - honestly maybe we should leave this for now or outsorce it, there are plenty of survey services right
+    - single question:
+      - with single choices
+      - with suggested choices:
+        - deadline
+        - people can input answer options (not anonymously)
+        - they need to be moderatable
+        - after dealine and moderating everyone can vote among suggested options
+        - important for Abimotto voting
+- forum:
+  - reddit like forum
+  - anyone can post
+  - text messages
+  - upvotes downvotes
+  - connecting to the events:
+    - main purpose discussing and planning
+  - maybe uploading images to it
+- quotes:
+  - own full page
+  - submit quotes
+  - quote model
+  - simple form:
+    - quote
+    - quoted person
+      - (maybe possible selection of users)
+        - they could be notified
+        - that would take the fun out of the freedom of naming the people
+        - free name chossing would be necessary anyways which would make the notification bypassable and useless
+        - need to think about that
+    - possibly upvotes and downvotes?
+    - then i would need various ways to filter them and sort them
+    - maybe connecting to forum feature? as in all quotes are automatically also forum entries
+- integrating tiktok and instagram profile of our grade onto website
+  - for people who dont have those apps
+  - should be browsable
+  - videos and posts should be viewable
+  - maybe comments and likecount too if possible
+- updating the introduction at some point aswell
+- contact info shouldnt be inside the repo
+- eventually:
+  - todo/task delegation?
+  - countdown towards abi(ball)?
+  - birthday notifications lmao?
+  - statistics
 
 ---
 
