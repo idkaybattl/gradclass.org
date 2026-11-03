@@ -6,14 +6,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- refresh page every 5 mins -->
-    <meta http-equiv="refresh" content="300">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- favicon -->
     <link rel="icon" type="image/png" href="{% static 'dashboard/icons/favicon.ico/favicon-96x96.png' %}"
         sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="{% static 'dashboard/icons/favicon.ico/favicon.svg'' %}" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'dashboard/icons/favicon.ico/favicon.svg' %}" />
     <link rel="shortcut icon" href="{% static 'dashboard/icons/favicon.ico/favicon.ico' %}" />
     <link rel="apple-touch-icon" sizes="180x180"
         href="{% static 'dashboard/icons/favicon.ico/apple-touch-icon.png' %}" />
@@ -31,7 +29,7 @@
     <link rel="stylesheet" href="{% static 'dashboard/css/users.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/user_search_widget.css' %}" />
 
-    <title>{% block 'title' %}WHG Abi 2028 Verwaltung {% endblock %}</title>
+    <title>{% block title %}WHG Abi 2028 Verwaltung{% endblock %}</title>
 
     {% block base_head %}
     {% endblock %}
@@ -48,7 +46,8 @@
         <div class="nav-items">
             {% if user.is_authenticated %}
             {% include "components/_notifications_button.html" %}
-            <a class="nav-item" aria-label="Profil" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
+            <a class="nav-item" aria-label="Profil" href="{% url 'user-details' user.id %}"
+                data-overlay-toggle="overlay" aria-controls="overlay" aria-expanded="false"
                 hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
                 <span class="logo" style="--icon: url('{% static 'dashboard/icons/circle.svg' %}')"></span>
             </a>
@@ -117,18 +116,22 @@
                 <div class="overlay-handle overlay-handle--side" aria-hidden="true"></div>
                 <div class="overlay-content">
                     <a class="menu-link" href="{% url 'events' %}">Aktionen</a>
-                    <a class="menu-link">Zitate</a>
-                    <a class="menu-link">Gallerie</a>
-                    <a class="menu-link">Umfragen</a> <!-- (Abstimmungen?) (Könnens auch bei Demokratie belassen) -->
-                    <a class="menu-link">Abikasse</a>
-                    <a class="menu-link">Forum</a>
+                    <span class="menu-link menu-link--disabled" aria-disabled="true">Zitate</span>
+                    <span class="menu-link menu-link--disabled" aria-disabled="true">Gallerie</span>
+                    <a class="menu-link" href="{% url 'polls' %}">Umfragen</a>
+                    <span class="menu-link menu-link--disabled" aria-disabled="true">Abikasse</span>
+                    <span class="menu-link menu-link--disabled" aria-disabled="true">Forum</span>
                     <a class="menu-link" href="{% url 'users' %}">Nutzer</a>
-                    <a class="menu-link">Admin</a>
+                    <a class="menu-link" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
+                        hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content"
+                        hx-swap="innerHTML">Profil</a>
+                    {% if user.is_staff %}
+                    <a class="menu-link" href="{% url 'admin:index' %}">Admin</a>
+                    {% endif %}
                     <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="menu-link">Logout</button>
                     </form>
-                    <!-- Damn sind das viele und ich hab das Gefühl ich hab welche vergessen -->
                 </div>
             </div>
         </div>

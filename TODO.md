@@ -414,36 +414,34 @@ pages. It keeps the move from churning code that is still being written.
 
 ## 7.1 Feedback components (replaces Django messages)
 
-- [ ] Add `templates/components/_feedback.html` and the `feedback` styles to
+- [x] Add `templates/components/_feedback.html` and the `feedback` styles to
   `components.css`; see the “Feedback pattern” section at the top.
-- [ ] Replace every app-facing `messages.success/error/info` call with the
+- [x] Replace every app-facing `messages.success/error/info` call with the
   feedback pattern as the corresponding view is touched. Keep
   `django.contrib.messages` installed only because the admin uses it.
-- [ ] Add the whitelisted `?status=` mapping used by non-HTMX PRG redirects and
+- [x] Add the whitelisted `?status=` mapping used by non-HTMX PRG redirects and
   by the full-page detail wrappers (event updated/created/deleted/earnings,
   profile updated, password updated).
-- [ ] Do not add a messages block to `base.html`.
+- [x] Do not add a messages block to `base.html`.
 
 ## 7.2 Home page content
 
-- [ ] `templates/index.html` is currently a static shell. Restore the old data:
+- [x] `templates/index.html` is currently a static shell. Restore the old data:
   - `.fund` (Abikasse): `{{ abikasse_current|floatformat:2 }} €` /
     `{{ abikasse_goal|floatformat:2 }} €`.
-  - `.news` or a dedicated panel: ranking table from `ranking`
-    (rank, name, hours). Collapse it into `<details>` on mobile if space is
-    tight.
+  - `.news`: intentionally empty for now; the ranking is not needed currently.
   - `.todos`: normal link to `events-upcoming` (the list is a full page).
   - `.polls`: normal link to `polls`.
   - `.profile`: overlay opener for the current user’s details.
   - `.gallery`: leave as a placeholder; there is no backend.
-- [ ] Restore `can_view_all_events` in `main_page` if the old “Alle Aktionen”
+- [x] Restore `can_view_all_events` in `main_page` if the old “Alle Aktionen”
   card/staff-only visibility is restored; otherwise drop the variable cleanly.
-- [ ] Format `timedelta` hours readably (e.g. `1:30 h`) instead of the default
-  `1:30:00` representation.
+- [x] Ranking hours formatting is not applicable while the ranking panel is
+  hidden.
 
 ## 7.3 Navigation and menu
 
-- [ ] Wire every menu link that has a backend:
+- [x] Wire every menu link that has a backend:
   - “Aktionen” → events page (normal navigation).
   - “Umfragen” → `polls` (normal navigation).
   - “Nutzer” → users page (normal navigation; `can_view_users` is always true
@@ -454,11 +452,11 @@ pages. It keeps the move from churning code that is still being written.
   - “Logout” stays a CSRF-protected POST form (already correct).
   - “Zitate”, “Gallerie”, “Abikasse”, “Forum” have no backend; keep them
     visibly disabled or remove them from the menu until implemented.
-- [ ] Reuse the menu’s close/overlay behaviour when an item opens the sheet.
+- [x] Reuse the menu’s close/overlay behaviour when an item opens the sheet.
 
 ## 7.4 Notifications
 
-- [ ] Already implemented in the rewrite, but verify:
+- [x] Already implemented in the rewrite, but verify:
   - lazy load via `overlay:open`;
   - OOB badge update;
   - mark-one / mark-all;
@@ -467,12 +465,12 @@ pages. It keeps the move from churning code that is still being written.
 
 ## 7.5 Misc shell issues
 
-- [ ] `base.html` has `<meta http-equiv="refresh" content="300">`. A full reload
+- [x] `base.html` has `<meta http-equiv="refresh" content="300">`. A full reload
   every five minutes closes overlays and loses form input. Either remove it or
   replace it with targeted HTMX polling (e.g. notifications).
-- [ ] Fix the malformed favicon link (`...favicon.svg''` has an extra quote).
+- [x] Fix the malformed favicon link (`...favicon.svg''` has an extra quote).
 - the current icon-only footer is intentional.
-- [ ] Verify the `{% block 'title' %}` syntax in `base.html`; quoted block names
+- [x] Verify the `{% block 'title' %}` syntax in `base.html`; quoted block names
   work, but the whitespace inside the default title should be cleaned up.
 
 ---

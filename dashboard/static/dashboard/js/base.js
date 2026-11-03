@@ -93,6 +93,27 @@ function closeOverlay() {
   closeOverlayElement(activeOverlay);
 }
 
+// Closing a toggle happens in the capture phase so the element's htmx trigger
+// does not refetch the panel that is being closed (e.g. the profile button).
+document.addEventListener(
+  "click",
+  (event) => {
+    const element = event.target instanceof Element ? event.target : null;
+    if (!element) return;
+
+    const toggle = element.closest("[data-overlay-toggle]");
+    if (!toggle) return;
+
+    const overlay = document.getElementById(toggle.dataset.overlayToggle);
+    if (overlay && overlay === activeOverlay) {
+      closeOverlayElement(overlay);
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  },
+  true,
+);
+
 document.addEventListener("click", (event) => {
   const element = event.target instanceof Element ? event.target : null;
   if (!element) return;

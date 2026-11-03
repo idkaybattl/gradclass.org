@@ -15,7 +15,7 @@ from .forms import (
     ParticipationTimeFormSet,
     SetEarningsForm,
 )
-from .models import Event, EventParticipation, JoinRequest
+from .models import Abikasse, Event, EventParticipation, JoinRequest
 from .notifications import Notification, NotificationVerbChoices
 from .views.events import MAX_PROJECTS_PER_HOUR
 
@@ -95,6 +95,33 @@ class NotificationViewTests(TestCase):
         self.assertContains(response, "Gelesen")
         self.assertNotContains(response, "Alte Aktion")
         self.assertNotContains(response, "Keine ungelesenen Mitteilungen.")
+
+    def test_event_notification_opens_event_details_in_overlay(self):
+        response = self.client.get(reverse("notifications"))
+
+        self.assertContains(
+            response,
+            f'hx-get="{reverse("event-details", args=[self.event.pk])}"',
+        )
+        self.assertContains(response, 'data-overlay-open="overlay"')
+        self.assertContains(response, 'hx-target="#overlay-content"')
+
+    def test_join_request_notification_opens_request_in_overlay(self):
+        join_request = JoinRequest.objects.create(
+            requestor=self.other_user, event=self.event
+        )
+        Notification.objects.create(
+            user=self.user,
+            verb=NotificationVerbChoices.EVENT_JOIN_REQUEST,
+            target=join_request,
+        )
+
+        response = self.client.get(reverse("notifications"))
+
+        self.assertContains(
+            response,
+            f'hx-get="{reverse("join-request-details", args=[join_request.pk])}"',
+        )
 
     def test_mark_notification_as_read_returns_updated_panel(self):
         response = self.client.post(
@@ -254,6 +281,78 @@ class EventViewTests(TestCase):
 
         self.assertContains(response, f'href="{reverse("events-upcoming")}"')
         self.assertContains(response, f'href="{reverse("events")}"')
+
+
+class HomePageViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="student",
+            password="password",
+            first_name="Anna",
+            last_name="Zimmer",
+        )
+        self.user.profile.has_had_introduction = True
+        self.user.profile.save(update_fields=["has_had_introduction"])
+        self.client.force_login(self.user)
+
+    def test_home_page_restores_abikasse_and_navigation_links(self):
+        Abikasse.objects.create(goal=30000)
+        now = timezone.now()
+        Event.objects.create(
+            title="Sommerfest",
+            description="",
+            starting_date=now - timedelta(days=2),
+            ending_date=now - timedelta(days=1),
+            creator=self.user,
+            manager=self.user,
+            earnings=Decimal("100.00"),
+            final=True,
+        )
+
+        response = self.client.get(reverse("main-page"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "100,00 €")
+        self.assertContains(response, "30000,00 €")
+        self.assertContains(response, 'class="fund__divider"')
+        self.assertContains(response, "Neuigkeiten")
+        self.assertNotContains(response, "Rangliste")
+        self.assertContains(response, f'href="{reverse("polls")}"')
+        self.assertContains(response, f'href="{reverse("events-upcoming")}"')
+
+    def test_empty_abikasse_shows_zero(self):
+        response = self.client.get(reverse("main-page"))
+
+        self.assertContains(response, "0,00 €")
+
+    def test_home_page_does_not_force_reload(self):
+        response = self.client.get(reverse("main-page"))
+
+        self.assertNotContains(response, 'http-equiv="refresh"')
+
+    def test_admin_menu_link_is_staff_only(self):
+        response = self.client.get(reverse("main-page"))
+
+        self.assertNotContains(response, 'href="/admin/"')
+
+        self.user.is_staff = True
+        self.user.save(update_fields=["is_staff"])
+
+        response = self.client.get(reverse("main-page"))
+
+        self.assertContains(response, 'href="/admin/"')
+
+    def test_menu_links_available_pages_and_marks_others_disabled(self):
+        response = self.client.get(reverse("main-page"))
+
+        self.assertContains(response, f'href="{reverse("users")}"')
+        self.assertContains(response, 'data-overlay-toggle="overlay"')
+        self.assertContains(response, 'aria-controls="overlay"')
+        self.assertContains(
+            response,
+            f'href="{reverse("user-details", args=[self.user.pk])}" data-overlay-open="overlay"',
+        )
+        self.assertContains(response, 'aria-disabled="true"')
 
 
 class EventDetailViewTests(TestCase):

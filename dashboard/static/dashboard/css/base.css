@@ -485,6 +485,15 @@ footer {
     opacity: 0.6;
 }
 
+.menu-link--disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.menu-link--disabled:hover {
+    opacity: 0.45;
+}
+
 @media (max-width: 800px) {
 
     /* full-bleed overlays only need their top/bottom borders */

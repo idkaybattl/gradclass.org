@@ -1,5 +1,5 @@
 /*
- * Mobile: two columns.
+ * Mobile: two columns, three rows.
  * The gallery and polls cards are desktop-only.
  */
 .main-grid {
@@ -42,6 +42,27 @@
 .fund {
     grid-column: 1 / 2;
     grid-row: 3 / 4;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.fund>h2 {
+    padding-top: 0;
+}
+
+.fund__amount {
+    color: var(--text);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+.fund__divider {
+    width: 60%;
+    border-style: solid none none;
 }
 
 .profile {
@@ -55,6 +76,11 @@
 .gallery,
 .polls {
     display: none;
+}
+
+.polls {
+    color: inherit;
+    text-decoration: none;
 }
 
 /*

@@ -72,7 +72,7 @@ class Abikasse(models.Model):
             Event.objects.filter(final=True)  # pyright: ignore[reportAttributeAccessIssue]
             .aggregate(Sum("earnings"))
             .get("earnings__sum", 0)
-        )
+        ) or 0
 
     def save(self, *args, **kwargs):
         # so that there is only one abikasse instance in the database

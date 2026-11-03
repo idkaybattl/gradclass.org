@@ -19,11 +19,14 @@
         <section class="card news">
             <h2>Neuigkeiten</h2>
         </section>
-        <section class="card polls">
+        <a class="card polls" href="{% url 'polls' %}">
             <h2>Abstimmungen</h2>
-        </section>
+        </a>
         <section class="card fund">
             <h2>Abikasse</h2>
+            <p class="fund__amount">{{ abikasse_current|floatformat:2 }} €</p>
+            <hr class="fund__divider" />
+            <p class="fund__amount">{{ abikasse_goal|floatformat:2 }} €</p>
         </section>
         <a class="card profile" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
             hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
