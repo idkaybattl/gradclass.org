@@ -1,0 +1,31 @@
+<form class="intro-form" method="post" action="{% url 'introduction' %}" hx-post="{% url 'introduction' %}"
+    hx-target="#step-6" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    <p class="intro-note">
+        Alle Felder sind optional und werden nur verwendet, falls eine Aktion
+        zusätzliche Informationen benötigt. Sie sind außerdem für alle Nutzer
+        der Website einsehbar.
+    </p>
+
+    {{ profile_form.non_field_errors }}
+
+    {% for field in profile_form %}
+    <div class="field">
+        {{ field.errors }}
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}
+        <div class="field__help">{{ field.help_text }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="intro-step__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">Fertig</button>
+        <button type="button" class="btn" data-from="step-6" data-to="step-1">Zurück</button>
+    </div>
+</form>

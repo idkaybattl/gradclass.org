@@ -30,6 +30,7 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
   `auth.py`, `events.py`, `users.py`, `notifications.py`.
 - `dashboard/permissions.py` — permission checks shared by views.
 - `dashboard/http_helpers.py` — `next`/`back` validation and HTMX redirects.
+- `dashboard/intro.py` — forced first-run introduction redirect and decorator.
 - `dashboard/feedback.py` — status-flag feedback messages and rendering.
 - `dashboard/context_processors.py` — template-wide unread notification count.
 - `dashboard/forms.py` — forms and widgets.

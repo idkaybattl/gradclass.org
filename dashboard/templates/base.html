@@ -40,6 +40,7 @@
 
 <body>
 
+    {% block nav %}
     <nav>
         <a href="/" class="nav-item" aria-label="Abi 28">
             <span class="logo" style="--icon: url('{% static 'dashboard/icons/hanging-square.svg' %}')"></span>
@@ -58,6 +59,7 @@
             {% endif %}
         </div>
     </nav>
+    {% endblock %}
 
     <main>
         <div class="content-container">
@@ -65,6 +67,7 @@
                 {% block content %}
                 {% endblock %}
             </div>
+            {% block footer %}
             {% if user.is_authenticated %}
             <footer>
                 <!-- Contact, Instagram, Tiktok -->
@@ -86,7 +89,9 @@
                 </div>
             </footer>
             {% endif %}
+            {% endblock %}
         </div>
+        {% block overlays %}
         <div class="overlay-layer">
             <!-- Notifications: drops down from the navbar. -->
             <div class="overlay overlay--notifications" id="notifications-overlay" data-dismiss="up" role="dialog"
@@ -127,6 +132,7 @@
                 </div>
             </div>
         </div>
+        {% endblock %}
     </main>
 
     <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>

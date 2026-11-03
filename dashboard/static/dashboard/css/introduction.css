@@ -1,0 +1,73 @@
+/* The introduction is a single full-page flow; JavaScript shows one step. */
+
+.introduction {
+    height: 100%;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.intro-step {
+    flex: 1 0 auto;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--base-padding);
+
+    padding: var(--base-padding);
+}
+
+.intro-step[hidden] {
+    display: none;
+}
+
+.intro-step__text {
+    display: grid;
+    gap: 12px;
+}
+
+.intro-step__title {
+    font-size: var(--font-size-lg);
+    color: var(--primary);
+}
+
+.intro-step__list {
+    display: grid;
+    gap: 4px;
+    padding-left: 1.2em;
+}
+
+.intro-step__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.intro-form {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.intro-form .intro-step__actions {
+    margin-top: auto;
+}
+
+.intro-note {
+    padding: 10px;
+
+    border-style: solid;
+
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 400px) {
+    .intro-step {
+        padding: 12px;
+    }
+}

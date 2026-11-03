@@ -5,20 +5,17 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from ..intro import introduction_required
 from ..models import Abikasse
 from ..permissions import can_view_users
-from .auth import redirect_if_introduction_needed
 
 User = get_user_model()
 
 
 @login_required
 @require_GET
+@introduction_required
 def main_page(request):
-    intro_redirect = redirect_if_introduction_needed(request)
-    if intro_redirect:
-        return intro_redirect
-
     abikasse, _ = Abikasse.objects.get_or_create(
         pk=1,
         defaults={
@@ -64,17 +61,20 @@ def main_page(request):
 
 
 @login_required
+@introduction_required
 def calendar(request):
     return render(request, "calendar.html")
 
 
 @login_required
 @require_GET
+@introduction_required
 def contact(request):
     return render(request, "contact.html")
 
 
 @login_required
 @require_GET
+@introduction_required
 def polls(request):
     return render(request, "polls.html")

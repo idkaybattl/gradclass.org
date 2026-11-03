@@ -17,6 +17,7 @@ from ..http_helpers import (
     is_htmx_request,
     render_page_or_partial,
 )
+from ..intro import introduction_required
 from ..permissions import can_change_password, can_edit_user, can_view_users
 
 User = get_user_model()
@@ -105,6 +106,7 @@ def render_user_details(request, user, **overrides):
 
 @login_required
 @require_GET
+@introduction_required
 def users(request):
     if not can_view_users(request):
         raise PermissionDenied

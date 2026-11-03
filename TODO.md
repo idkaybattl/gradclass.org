@@ -370,7 +370,7 @@ pages. It keeps the move from churning code that is still being written.
 
 # 6. Introduction
 
-- [ ] Add `templates/introduction.html` extending `base.html`.
+- [x] Add `templates/introduction.html` extending `base.html`.
   - The view already provides `profile_form`, `password_form`, `user`,
     `next_url`.
   - Keep the old five content steps and the final profile step, but rebuild the
@@ -378,20 +378,20 @@ pages. It keeps the move from churning code that is still being written.
   - Consider hiding the normal nav/menu/footer during the introduction, or add a
     `base.html` block for “minimal shell”. The current user should be forced to
     finish before using the site.
-- [ ] Add `static/dashboard/js/introduction.js`:
+- [x] Add `static/dashboard/js/introduction.js`:
   - `showStep(showId, hideId)` logic and “Weiter” buttons.
   - Initialise on `DOMContentLoaded` and after HTMX swaps.
   - On `intro:password-set`, advance to the profile step.
   - If the profile POST fails and the page re-renders, start at the profile step
     (pass an `initial_step` context variable).
-- [ ] Rewrite `password_set`:
+- [x] Rewrite `password_set`:
   - Invalid form: render `introduction/_password_form.html` with errors and
     status 200 (currently returns a bare JSON `{"success": false}` and shows
     nothing).
   - Valid form: return `204` with `HX-Trigger: intro:password-set` (after
     `update_session_auth_hash`).
   - Non-HTMX fallback: redirect to the introduction page.
-- [ ] Make the final profile form POST to `introduction`:
+- [x] Make the final profile form POST to `introduction`:
   - On success: mark `has_had_introduction`, save, then render a final
     `components/_feedback.html` step (“Profil gespeichert”) with a “Weiter zur
     Startseite” link. The intro page is a full page, so the link can be a normal
@@ -401,11 +401,11 @@ pages. It keeps the move from churning code that is still being written.
   - On failure: re-render the page with errors and `initial_step="profile"`.
   - For HTMX, `HX-Redirect` is only needed if the final step navigates away;
     otherwise the feedback step stays in the intro container.
-- [ ] Call `redirect_if_introduction_needed` from the main entry points
+- [x] Call `redirect_if_introduction_needed` from the main entry points
   (main page, events, users, polls, calendar, contact) or add a small
   middleware/decorator. The old frontend only guarded the main page, so direct
   URLs could bypass the intro; decide whether parity or hardening is wanted.
-- [ ] Add tests for: intro redirect, successful password step, invalid password
+- [x] Add tests for: intro redirect, successful password step, invalid password
   step, successful profile completion, invalid profile stay-on-step.
 
 ---

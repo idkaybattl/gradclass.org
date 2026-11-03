@@ -37,6 +37,7 @@ STATUS_FEEDBACK = {
     ),
     "profile-updated": ("success", "Profil erfolgreich bearbeitet"),
     "password-updated": ("success", "Passwort erfolgreich geändert"),
+    "intro-profile-saved": ("success", "Profil gespeichert"),
 }
 
 

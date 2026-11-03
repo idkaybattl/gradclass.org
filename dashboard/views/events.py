@@ -23,6 +23,7 @@ from ..http_helpers import (
     is_htmx_request,
     render_page_or_partial,
 )
+from ..intro import introduction_required
 from ..models import Event, EventParticipation, JoinRequest
 from ..notifications import Notification, NotificationVerbChoices
 from ..permissions import (
@@ -192,6 +193,7 @@ def edit_event(request, event_id):
 
 @login_required
 @require_GET
+@introduction_required
 def events(request, mode):
     now = timezone.now()
     event_list = list(

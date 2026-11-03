@@ -146,6 +146,9 @@ class EventViewTests(TestCase):
         self.staff = User.objects.create_user(
             username="staff", password="password", is_staff=True
         )
+        for user in (self.user, self.other_user, self.staff):
+            user.profile.has_had_introduction = True
+            user.profile.save(update_fields=["has_had_introduction"])
 
         now = timezone.now()
         self.own_past_event = self.create_event(
@@ -598,6 +601,8 @@ class EventCreateViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="student", password="password")
         self.other = User.objects.create_user(username="other", password="password")
+        self.user.profile.has_had_introduction = True
+        self.user.profile.save(update_fields=["has_had_introduction"])
         self.client.force_login(self.user)
 
     def create_data(self, **overrides):
@@ -1173,3 +1178,129 @@ class UserViewTests(TestCase):
         )
         self.other.refresh_from_db()
         self.assertTrue(self.other.check_password("password"))
+
+
+class IntroductionViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="new-student",
+            password="old-password",
+            first_name="Nora",
+        )
+        self.client.force_login(self.user)
+
+    def test_entry_points_redirect_to_introduction_until_complete(self):
+        for url_name in (
+            "main-page",
+            "events",
+            "users",
+            "calendar",
+            "contact",
+            "polls",
+        ):
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+                self.assertRedirects(response, reverse("introduction"))
+
+    def test_introduction_page_renders_steps(self):
+        response = self.client.get(reverse("introduction"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-introduction")
+        self.assertContains(response, 'data-initial-step="step-1"')
+        self.assertContains(response, 'id="step-1"')
+        self.assertContains(response, 'id="step-6"')
+        self.assertContains(response, "<p>Hi Nora,</p>")
+        self.assertContains(
+            response,
+            '<button type="button" class="btn" data-from="step-1" '
+            'data-to="step-2">Weiter</button>',
+        )
+        self.assertContains(response, "<li>Ankündigungen</li>")
+        self.assertContains(response, "Telefonnummer:")
+
+    def test_password_step_success_returns_trigger_and_updates_password(self):
+        response = self.client.post(
+            reverse("set-password"),
+            {
+                "new_password1": "new-password-123",
+                "new_password2": "new-password-123",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response["HX-Trigger"], "intro:password-set")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("new-password-123"))
+
+    def test_password_step_invalid_rerenders_partial_with_errors(self):
+        response = self.client.post(
+            reverse("set-password"),
+            {"new_password1": "short", "new_password2": "different"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<html")
+        self.assertContains(response, "errorlist")
+        self.assertTrue(response.context["password_form"].errors)
+
+    def test_password_step_without_htmx_redirects_to_introduction(self):
+        response = self.client.post(
+            reverse("set-password"),
+            {
+                "new_password1": "new-password-123",
+                "new_password2": "new-password-123",
+            },
+        )
+
+        self.assertRedirects(response, reverse("introduction"))
+
+    def test_profile_completion_htmx_returns_feedback_step(self):
+        response = self.client.post(
+            reverse("introduction"),
+            {"bio": "Hallo"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<html")
+        self.assertContains(response, "Profil gespeichert")
+        self.assertContains(response, "Weiter zur Startseite")
+        self.assertEqual(response.context["feedback"]["kind"], "success")
+        self.user.profile.refresh_from_db()
+        self.assertTrue(self.user.profile.has_had_introduction)
+
+    def test_profile_completion_without_htmx_redirects_to_main_page(self):
+        response = self.client.post(reverse("introduction"), {"bio": "Hallo"})
+
+        self.assertRedirects(response, reverse("main-page"))
+        self.user.profile.refresh_from_db()
+        self.assertTrue(self.user.profile.has_had_introduction)
+
+    def test_invalid_profile_rerenders_page_at_profile_step(self):
+        response = self.client.post(
+            reverse("introduction"),
+            {"birthday": "2020-13-01"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<html")
+        self.assertContains(response, 'data-initial-step="profile"')
+        self.assertContains(response, "errorlist")
+        self.user.profile.refresh_from_db()
+        self.assertFalse(self.user.profile.has_had_introduction)
+
+    def test_invalid_profile_htmx_rerenders_form_partial(self):
+        response = self.client.post(
+            reverse("introduction"),
+            {"birthday": "2020-13-01"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<html")
+        self.assertContains(response, "errorlist")
+        self.user.profile.refresh_from_db()
+        self.assertFalse(self.user.profile.has_had_introduction)

@@ -1,9 +1,9 @@
-from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from ..feedback import get_feedback, render_feedback
@@ -19,17 +19,38 @@ from .users import user_details_url
 
 User = get_user_model()
 
+VALID_INITIAL_STEPS = {
+    "step-1",
+    "step-2",
+    "step-3",
+    "step-4",
+    "step-5",
+    "step-6",
+    "password",
+    "profile",
+}
 
-def redirect_if_introduction_needed(request):
-    """
-    Helper used by views that should force the user through the introduction
-    before accessing the main site.
-    """
-    # The user is guaranteed to be authenticated (all callers are @login_required)
+
+def introduction_context(
+    request,
+    *,
+    profile_form=None,
+    password_form=None,
+    initial_step="step-1",
+):
     profile = request.user.profile
-    if not profile.has_had_introduction:
-        return redirect("introduction")  # name of the URL pattern
-    return None
+    if profile_form is None:
+        profile_form = UserProfileForm(instance=profile)
+    if password_form is None:
+        password_form = SetPasswordForm(request.user)
+
+    return {
+        "profile_form": profile_form,
+        "password_form": password_form,
+        "user": request.user,
+        "next_url": get_safe_next_url(request),
+        "initial_step": initial_step,
+    }
 
 
 @login_required
@@ -39,8 +60,26 @@ def password_set(request):
     if form.is_valid():
         user = form.save()
         update_session_auth_hash(request, user)
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False})
+
+        if is_htmx_request(request):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "intro:password-set"
+            return response
+
+        return redirect("introduction")
+
+    if is_htmx_request(request):
+        return render(
+            request,
+            "introduction/_password_form.html",
+            {"password_form": form},
+        )
+
+    return render(
+        request,
+        "introduction.html",
+        introduction_context(request, password_form=form, initial_step="password"),
+    )
 
 
 @login_required
@@ -112,23 +151,46 @@ def introduction(request):
             profile.has_had_introduction = True
             profile.save(update_fields=["has_had_introduction"])
 
-            messages.success(request, "Dein Profil wurde gespeichert.")
-            # Respect a ?next= query‑parameter if present
-            return redirect_next_or(request, "main-page")
-        # If the form is invalid we fall through to the template rendering
-        # so the user can correct the errors.
-    else:
-        profile_form = UserProfileForm(instance=profile)
+            if is_htmx_request(request):
+                next_url = get_safe_next_url(request) or reverse("main-page")
+                return render_feedback(
+                    request,
+                    get_feedback(
+                        "intro-profile-saved",
+                        action_url=next_url,
+                        action_label="Weiter zur Startseite",
+                    ),
+                )
 
-    password_form = SetPasswordForm(request.user)
+            # Respect a ?next= parameter if present
+            return redirect_next_or(request, "main-page")
+
+        if is_htmx_request(request):
+            return render(
+                request,
+                "introduction/_profile_form.html",
+                {
+                    "profile_form": profile_form,
+                    "next_url": get_safe_next_url(request),
+                },
+            )
+
+        return render(
+            request,
+            "introduction.html",
+            introduction_context(
+                request,
+                profile_form=profile_form,
+                initial_step="profile",
+            ),
+        )
+
+    initial_step = request.GET.get("step") or "step-1"
+    if initial_step not in VALID_INITIAL_STEPS:
+        initial_step = "step-1"
 
     return render(
         request,
         "introduction.html",
-        {
-            "profile_form": profile_form,
-            "password_form": password_form,
-            "user": request.user,
-            "next_url": get_safe_next_url(request),
-        },
+        introduction_context(request, initial_step=initial_step),
     )
