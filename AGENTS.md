@@ -142,7 +142,9 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
 - Run `manage.py check` after backend changes.
 - Render the affected pages (test client or `runserver`) after template/view
   changes.
-- Run `collectstatic` after static changes.
+- Run `collectstatic` after static changes, and **before running the full test
+  suite**. Tests use the static manifest and fail with `Missing staticfiles
+  manifest entry` for any new or changed asset that has not been collected.
 - The automated test suite is still minimal; add tests where practical when
   fixing logic.
 

@@ -286,30 +286,30 @@ pages. It keeps the move from churning code that is still being written.
 
 ## 5.1 Users list page
 
-- [ ] Add `templates/users.html` extending `base.html`:
+- [x] Add `templates/users.html` extending `base.html`:
   - Full page, not an HTMX partial: search input (`data-user-search`), grid,
     empty state.
   - Each card opens `user-details` in the sheet.
-- [ ] Add `templates/users/_user_card.html`:
+- [x] Add `templates/users/_user_card.html`:
   - `<a>` or `<button>` with `data-overlay-open="overlay"`, `hx-get`,
     `hx-target="#overlay-content"`.
   - Name + email; data hooks for search: `data-user-card`,
     `data-user-name`, `data-user-mail` (or keep the old `#name` / `#mail`
     structure but scope queries to the card).
-- [ ] `users` view:
+- [x] `users` view:
   - Use `User.objects.select_related("profile").order_by("first_name",
     "last_name", "username")` instead of an unordered `set`.
   - Keep `can_view_users` (currently `True`).
   - Always render the full `users.html` page; no partial variant.
-- [ ] Add `static/dashboard/js/users.js`:
+- [x] Add `static/dashboard/js/users.js`:
   - `initUsersList(root)`, ported from the old `users.js`.
   - Use `searchItems` with name, email, maybe username.
   - Initialise on `DOMContentLoaded`; the list page is not swapped.
-- [ ] Add `static/dashboard/css/users.css` (or reuse `events.css` classes).
+- [x] Add `static/dashboard/css/users.css` (or reuse `events.css` classes).
 
 ## 5.2 User details
 
-- [ ] Add `templates/users/_user_details.html`:
+- [x] Add `templates/users/_user_details.html`:
   - Header: name, “Bearbeiten” (if `can_edit`), “Passwort ändern”
     (if `can_change_password`), back.
   - Profile fields: birthday (or “Keine Angabe bisher”), username, IServ mail,
@@ -317,23 +317,23 @@ pages. It keeps the move from churning code that is still being written.
   - Arbeitsstunden (`total_hours`; format `timedelta` readably, e.g. `H:MM`).
   - Projektteilnahmen: list of events. Reuse a simple event card partial or the
     event card with explicit `is_upcoming`/`is_own` values.
-- [ ] `user_details` view:
+- [x] `user_details` view:
   - Dual-render partial/page.
   - Keep `can_edit` and `can_change_password`.
   - Do **not** display `total_earnings` until `UserProfile.total_earnings()` is
     fixed (the model comment says it is currently wrong).
   - Add `back_url` handling so a user opened from an event can return there.
-- [ ] Wire the navbar profile icon and the index `.profile` card to the current
+- [x] Wire the navbar profile icon and the index `.profile` card to the current
   user’s details overlay.
 
 ## 5.3 Edit user profile
 
-- [ ] Add `templates/users/_user_form.html`:
+- [x] Add `templates/users/_user_form.html`:
   - Header “Profil bearbeiten”, back to details.
   - Explicit `.field` rendering of `UserProfileForm` (birthday, external mail,
     phone, bio); do not use `.as_p`.
   - Hidden `next`, CSRF, actions.
-- [ ] `edit_user` view:
+- [x] `edit_user` view:
   - Permission check already exists.
   - GET renders the form.
   - POST: on success return `components/_feedback.html` (“Profil erfolgreich
@@ -342,15 +342,15 @@ pages. It keeps the move from churning code that is still being written.
     `?status=profile-updated`.
   - On failure return the form with status 200.
   - Remove the old `_user_edit_success.html` flow.
-- [ ] Add `static/dashboard/css` styles if the form needs anything beyond
+- [x] Add `static/dashboard/css` styles if the form needs anything beyond
   `.field`.
 
 ## 5.4 Change password
 
-- [ ] Add `templates/users/_password_form.html`:
+- [x] Add `templates/users/_password_form.html`:
   - Header “Passwort ändern für …”, back to details.
   - Explicit field rendering + errors.
-- [ ] `change_password_popup` view cleanup:
+- [x] `change_password_popup` view cleanup:
   - Remove the `print(...)` calls.
   - Add the missing permission check (currently any logged-in user can POST to
     another user’s ID).
@@ -364,7 +364,7 @@ pages. It keeps the move from churning code that is still being written.
     geändert”) with “Zurück zum Profil”; the X closes. Non-HTMX: redirect to the
     full-page user-details wrapper with `?status=password-updated`.
   - On failure return the form with status 200.
-- [ ] `password_set` (introduction) is a separate flow; see step 6.
+- [x] `password_set` (introduction) is a separate flow; see step 6.
 
 ---
 

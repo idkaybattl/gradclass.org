@@ -31,3 +31,7 @@ def can_view_users(request):
 
 def can_edit_user(request, user_id):
     return request.user.is_staff or request.user.id == user_id
+
+
+def can_change_password(request, user_id):
+    return request.user.is_staff or request.user.id == user_id

@@ -1,0 +1,41 @@
+{% url 'user-edit' user.id as form_action %}
+
+<form class="event-form" method="post" action="{{ form_action }}" hx-post="{{ form_action }}"
+    hx-target="#overlay-content" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    {% include "components/_overlay_header.html" with title="Profil bearbeiten" back_url=back_url %}
+
+    {{ form.non_field_errors }}
+
+    <p class="field">
+        {{ form.birthday.errors }}
+        {{ form.birthday.label_tag }}
+        {{ form.birthday }}
+    </p>
+
+    <p class="field">
+        {{ form.external_mail.errors }}
+        {{ form.external_mail.label_tag }}
+        {{ form.external_mail }}
+    </p>
+
+    <p class="field">
+        {{ form.phone_number.errors }}
+        {{ form.phone_number.label_tag }}
+        {{ form.phone_number }}
+    </p>
+
+    <p class="field">
+        {{ form.bio.errors }}
+        {{ form.bio.label_tag }}
+        {{ form.bio }}
+    </p>
+
+    <div class="event-form__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">Fertig</button>
+    </div>
+</form>

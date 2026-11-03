@@ -1,0 +1,55 @@
+/* The users list reuses the list layout classes from events.css
+   (.events-page, .events-grid, .event-card); this file adds user-specific pieces. */
+.user-card {
+    text-align: left;
+}
+
+.user-card__name {
+    font-size: var(--font-size-base);
+    color: var(--primary);
+    overflow-wrap: anywhere;
+}
+
+.user-card__mail {
+    font-size: var(--font-size-sm);
+    overflow-wrap: anywhere;
+}
+
+/* user detail overlay */
+.user-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.user-detail__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.user-detail__section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+}
+
+.user-detail__section h3 {
+    font-size: var(--font-size-lg);
+}
+
+.user-detail__events {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.field__help {
+    font-size: var(--font-size-sm);
+    opacity: 0.8;
+}
+
+.field__help ul {
+    padding-left: 1.2em;
+}

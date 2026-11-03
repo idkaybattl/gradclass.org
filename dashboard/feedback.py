@@ -27,6 +27,16 @@ STATUS_FEEDBACK = {
     "create-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu erstellen."),
     "edit-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu bearbeiten."),
     "delete-denied": ("error", "Du bist nicht berechtigt, diese Aktion zu löschen."),
+    "user-edit-denied": (
+        "error",
+        "Du bist nicht berechtigt, dieses Nutzerprofil zu bearbeiten.",
+    ),
+    "password-denied": (
+        "error",
+        "Du bist nicht berechtigt, dieses Passwort zu ändern.",
+    ),
+    "profile-updated": ("success", "Profil erfolgreich bearbeitet"),
+    "password-updated": ("success", "Passwort erfolgreich geändert"),
 }
 
 

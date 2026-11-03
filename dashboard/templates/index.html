@@ -25,9 +25,10 @@
         <section class="card fund">
             <h2>Abikasse</h2>
         </section>
-        <section class="card profile">
+        <a class="card profile" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
+            hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
             <h2>Profil</h2>
-        </section>
+        </a>
     </div>
 </div>
 {% endblock %}

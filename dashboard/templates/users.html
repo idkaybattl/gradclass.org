@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Nutzer{% endblock %}
+
+{% block content %}
+<div class="events-page users-page" data-users-page>
+    <div class="events-page__header">
+        <h1>Nutzer</h1>
+    </div>
+
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
+
+    <div class="events-toolbar">
+        <input type="search" class="input" data-user-search placeholder="Nutzer durchsuchen …"
+            aria-label="Nutzer durchsuchen" autocomplete="off" />
+    </div>
+
+    <div class="events-grid" data-users-grid>
+        {% for user in users %}
+        {% include "users/_user_card.html" %}
+        {% endfor %}
+
+        <p class="events-empty" data-users-empty {% if users %}hidden{% endif %}>
+            Keine Nutzer gefunden.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'dashboard/js/users.js' %}" defer></script>
+{% endblock %}

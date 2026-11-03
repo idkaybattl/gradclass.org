@@ -1,0 +1,7 @@
+<a class="card event-card user-card" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
+    hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content" hx-swap="innerHTML" data-user-card
+    data-user-name="{{ user.get_full_name }}" data-user-mail="{{ user.email }}"
+    data-user-username="{{ user.username }}">
+    <span class="user-card__name">{{ user.get_full_name|default:user.username }}</span>
+    <p class="user-card__mail">{{ user.email|default:"Keine IServ-Mail" }}</p>
+</a>

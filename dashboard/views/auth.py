@@ -2,14 +2,20 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
-from django.template.loader import render_to_string
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from ..feedback import get_feedback, render_feedback
 from ..forms import UserProfileForm
-from ..http_helpers import get_safe_next_url, redirect_next_or
-from ..permissions import can_edit_user
+from ..http_helpers import (
+    get_safe_back_url,
+    get_safe_next_url,
+    is_htmx_request,
+    redirect_next_or,
+)
+from ..permissions import can_change_password
+from .users import user_details_url
 
 User = get_user_model()
 
@@ -39,52 +45,58 @@ def password_set(request):
 
 @login_required
 def change_password_popup(request, user_id):
-    if request.method == "POST":
-        user = User.objects.get(pk=user_id)
-        form = PasswordChangeForm(user, request.POST)
-        if form.is_valid():
-            print("valid form")
-            user = form.save()
-            update_session_auth_hash(request, user)
-            messages.success(request, "Dein Passwort wurde erfolgreich geändert.")
-            # Build the same context user_details uses
-            total_hours = user.profile.total_hours()
-            total_earnings = user.profile.total_earnings()
-            event_participations = set(user.event_participations.all())
-            can_edit = can_edit_user(request, user_id)
-            can_change_password = request.user.is_staff or request.user.id == user_id
+    user = get_object_or_404(User, pk=user_id)
 
-            html = render_to_string(
-                "components/_user_details.html",
-                {
-                    "user": user,
-                    "total_hours": total_hours,
-                    "total_earnings": total_earnings,
-                    "event_participations": event_participations,
-                    "can_edit": can_edit,
-                    "can_change_password": can_change_password,
-                    "next_url": get_safe_next_url(request),
-                },
-                request=request,
-            )
-            return HttpResponse(html)
-
-        # ----- FAILURE -----
-        # Render the form again (with errors) and send it back
-        print("invalid form")
-        html = render_to_string(
-            "components/_user_change_password.html",
-            {"user": user, "form": form, "next_url": request.GET.get("next")},
-            request=request,
+    if not can_change_password(request, user_id):
+        feedback = get_feedback(
+            "password-denied",
+            action_url=user_details_url(user),
+            action_label="Zum Profil",
+            action_htmx=True,
         )
-        return HttpResponse(html, status=200)
+        if is_htmx_request(request):
+            return render_feedback(request, feedback)
 
-    user = User.objects.get(pk=user_id)
-    form = PasswordChangeForm(user)
+        return redirect(user_details_url(user, status="password-denied"))
+
+    form_class = PasswordChangeForm if user == request.user else SetPasswordForm
+    back_url = get_safe_back_url(request) or user_details_url(user)
+    next_url = get_safe_next_url(request)
+
+    if request.method == "POST":
+        form = form_class(user, request.POST)
+
+        if form.is_valid():
+            changed_user = form.save()
+            if changed_user == request.user:
+                update_session_auth_hash(request, changed_user)
+
+            if is_htmx_request(request):
+                return render_feedback(
+                    request,
+                    get_feedback(
+                        "password-updated",
+                        action_url=back_url,
+                        action_label="Zurück zum Profil",
+                        action_htmx=True,
+                    ),
+                )
+
+            return redirect(user_details_url(changed_user, status="password-updated"))
+    else:
+        form = form_class(user)
+
     return render(
         request,
-        "components/_user_change_password.html",
-        {"form": form, "user": user, "next_url": request.GET.get("next")},
+        "users/_password_form.html",
+        {
+            "form": form,
+            "user": user,
+            "display_name": user.get_full_name() or user.username,
+            "password_title": f"Passwort ändern für {user.get_full_name() or user.username}",
+            "back_url": back_url,
+            "next_url": next_url,
+        },
     )
 
 

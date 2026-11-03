@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{% static 'dashboard/css/base.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/components.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/events.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/css/users.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/user_search_widget.css' %}" />
 
     <title>{% block 'title' %}WHG Abi 2028 Verwaltung {% endblock %}</title>
@@ -46,7 +47,8 @@
         <div class="nav-items">
             {% if user.is_authenticated %}
             {% include "components/_notifications_button.html" %}
-            <a class="nav-item" aria-label="Profil">
+            <a class="nav-item" aria-label="Profil" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
+                hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
                 <span class="logo" style="--icon: url('{% static 'dashboard/icons/circle.svg' %}')"></span>
             </a>
             <button type="button" class="nav-item" data-overlay-toggle="menu-overlay" aria-controls="menu-overlay"
@@ -115,7 +117,7 @@
                     <a class="menu-link">Umfragen</a> <!-- (Abstimmungen?) (Könnens auch bei Demokratie belassen) -->
                     <a class="menu-link">Abikasse</a>
                     <a class="menu-link">Forum</a>
-                    <a class="menu-link">Nutzer</a>
+                    <a class="menu-link" href="{% url 'users' %}">Nutzer</a>
                     <a class="menu-link">Admin</a>
                     <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}

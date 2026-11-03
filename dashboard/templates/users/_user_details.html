@@ -1,0 +1,42 @@
+<div class="user-detail" data-user-detail>
+    {% include "components/_overlay_header.html" with title=display_name %}
+
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
+
+    {% if can_change_password %}
+    <div class="user-detail__actions">
+        <a class="btn" href="{{ password_url }}" data-overlay-open="overlay" hx-get="{{ password_url }}"
+            hx-target="#overlay-content" hx-swap="innerHTML">Passwort ändern</a>
+    </div>
+    {% endif %}
+
+    <section class="user-detail__section card">
+        <h3>Profil</h3>
+        <p><strong>Geburtstag:</strong> {{ profile_user.profile.birthday|date:"d.m.Y"|default:"Keine Angabe bisher" }}
+        </p>
+        <p><strong>Nutzername:</strong> {{ profile_user.username }}</p>
+        <p><strong>IServ Mail:</strong> {{ profile_user.email|default:"Keine Angabe bisher" }}</p>
+        <p><strong>Externe Mail:</strong> {{ profile_user.profile.external_mail|default:"Keine Angabe bisher" }}</p>
+        <p><strong>Telefonnummer:</strong> {{ profile_user.profile.phone_number|default:"Keine Angabe bisher" }}</p>
+    </section>
+
+    <section class="user-detail__section card">
+        <h3>Bio</h3>
+        <p>{{ profile_user.profile.bio|default:"Keine Bio vorhanden"|linebreaksbr }}</p>
+    </section>
+
+    <section class="user-detail__section card">
+        <h3>Projektteilnahmen</h3>
+        <p>Arbeitsstunden: {{ total_hours_display }} h</p>
+
+        <div class="user-detail__events">
+            {% for event in participation_events %}
+            {% include "events/_event_card.html" with event=event card_back_url=detail_url %}
+            {% empty %}
+            <p>Keine Projektteilnahmen</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
