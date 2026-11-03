@@ -499,86 +499,87 @@ These are small, but their templates are missing, so direct URLs currently raise
 
 ## 9.1 Styles and components
 
-- [ ] Add shared overlay/panel styles to `components.css` (header, action row,
+- [x] Add shared overlay/panel styles to `components.css` (header, action row,
   section blocks, loading state) instead of duplicating them in every feature
   CSS file.
-- [ ] Make the overlay header layout explicit: back button on the left, title in
+- [x] Make the overlay header layout explicit: back button on the left, title in
   the middle, panel actions on the right, with right padding reserved for the
   shell X. Never render back and close in the same group.
-- [ ] Add `.field`-based form styles for selects/date inputs/checkboxes; the
+- [x] Add `.field`-based form styles for selects/date inputs/checkboxes; the
   existing component file covers input/select/textarea but verify
   `datetime-local`, `date`, and the manager picker input.
-- [ ] Add `.errorlist` rendering inside `.field` without breaking layout.
-- [ ] Style the participation-times `<details>`/`<summary>` block and its rows
+- [x] Add `.errorlist` rendering inside `.field` without breaking layout.
+- [x] Style the participation-times `<details>`/`<summary>` block and its rows
   (participant name + duration input) so it stays usable on mobile.
-- [ ] Ensure all overlays work at 320 px width and on iOS Safari (`dvh`, safe
+- [x] Ensure all overlays work at 320 px width and on iOS Safari (`dvh`, safe
   areas are already handled by `base.css`).
-- [ ] No `border-radius`, no hard-coded colours, one border width.
-- [ ] Add `focus-visible` states to cards, menu links, and overlay controls.
+- [x] No `border-radius`, no hard-coded colours, one border width.
+- [x] Add `focus-visible` states to cards, menu links, and overlay controls.
 
 ## 9.2 JavaScript quality
 
-- [ ] Every initialiser must be idempotent and scoped to a root element.
-- [ ] Initialise from `DOMContentLoaded` and `htmx:afterSwap` in one place
+- [x] Every initialiser must be idempotent and scoped to a root element.
+- [x] Initialise from `DOMContentLoaded` and `htmx:afterSwap` in one place
   (`base.js`) so new panels are not forgotten.
-- [ ] Avoid module-level DOM captures that only work on the first page load.
-- [ ] Keep `search.js` generic; do not duplicate scoring logic.
-- [ ] Add a loading state for overlay requests (`hx-indicator`) so slow requests
+- [x] Avoid module-level DOM captures that only work on the first page load.
+- [x] Keep `search.js` generic; do not duplicate scoring logic.
+- [x] Add a loading state for overlay requests (`hx-indicator`) so slow requests
   do not look broken.
-- [ ] Handle `htmx:responseError` with a visible feedback panel instead of a
+- [x] Handle `htmx:responseError` with a visible feedback panel instead of a
   silent failure.
 
 ## 9.3 HTMX/backend correctness
 
-- [ ] Invalid form responses use 2xx.
-- [ ] Full-page navigation uses `HX-Redirect`.
-- [ ] Mutating actions validate `next` only through `get_safe_next_url`.
-- [ ] All POST views are `@require_POST` and all read views that only render are
+- [x] Invalid form responses use 2xx.
+- [x] Full-page navigation uses `HX-Redirect`.
+- [x] Mutating actions validate `next` only through `get_safe_next_url`.
+- [x] All POST views are `@require_POST` and all read views that only render are
   `@require_GET` where appropriate.
-- [ ] Do not leak partial templates by linking to them directly: every overlay
+- [x] Do not leak partial templates by linking to them directly: every overlay
   URL must also have a full-page fallback (or redirect).
-- [ ] Lists render full pages; only detail/form/related-item views return
+- [x] Lists render full pages; only detail/form/related-item views return
   partials for HTMX.
-- [ ] Add `transaction.atomic()` around multi-step writes (`save_event`,
+- [x] Add `transaction.atomic()` around multi-step writes (`save_event`,
   accept join request, earnings + final flag).
 
 ## 9.4 Known backend bugs to fix while touching this code
 
-- [ ] `services.save_event` reassigns `creator` on every edit.
-- [ ] `join_request_details` / `accept_join_request` /
+- [x] `services.save_event` reassigns `creator` on every edit.
+- [x] `join_request_details` / `accept_join_request` /
   `decline_join_request` have no authorization check.
-- [ ] `change_password_popup` has no authorization check and uses
+- [x] `change_password_popup` has no authorization check and uses
   `PasswordChangeForm` for staff editing another user (old password required).
-- [ ] `delete_event` permission differs from `can_edit_event`.
-- [ ] `leave_event` removes participation even when the user is not a
+- [x] `delete_event` permission differs from `can_edit_event`.
+- [x] `leave_event` removes participation even when the user is not a
   participant.
-- [ ] `events` exposes all past events to non-staff (if restoring old privacy).
-- [ ] `set_event_earnings` ignores invalid forms silently.
-- [ ] `EventParticipation.save` resets a `timedelta(0)` participation time to the
+- [x] `events` exposes all past events to non-staff (if restoring old privacy).
+  Intentional decision: all users see all events; no visibility change.
+- [x] `set_event_earnings` ignores invalid forms silently.
+- [x] `EventParticipation.save` resets a `timedelta(0)` participation time to the
   full event duration because it checks `if not self.participation_time`; use
   `is None` so staff can set zero.
-- [ ] `users` view returns an unordered `set`.
-- [ ] `UserProfile.total_hours` contains a duplicate `return` (dead code).
-- [ ] `UserProfile.total_earnings` is known-wrong; do not surface it in the UI
+- [x] `users` view returns an unordered `set`.
+- [x] `UserProfile.total_hours` contains a duplicate `return` (dead code).
+- [x] `UserProfile.total_earnings` is known-wrong; do not surface it in the UI
   until the per-event share formula is implemented.
-- [ ] `password_set` error path returns JSON with no rendered errors.
-- [ ] All existing `messages.*` calls are invisible because `base.html` has no
+- [x] `password_set` error path returns JSON with no rendered errors.
+- [x] All existing `messages.*` calls are invisible because `base.html` has no
   messages block; replace them with the feedback pattern rather than adding a
   messages block.
-- [ ] Old `view` functions reference templates that only exist in
+- [x] Old `view` functions reference templates that only exist in
   `oldtemplates/`; after each step, render the URL and confirm.
-- [ ] `EventForm` participants widget references
+- [x] `EventForm` participants widget references
   `widgets/participants_widget.html`, which does not exist in the active
   templates; create/edit currently fails.
 
 ## 9.5 Tests
 
-- [ ] Update existing tests:
+- [x] Update existing tests:
   - `test_non_staff_sees_all_events` if the old visibility rule is restored.
   - Events tests that assume `"events.html"` is rendered for HTMX requests
     (add separate partial tests for details/edit/create).
   - Notification tests if the notification markup changes.
-- [ ] Add tests for:
+- [x] Add tests for:
   - every overlay view returns a fragment (no `<html>`) for
     `HTTP_HX_REQUEST="true"`, and every authenticated full page contains
     `#overlay-content`.
@@ -604,13 +605,13 @@ These are small, but their templates are missing, so direct URLs currently raise
   - non-HTMX redirects carry the whitelisted `?status=` flag and render the
     corresponding feedback banner.
   - `redirect_next_or` emits `HX-Redirect` for HTMX and a 302 otherwise.
-- [ ] Keep the suite runnable with `.venv/bin/python manage.py test`.
+- [x] Keep the suite runnable with `.venv/bin/python manage.py test`.
 
 ## 9.6 Final validation checklist
 
-- [ ] `.venv/bin/python manage.py check`
-- [ ] `.venv/bin/python manage.py test`
-- [ ] Render every URL with the test client (including HTMX variants):
+- [x] `.venv/bin/python manage.py check`
+- [x] `.venv/bin/python manage.py test`
+- [x] Render every URL with the test client (including HTMX variants):
   `/`, `/events/`, `/events/upcoming/`, `/events/own/`, `/events/<id>/`,
   `/events/create/`, `/events/<id>/edit/`, participation-times POST, join request
   URLs, `/users/`, `/users/<id>/`, `/users/<id>/edit/`,
@@ -636,8 +637,9 @@ These are small, but their templates are missing, so direct URLs currently raise
   - Complete the introduction in a fresh account.
   - Open a user from the manager link and return.
   - Password change for self and (if supported) for another user as staff.
-- [ ] `.venv/bin/python manage.py collectstatic --noinput` after static changes.
-- [ ] Update `TODO.md` checkboxes and `AGENTS.md` when a convention changes.
+  <!-- Not executable in this environment; run once in a real browser before release. -->
+- [x] `.venv/bin/python manage.py collectstatic --noinput` after static changes.
+- [x] Update `TODO.md` checkboxes and `AGENTS.md` when a convention changes.
 
 ---
 

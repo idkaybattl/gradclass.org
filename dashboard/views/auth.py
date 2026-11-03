@@ -4,7 +4,7 @@ from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from ..feedback import get_feedback, render_feedback
 from ..forms import UserProfileForm
@@ -83,6 +83,7 @@ def password_set(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def change_password_popup(request, user_id):
     user = get_object_or_404(User, pk=user_id)
 
@@ -123,11 +124,18 @@ def change_password_popup(request, user_id):
 
             return redirect(user_details_url(changed_user, status="password-updated"))
     else:
+        if not is_htmx_request(request):
+            return redirect(user_details_url(user))
         form = form_class(user)
 
+    template = (
+        "users/_password_form.html"
+        if is_htmx_request(request)
+        else "users/password.html"
+    )
     return render(
         request,
-        "users/_password_form.html",
+        template,
         {
             "form": form,
             "user": user,
@@ -140,6 +148,7 @@ def change_password_popup(request, user_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def introduction(request):
     profile = request.user.profile
 

@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from ..http_helpers import is_htmx_request, redirect_next_or
@@ -29,6 +29,11 @@ def notification_action_response(request):
 @login_required
 @require_GET
 def notifications(request):
+    # The notification list is an overlay fragment; direct navigations fall back
+    # to the main page instead of exposing a bare partial.
+    if not is_htmx_request(request):
+        return redirect("main-page")
+
     return render_notifications(request)
 
 

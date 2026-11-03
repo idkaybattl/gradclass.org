@@ -75,14 +75,4 @@ function initEventsList(root = document) {
   render();
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => initEventsList(document));
-} else {
-  initEventsList(document);
-}
-
-// The events list is a normal page, but keep the initialiser idempotent so a
-// future HTMX-swapped variant works without a second code path.
-document.addEventListener("htmx:afterSwap", (event) => {
-  initEventsList(event.detail.target);
-});
+window.initEventsList = initEventsList;

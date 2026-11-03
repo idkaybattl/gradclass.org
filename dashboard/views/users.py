@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
 
 from ..durations import format_duration
 from ..feedback import get_feedback, render_feedback
@@ -144,6 +144,7 @@ def user_details(request, user_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def edit_user(request, user_id):
     if not can_edit_user(request, user_id):
         feedback = get_feedback(
@@ -181,11 +182,16 @@ def edit_user(request, user_id):
 
             return redirect(user_details_url(user, status="profile-updated"))
     else:
+        if not is_htmx_request(request):
+            return redirect(user_details_url(user))
         form = UserProfileForm(instance=user.profile)
 
+    template = (
+        "users/_user_form.html" if is_htmx_request(request) else "users/form.html"
+    )
     return render(
         request,
-        "users/_user_form.html",
+        template,
         {
             "form": form,
             "user": user,

@@ -62,17 +62,7 @@ function initIntroduction(root = document) {
   showStep(normalizeStepId(container.dataset.initialStep) ?? "step-1");
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => initIntroduction(document));
-} else {
-  initIntroduction(document);
-}
-
-// The intro page is a normal page, but keep the initialiser idempotent so a
-// future HTMX-swapped variant works without a second code path.
-document.addEventListener("htmx:afterSwap", (event) => {
-  initIntroduction(event.detail.target);
-});
+window.initIntroduction = initIntroduction;
 
 document.addEventListener("intro:password-set", () => {
   showStep("step-6", "step-5");

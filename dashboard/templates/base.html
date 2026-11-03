@@ -36,7 +36,7 @@
 
 </head>
 
-<body>
+<body hx-indicator="#overlay-loading">
 
     {% block nav %}
     <nav>
@@ -92,6 +92,11 @@
         </div>
         {% block overlays %}
         <div class="overlay-layer">
+            <!-- Thin progress bar for any HTMX request. -->
+            <div class="overlay-loading" id="overlay-loading" aria-hidden="true">
+                <span class="overlay-loading__bar"></span>
+            </div>
+
             <!-- Notifications: drops down from the navbar. -->
             <div class="overlay overlay--notifications" id="notifications-overlay" data-dismiss="up" role="dialog"
                 aria-label="Mitteilungen" hx-get="{% url 'notifications' %}" hx-trigger="overlay:open"

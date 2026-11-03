@@ -60,13 +60,3 @@ function initEventForms(root = document) {
 }
 
 window.initEventForms = initEventForms;
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => initEventForms());
-} else {
-  initEventForms();
-}
-
-document.addEventListener("htmx:afterSwap", (event) => {
-  initEventForms(event.detail.target);
-});

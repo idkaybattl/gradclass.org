@@ -31,14 +31,4 @@ function initUsersList(root = document) {
   render();
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => initUsersList(document));
-} else {
-  initUsersList(document);
-}
-
-// The users list is a normal page, but keep the initialiser idempotent so a
-// future HTMX-swapped variant works without a second code path.
-document.addEventListener("htmx:afterSwap", (event) => {
-  initUsersList(event.detail.target);
-});
+window.initUsersList = initUsersList;

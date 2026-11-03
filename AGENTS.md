@@ -61,6 +61,8 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
   success/error endpoints.
 - Redirects and HTMX responses: follow **Redirects and HTMX** below.
 - Logout must stay a CSRF-protected POST form; Django 6 rejects GET logout.
+- Event lists show all events to every user; all-users visibility is
+  intentional.
 - User-facing strings are German.
 - Add migrations for model changes. Never reset or delete the dev database.
 - Do not touch `.env`, `db.sqlite3`, `.venv`, `node_modules`, or `staticfiles/`.
@@ -98,6 +100,9 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
 - Overlay partials are fragments: no `{% extends %}`, `<html>`, navbar, footer or
   overlay shell. They may only depend on context passed by their own view. Load
   their CSS/JS from `base.html`, not from the fragment.
+- Overlay-only form URLs redirect on a direct (non-HTMX) GET. An invalid
+  non-HTMX POST renders the full-page wrapper (`*/form.html`, `users/password.html`)
+  so a no-JS submission never exposes a bare fragment.
 - Validate `back`/`next` through `get_safe_back_url` / `get_safe_next_url`.
   `next` is a redirect hint; `back` only navigates one overlay level.
 - `redirect_next_or` is the only place that chooses between a normal redirect
@@ -118,6 +123,11 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
 - Font: self-hosted BioRhyme. Do not add a Google Fonts CDN link.
 - Mobile-first and responsive. Preserve the overlay/menu drag behaviour in `base.css` and `base.js`.
 - Use `{% static %}` for assets. Run `collectstatic` after static changes.
+- Component initialisers expose `window.initX(root)`, are idempotent and scoped to
+  `root`. `base.js` is the only place that calls them, on `DOMContentLoaded` and
+  `htmx:afterSwap`.
+- Overlay requests use the global `#overlay-loading` indicator. `base.js` renders
+  an error feedback panel on `htmx:responseError`, `sendError` and `timeout`.
 - Overlays dispatch `overlay:open`; use it with `hx-trigger` to lazy-load overlay content.
 - Icons use `.logo` with the inline `--icon` pattern; follow it.
 - Icons, fonts, and vendored libraries are assets, not code to edit.

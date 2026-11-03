@@ -282,13 +282,3 @@ function initUserPickers(root = document) {
 }
 
 window.initUserPickers = initUserPickers;
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => initUserPickers());
-} else {
-  initUserPickers();
-}
-
-document.addEventListener("htmx:afterSwap", (event) => {
-  initUserPickers(event.detail.target);
-});

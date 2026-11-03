@@ -1,5 +1,12 @@
-const overlays = Array.from(document.querySelectorAll(".overlay"));
-const defaultOverlay = document.querySelector(".overlay--sheet");
+function getOverlays(root = document) {
+  const overlays = Array.from(root.querySelectorAll(".overlay"));
+  if (root instanceof Element && root.matches(".overlay")) overlays.unshift(root);
+  return overlays;
+}
+
+function getDefaultOverlay() {
+  return document.querySelector(".overlay--sheet");
+}
 
 // Only one overlay may be open at a time.
 let activeOverlay = null;
@@ -86,7 +93,7 @@ function closeOverlayElement(overlay, { restoreFocus = true } = {}) {
 
 // Kept for callers of the original single-overlay API.
 function openOverlay(markup) {
-  openOverlayElement(defaultOverlay, markup);
+  openOverlayElement(getDefaultOverlay(), markup);
 }
 
 function closeOverlay() {
@@ -164,6 +171,73 @@ document.addEventListener("htmx:afterSwap", (event) => {
   if (heading instanceof HTMLElement) heading.focus({ preventScroll: true });
 });
 
+/* Request feedback */
+
+function buildRequestError(message) {
+  const panel = document.createElement("section");
+  panel.className = "feedback feedback--error";
+  panel.setAttribute("role", "status");
+  panel.setAttribute("aria-live", "polite");
+
+  const title = document.createElement("h2");
+  title.className = "feedback__title";
+  title.dataset.overlayTitle = "";
+  title.tabIndex = -1;
+  title.textContent = "Aktion fehlgeschlagen";
+
+  const text = document.createElement("p");
+  text.className = "feedback__message";
+  text.textContent = message;
+
+  panel.append(title, text);
+  return panel;
+}
+
+function showRequestError(event, message) {
+  const target = event.detail.target;
+  if (!(target instanceof Element)) return;
+
+  const container = target.matches(
+    "#overlay-content, #notifications-content, .overlay-content",
+  )
+    ? target
+    : target.closest("#overlay-content, #notifications-content, .overlay-content");
+  if (!container) return;
+
+  container.replaceChildren(buildRequestError(message));
+  const heading = container.querySelector("[data-overlay-title]");
+  if (heading instanceof HTMLElement) heading.focus({ preventScroll: true });
+}
+
+document.addEventListener("htmx:responseError", (event) => {
+  const status = event.detail.xhr?.status;
+  let message = "Der Server konnte die Anfrage nicht verarbeiten.";
+
+  if (status === 403) {
+    message = "Du bist für diese Aktion nicht berechtigt.";
+  } else if (status === 404) {
+    message = "Die angeforderte Seite existiert nicht mehr.";
+  } else if (status) {
+    message = `Der Server konnte die Anfrage nicht verarbeiten (Status ${status}).`;
+  }
+
+  showRequestError(event, message);
+});
+
+document.addEventListener("htmx:sendError", (event) => {
+  showRequestError(
+    event,
+    "Der Server ist gerade nicht erreichbar. Bitte später erneut versuchen.",
+  );
+});
+
+document.addEventListener("htmx:timeout", (event) => {
+  showRequestError(
+    event,
+    "Die Anfrage hat zu lange gedauert. Bitte erneut versuchen.",
+  );
+});
+
 /* Drag to dismiss */
 
 let drag = null;
@@ -185,7 +259,8 @@ function startDrag(event, handle, overlay) {
 // Distance the pointer has moved in the dismiss direction, never negative.
 function getDragDistance(event, dragState) {
   const { dismiss, startX, startY } = dragState;
-  const moved = dismiss.axis === "x" ? event.clientX - startX : event.clientY - startY;
+  const moved =
+    dismiss.axis === "x" ? event.clientX - startX : event.clientY - startY;
   return Math.max(0, moved * dismiss.sign);
 }
 
@@ -197,19 +272,28 @@ function endDrag() {
   drag = null;
 }
 
-overlays.forEach((overlay) => {
-  const handle = overlay.querySelector(".overlay-handle");
-  if (handle) {
-    handle.addEventListener("pointerdown", (event) => startDrag(event, handle, overlay));
-  }
-});
+function initOverlayHandles(root = document) {
+  getOverlays(root).forEach((overlay) => {
+    if (overlay.dataset.dragInitialized === "true") return;
+
+    const handle = overlay.querySelector(".overlay-handle");
+    if (!handle) return;
+
+    handle.addEventListener("pointerdown", (event) =>
+      startDrag(event, handle, overlay),
+    );
+    overlay.dataset.dragInitialized = "true";
+  });
+}
 
 window.addEventListener("pointermove", (event) => {
   if (!drag) return;
 
   const offset = getDragDistance(event, drag) * drag.dismiss.sign;
   drag.overlay.style.transform =
-    drag.dismiss.axis === "x" ? `translateX(${offset}px)` : `translateY(${offset}px)`;
+    drag.dismiss.axis === "x"
+      ? `translateX(${offset}px)`
+      : `translateY(${offset}px)`;
 });
 
 window.addEventListener("pointerup", (event) => {
@@ -225,3 +309,34 @@ window.addEventListener("pointerup", (event) => {
 });
 
 window.addEventListener("pointercancel", endDrag);
+
+/* Component initialisation */
+
+// Feature scripts expose window.initX(root). They must be idempotent and are
+// only called from here, so new panels cannot be forgotten by a page script.
+const PAGE_INITIALIZERS = [
+  "initUserPickers",
+  "initEventForms",
+  "initEventsList",
+  "initUsersList",
+  "initIntroduction",
+];
+
+function initPage(root = document) {
+  initOverlayHandles(root);
+
+  PAGE_INITIALIZERS.forEach((name) => {
+    const initializer = window[name];
+    if (typeof initializer === "function") initializer(root);
+  });
+}
+
+if (document.readyState === "complete") {
+  initPage(document);
+} else {
+  document.addEventListener("DOMContentLoaded", () => initPage(document));
+}
+
+document.addEventListener("htmx:afterSwap", (event) => {
+  initPage(event.detail.target);
+});

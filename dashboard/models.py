@@ -110,7 +110,6 @@ class UserProfile(models.Model):
         result = past_participations.aggregate(total=Sum("participation_time"))
         # If there are no matching rows, return a zero timedelta
         return result["total"] or timedelta(0)
-        return result["total"] or timedelta(0)
 
 
 class JoinRequest(models.Model):

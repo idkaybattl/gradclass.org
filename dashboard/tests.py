@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import SimpleTestCase, TestCase
+from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -15,6 +15,7 @@ from .forms import (
     ParticipationTimeFormSet,
     SetEarningsForm,
 )
+from .http_helpers import redirect_next_or
 from .models import Abikasse, Event, EventParticipation, JoinRequest
 from .notifications import Notification, NotificationVerbChoices
 from .views.events import MAX_PROJECTS_PER_HOUR
@@ -68,7 +69,7 @@ class NotificationViewTests(TestCase):
         )
         join_request.delete()
 
-        response = self.client.get(reverse("notifications"))
+        response = self.client.get(reverse("notifications"), HTTP_HX_REQUEST="true")
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "nicht mehr verfügbar")
@@ -89,7 +90,7 @@ class NotificationViewTests(TestCase):
             is_read=True,
         )
 
-        response = self.client.get(reverse("notifications"))
+        response = self.client.get(reverse("notifications"), HTTP_HX_REQUEST="true")
 
         self.assertContains(response, "Sommerfest")
         self.assertContains(response, "Gelesen")
@@ -97,7 +98,7 @@ class NotificationViewTests(TestCase):
         self.assertNotContains(response, "Keine ungelesenen Mitteilungen.")
 
     def test_event_notification_opens_event_details_in_overlay(self):
-        response = self.client.get(reverse("notifications"))
+        response = self.client.get(reverse("notifications"), HTTP_HX_REQUEST="true")
 
         self.assertContains(
             response,
@@ -116,11 +117,18 @@ class NotificationViewTests(TestCase):
             target=join_request,
         )
 
-        response = self.client.get(reverse("notifications"))
+        response = self.client.get(reverse("notifications"), HTTP_HX_REQUEST="true")
 
         self.assertContains(
             response,
             f'hx-get="{reverse("join-request-details", args=[join_request.pk])}"',
+        )
+
+    def test_notifications_direct_navigation_redirects_to_main_page(self):
+        response = self.client.get(reverse("notifications"))
+
+        self.assertRedirects(
+            response, reverse("main-page"), fetch_redirect_response=False
         )
 
     def test_mark_notification_as_read_returns_updated_panel(self):
@@ -394,6 +402,37 @@ class EventDetailViewTests(TestCase):
         self.assertNotContains(response, "overlay-close")
         self.assertContains(response, "data-event-detail")
 
+    def test_detail_permission_flags(self):
+        detail_url = reverse("event-details", args=[self.event.pk])
+
+        self.client.force_login(self.user)
+        response = self.client.get(detail_url, HTTP_HX_REQUEST="true")
+        self.assertFalse(response.context["can_edit"])
+        self.assertTrue(response.context["can_join"])
+        self.assertFalse(response.context["can_leave"])
+
+        EventParticipation.objects.create(event=self.event, user=self.user)
+        response = self.client.get(detail_url, HTTP_HX_REQUEST="true")
+        self.assertFalse(response.context["can_join"])
+        self.assertTrue(response.context["can_leave"])
+
+        self.client.force_login(self.manager)
+        response = self.client.get(detail_url, HTTP_HX_REQUEST="true")
+        self.assertTrue(response.context["can_edit"])
+        self.assertTrue(response.context["can_join"])
+
+        self.event.final = True
+        self.event.save(update_fields=["final"])
+
+        for user in (self.user, self.manager, self.staff):
+            with self.subTest(user=user.username):
+                self.client.force_login(user)
+                response = self.client.get(detail_url, HTTP_HX_REQUEST="true")
+
+                self.assertFalse(response.context["can_edit"])
+                self.assertFalse(response.context["can_join"])
+                self.assertFalse(response.context["can_leave"])
+
     def test_join_creates_request_for_regular_user(self):
         self.client.force_login(self.user)
 
@@ -515,6 +554,20 @@ class JoinRequestViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    def test_non_manager_cannot_accept_or_decline_join_request(self):
+        self.client.force_login(self.requestor)
+
+        for url_name in ("accept-join-request", "decline-join-request"):
+            with self.subTest(url_name=url_name):
+                response = self.client.post(
+                    reverse(url_name, args=[self.join_request.pk]),
+                    HTTP_HX_REQUEST="true",
+                )
+
+                self.assertEqual(response.status_code, 403)
+
+        self.assertTrue(JoinRequest.objects.filter(pk=self.join_request.pk).exists())
 
     def test_join_request_renders_fragment_for_manager(self):
         self.client.force_login(self.manager)
@@ -739,13 +792,18 @@ class EventCreateViewTests(TestCase):
         self.assertNotContains(response, "overlay-panel-back")
 
     def test_create_form_defaults_manager_to_request_user(self):
-        response = self.client.get(reverse("event-create"))
+        response = self.client.get(reverse("event-create"), HTTP_HX_REQUEST="true")
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
             f'value="{self.user.pk}" data-hidden-user="{self.user.pk}"',
         )
+
+    def test_create_form_direct_navigation_redirects_to_list(self):
+        response = self.client.get(reverse("event-create"))
+
+        self.assertRedirects(response, reverse("events"), fetch_redirect_response=False)
 
     def test_valid_post_creates_event_with_participants_and_feedback(self):
         response = self.client.post(
@@ -789,6 +847,18 @@ class EventCreateViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("title", response.context["form"].errors)
         self.assertContains(response, "Neue Aktion erstellen")
+        self.assertEqual(Event.objects.count(), 0)
+
+    def test_invalid_post_without_htmx_renders_full_page(self):
+        response = self.client.post(
+            reverse("event-create"),
+            self.create_data(**{"new-title": ""}),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<html")
+        self.assertContains(response, "Neue Aktion erstellen")
+        self.assertContains(response, "errorlist")
         self.assertEqual(Event.objects.count(), 0)
 
     def test_rate_limit_returns_feedback_for_htmx(self):
@@ -895,6 +965,29 @@ class EventEditViewTests(TestCase):
             f'value="{self.manager.pk}" data-hidden-user="{self.manager.pk}"',
         )
         self.assertNotContains(response, "<html")
+        self.assertContains(response, "overlay-panel-back")
+
+    def test_edit_form_direct_navigation_redirects_to_detail(self):
+        response = self.client.get(reverse("event-edit", args=[self.event.pk]))
+
+        self.assertRedirects(
+            response,
+            reverse("event-details", args=[self.event.pk]),
+            fetch_redirect_response=False,
+        )
+
+    def test_invalid_edit_post_without_htmx_renders_full_page(self):
+        data = self.edit_data(**{f"{self.event.pk}-title": ""})
+
+        response = self.client.post(reverse("event-edit", args=[self.event.pk]), data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<html")
+        self.assertContains(response, "Aktion bearbeiten")
+        self.assertContains(response, "errorlist")
+
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.creator, self.creator)
 
     def test_manager_picker_only_lists_active_users(self):
         User.objects.create_user(
@@ -1160,6 +1253,42 @@ class UserViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Profil bearbeiten")
         self.assertContains(response, 'name="birthday"')
+
+    def test_edit_user_direct_navigation_redirects_to_details(self):
+        response = self.client.get(reverse("user-edit", args=[self.user.pk]))
+
+        self.assertRedirects(
+            response,
+            reverse("user-details", args=[self.user.pk]),
+            fetch_redirect_response=False,
+        )
+
+    def test_edit_user_invalid_post_without_htmx_renders_full_page(self):
+        response = self.client.post(
+            reverse("user-edit", args=[self.user.pk]),
+            {
+                "birthday": "2020-13-01",
+                "external_mail": "",
+                "phone_number": "",
+                "bio": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<html")
+        self.assertContains(response, "Profil bearbeiten")
+        self.assertContains(response, "errorlist")
+
+    def test_password_popup_direct_navigation_redirects_to_details(self):
+        response = self.client.get(
+            reverse("change-password-popup", args=[self.user.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("user-details", args=[self.user.pk]),
+            fetch_redirect_response=False,
+        )
 
     def test_edit_user_success_returns_feedback(self):
         response = self.client.post(
@@ -1429,3 +1558,340 @@ class StaticPageViewTests(TestCase):
         response = self.client.get(reverse("events"))
 
         self.assertContains(response, f'href="{reverse("calendar")}"')
+
+
+class RedirectHelperTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_redirect_next_or_prefers_safe_next(self):
+        request = self.factory.post("/action/", {"next": reverse("events")})
+
+        response = redirect_next_or(request, "main-page")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("events"))
+
+    def test_redirect_next_or_uses_fallback_for_unsafe_next(self):
+        request = self.factory.post("/action/", {"next": "https://evil.example/steal"})
+
+        response = redirect_next_or(request, "main-page")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("main-page"))
+
+    def test_redirect_next_or_emits_hx_redirect_for_htmx(self):
+        request = self.factory.post(
+            "/action/",
+            {"next": reverse("events")},
+            HTTP_HX_REQUEST="true",
+        )
+
+        response = redirect_next_or(request, "main-page")
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response["HX-Redirect"], reverse("events"))
+
+
+class EventEarningsViewTests(TestCase):
+    def setUp(self):
+        self.manager = User.objects.create_user(username="manager", password="password")
+        self.staff = User.objects.create_user(
+            username="staff", password="password", is_staff=True
+        )
+        self.other = User.objects.create_user(username="other", password="password")
+        self.event = Event.objects.create(
+            title="Sommerfest",
+            description="",
+            starting_date=timezone.now() + timedelta(days=1),
+            ending_date=timezone.now() + timedelta(days=1, hours=2),
+            creator=self.manager,
+            manager=self.manager,
+        )
+
+    def test_manager_can_set_earnings(self):
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            reverse("set-earnings", args=[self.event.pk]),
+            {"earnings": "12,50"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Einnahmen gesetzt.")
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.earnings, Decimal("12.50"))
+
+    def test_invalid_earnings_rerenders_detail_with_errors(self):
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            reverse("set-earnings", args=[self.event.pk]),
+            {"earnings": "keine Zahl"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("earnings", response.context["earnings_form"].errors)
+        self.event.refresh_from_db()
+        self.assertIsNone(self.event.earnings)
+
+    def test_unrelated_user_cannot_set_earnings(self):
+        self.client.force_login(self.other)
+
+        response = self.client.post(
+            reverse("set-earnings", args=[self.event.pk]),
+            {"earnings": "12,50"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertContains(
+            response, "Du bist nicht berechtigt, diese Aktion zu bearbeiten."
+        )
+        self.event.refresh_from_db()
+        self.assertIsNone(self.event.earnings)
+
+    def test_staff_can_mark_earnings_received_and_finalize_event(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse("set-earnings-received", args=[self.event.pk]),
+            {"earnings_received": "on"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Einnahmenstatus aktualisiert.")
+        self.event.refresh_from_db()
+        self.assertTrue(self.event.earnings_received)
+        self.assertTrue(self.event.final)
+
+    def test_non_staff_cannot_mark_earnings_received(self):
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            reverse("set-earnings-received", args=[self.event.pk]),
+            {"earnings_received": "on"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertContains(
+            response, "Du bist nicht berechtigt, diese Aktion zu bearbeiten."
+        )
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.earnings_received)
+        self.assertFalse(self.event.final)
+
+
+class OverlayContractTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="student", password="password")
+        self.manager = User.objects.create_user(username="manager", password="password")
+        self.user.profile.has_had_introduction = True
+        self.user.profile.save(update_fields=["has_had_introduction"])
+        self.manager.profile.has_had_introduction = True
+        self.manager.profile.save(update_fields=["has_had_introduction"])
+        self.event = Event.objects.create(
+            title="Sommerfest",
+            description="",
+            starting_date=timezone.now() + timedelta(days=1),
+            ending_date=timezone.now() + timedelta(days=1, hours=2),
+            creator=self.manager,
+            manager=self.manager,
+        )
+        self.join_request = JoinRequest.objects.create(
+            requestor=self.user, event=self.event
+        )
+        self.client.force_login(self.manager)
+
+    def test_authenticated_full_pages_include_the_overlay_shell(self):
+        for url in (
+            reverse("main-page"),
+            reverse("events"),
+            reverse("users"),
+            reverse("event-details", args=[self.event.pk]),
+            reverse("user-details", args=[self.user.pk]),
+        ):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "<html")
+                self.assertContains(response, 'id="overlay-content"')
+
+    def test_overlay_views_return_fragments_without_close_controls(self):
+        urls = (
+            reverse("event-details", args=[self.event.pk]),
+            reverse("event-create"),
+            reverse("event-edit", args=[self.event.pk]),
+            reverse("user-details", args=[self.user.pk]),
+            reverse("user-edit", args=[self.manager.pk]),
+            reverse("change-password-popup", args=[self.manager.pk]),
+            reverse("notifications"),
+        )
+
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+                self.assertEqual(response.status_code, 200)
+                self.assertNotContains(response, "<html")
+                self.assertNotContains(response, "overlay-close")
+                self.assertNotContains(response, "Schließen")
+
+    def test_overlay_views_have_a_full_page_or_redirect_fallback(self):
+        for url in (
+            reverse("event-create"),
+            reverse("event-edit", args=[self.event.pk]),
+            reverse("user-edit", args=[self.user.pk]),
+            reverse("change-password-popup", args=[self.user.pk]),
+            reverse("notifications"),
+        ):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+
+                self.assertEqual(response.status_code, 302)
+
+    def test_back_control_only_renders_when_back_url_is_present(self):
+        detail_url = reverse("event-details", args=[self.event.pk])
+        user_url = reverse("user-details", args=[self.user.pk])
+
+        cases = (
+            (detail_url, False),
+            (f"{detail_url}?back={reverse('events')}", True),
+            (user_url, False),
+            (f"{user_url}?back={reverse('users')}", True),
+            (reverse("event-create"), False),
+            (reverse("event-edit", args=[self.event.pk]), True),
+            (reverse("user-edit", args=[self.manager.pk]), True),
+            (reverse("change-password-popup", args=[self.manager.pk]), True),
+        )
+
+        for url, has_back in cases:
+            with self.subTest(url=url):
+                response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+                if has_back:
+                    self.assertContains(response, "overlay-panel-back")
+                else:
+                    self.assertNotContains(response, "overlay-panel-back")
+
+    def test_join_request_fragment_has_a_back_control(self):
+        self.client.force_login(self.manager)
+
+        response = self.client.get(
+            f"{reverse('join-request-details', args=[self.join_request.pk])}?back={reverse('events')}",
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "overlay-panel-back")
+        self.assertNotContains(response, "overlay-close")
+
+
+class StatusFeedbackTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="student", password="password")
+        self.user.profile.has_had_introduction = True
+        self.user.profile.save(update_fields=["has_had_introduction"])
+        self.event = Event.objects.create(
+            title="Sommerfest",
+            description="",
+            starting_date=timezone.now() + timedelta(days=1),
+            ending_date=timezone.now() + timedelta(days=1, hours=2),
+            creator=self.user,
+            manager=self.user,
+        )
+        self.client.force_login(self.user)
+
+    def test_full_page_status_flags_render_the_feedback_banner(self):
+        cases = (
+            (f"{reverse('events')}?status=deleted", "Aktion gelöscht."),
+            (
+                f"{reverse('event-details', args=[self.event.pk])}?status=joined",
+                "Du nimmst jetzt teil",
+            ),
+            (
+                f"{reverse('user-details', args=[self.user.pk])}?status=profile-updated",
+                "Profil erfolgreich bearbeitet",
+            ),
+        )
+
+        for url, text in cases:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, text)
+                self.assertContains(response, "feedback")
+
+
+class UrlSmokeTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            username="smoke-staff", password="password", is_staff=True
+        )
+        self.staff.profile.has_had_introduction = True
+        self.staff.profile.save(update_fields=["has_had_introduction"])
+        self.event = Event.objects.create(
+            title="Smoke-Aktion",
+            description="",
+            starting_date=timezone.now() + timedelta(days=1),
+            ending_date=timezone.now() + timedelta(days=1, hours=2),
+            creator=self.staff,
+            manager=self.staff,
+        )
+        self.join_request = JoinRequest.objects.create(
+            requestor=self.staff, event=self.event
+        )
+        self.client.force_login(self.staff)
+
+    def urls(self):
+        return (
+            reverse("main-page"),
+            reverse("events"),
+            reverse("events-upcoming"),
+            reverse("events-own"),
+            reverse("event-details", args=[self.event.pk]),
+            reverse("event-create"),
+            reverse("event-edit", args=[self.event.pk]),
+            reverse("join-request-details", args=[self.join_request.pk]),
+            reverse("users"),
+            reverse("user-details", args=[self.staff.pk]),
+            reverse("user-edit", args=[self.staff.pk]),
+            reverse("change-password-popup", args=[self.staff.pk]),
+            reverse("introduction"),
+            reverse("calendar"),
+            reverse("contact"),
+            reverse("polls"),
+            reverse("notifications"),
+        )
+
+    def test_every_route_renders_without_a_template_error(self):
+        for url in self.urls():
+            with self.subTest(url=url):
+                response = self.client.get(url)
+
+                self.assertIn(response.status_code, (200, 302))
+                if response.status_code == 200:
+                    self.assertContains(response, "<html")
+
+    def test_every_overlay_route_renders_a_fragment_for_htmx(self):
+        overlay_urls = (
+            reverse("event-details", args=[self.event.pk]),
+            reverse("event-create"),
+            reverse("event-edit", args=[self.event.pk]),
+            reverse("join-request-details", args=[self.join_request.pk]),
+            reverse("user-details", args=[self.staff.pk]),
+            reverse("user-edit", args=[self.staff.pk]),
+            reverse("change-password-popup", args=[self.staff.pk]),
+            reverse("notifications"),
+        )
+
+        for url in overlay_urls:
+            with self.subTest(url=url):
+                response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+                self.assertEqual(response.status_code, 200)
+                self.assertNotContains(response, "<html")

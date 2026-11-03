@@ -8,7 +8,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from ..feedback import get_feedback, render_feedback
 from ..forms import (
@@ -60,6 +60,7 @@ def get_event_creation_limit_error(user):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def create_event(request):
     if not can_create_event(request.user):
         feedback = get_feedback(
@@ -86,6 +87,8 @@ def create_event(request):
         return redirect(f"{reverse('events')}?{urlencode({'status': 'rate-limited'})}")
 
     if request.method == "GET":
+        if not is_htmx_request(request):
+            return redirect("events")
         form = EventForm(prefix="new", request_user=request.user)
     else:
         form = EventForm(
@@ -118,9 +121,12 @@ def create_event(request):
 
             return redirect(event_detail_url(event, "created"))
 
+    template = (
+        "events/_event_form.html" if is_htmx_request(request) else "events/form.html"
+    )
     return render(
         request,
-        "events/_event_form.html",
+        template,
         {
             "form": form,
             "mode": "create",
@@ -130,6 +136,7 @@ def create_event(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def edit_event(request, event_id):
     event = get_object_or_404(
         Event.objects.select_related("creator", "manager"), pk=event_id
@@ -172,15 +179,20 @@ def edit_event(request, event_id):
 
             return redirect(event_detail_url(saved_event, "updated"))
     else:
+        if not is_htmx_request(request):
+            return redirect(event_detail_url(event))
         form = EventForm(
             instance=event,
             prefix=str(event.id),
             request_user=request.user,
         )
 
+    template = (
+        "events/_event_form.html" if is_htmx_request(request) else "events/form.html"
+    )
     return render(
         request,
-        "events/_event_form.html",
+        template,
         {
             "form": form,
             "event": event,
@@ -588,7 +600,8 @@ def set_participation_times(request, event_id):
         queryset=queryset,
     )
     if formset.is_valid():
-        formset.save()
+        with transaction.atomic():
+            formset.save()
         return event_action_response(request, event, "participation-times")
 
     return render_event_details(

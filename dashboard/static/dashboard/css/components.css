@@ -22,6 +22,11 @@
     color: var(--text);
 }
 
+.btn:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
 /* secondary action: same shape, no fill until hovered */
 .btn--secondary {
     background: transparent;
@@ -130,6 +135,18 @@ textarea::placeholder {
     color: var(--on-primary);
     font-size: var(--font-size-sm);
     list-style: none;
+}
+
+/* error lists are grid children inside .field; keep them full-width */
+.field>.errorlist {
+    justify-self: stretch;
+}
+
+/* full-page fallback for overlay-only forms (invalid POST without HTMX) */
+.form-page {
+    width: 100%;
+    max-width: 800px;
+    margin-inline: auto;
 }
 
 /* overlay panel header: back | title | actions */

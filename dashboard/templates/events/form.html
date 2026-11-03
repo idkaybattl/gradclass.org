@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "edit" %}Aktion bearbeiten{% else %}Neue Aktion{% endif %}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    {% include "events/_event_form.html" %}
+</div>
+{% endblock %}

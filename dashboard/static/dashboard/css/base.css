@@ -144,6 +144,13 @@ button.nav-item {
     border-style: solid;
 }
 
+.card:focus-visible,
+.nav-item:focus-visible,
+.footer-item:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
 
 /* main part */
 main {
@@ -358,6 +365,49 @@ footer {
     height: 16px;
 }
 
+.overlay-close:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+/* Thin progress bar for HTMX requests (htmx adds .htmx-request). */
+.overlay-loading {
+    position: absolute;
+    inset: 0 0 auto;
+
+    height: var(--border-width);
+    overflow: hidden;
+    z-index: 2000;
+    pointer-events: none;
+}
+
+.overlay-loading__bar {
+    display: block;
+    height: 100%;
+
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: left center;
+}
+
+.overlay-loading.htmx-request .overlay-loading__bar {
+    animation: overlay-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes overlay-loading {
+    0% {
+        transform: scaleX(0);
+    }
+
+    50% {
+        transform: scaleX(0.6);
+    }
+
+    100% {
+        transform: scaleX(1);
+    }
+}
+
 .overlay-content {
     /* auto basis so the notifications sheet can grow with its content */
     flex: 1 1 auto;
@@ -404,6 +454,11 @@ footer {
 .notifications__action:hover {
     background: var(--text);
     color: var(--bg);
+}
+
+.notifications__action:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
 }
 
 .notifications__list {
@@ -485,6 +540,11 @@ footer {
     opacity: 0.6;
 }
 
+.menu-link:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: -2px;
+}
+
 .menu-link--disabled {
     opacity: 0.45;
     cursor: default;
@@ -505,5 +565,11 @@ footer {
     /* the menu still has a gap on the left, so keep its border */
     .overlay--menu {
         border-left-style: solid;
+    }
+}
+
+@media (max-width: 360px) {
+    .overlay-content {
+        padding: 10px;
     }
 }
