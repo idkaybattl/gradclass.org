@@ -3,10 +3,14 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from gradclassorg.admin_site import CapabilityAdminSite
+
+from . import permissions
 from .durations import split_duration
 from .forms import (
     DurationHMField,
@@ -21,6 +25,19 @@ from .notifications import Notification, NotificationVerbChoices
 from .views.events import MAX_PROJECTS_PER_HOUR
 
 User = get_user_model()
+
+
+def make_rep(username, **kwargs):
+    kwargs.setdefault("password", "password")
+    user = User.objects.create_user(username=username, **kwargs)
+    user.groups.add(Group.objects.get(name="Stufensprecher"))
+    return user
+
+
+def make_limited_creator(username):
+    user = User.objects.create_user(username=username, password="password")
+    user.user_permissions.add(Permission.objects.get(codename="create_event"))
+    return user
 
 
 class NotificationViewTests(TestCase):
@@ -178,10 +195,8 @@ class EventViewTests(TestCase):
         self.other_user = User.objects.create_user(
             username="other", password="password"
         )
-        self.staff = User.objects.create_user(
-            username="staff", password="password", is_staff=True
-        )
-        for user in (self.user, self.other_user, self.staff):
+        self.rep = make_rep("rep")
+        for user in (self.user, self.other_user, self.rep):
             user.profile.has_had_introduction = True
             user.profile.save(update_fields=["has_had_introduction"])
 
@@ -243,8 +258,8 @@ class EventViewTests(TestCase):
         self.assertTrue(events_by_id[self.own_past_event.pk].is_own)
         self.assertFalse(events_by_id[self.upcoming_event.pk].is_own)
 
-    def test_staff_sees_all_past_events(self):
-        self.client.force_login(self.staff)
+    def test_rep_sees_all_past_events(self):
+        self.client.force_login(self.rep)
 
         response = self.client.get(reverse("events"))
 
@@ -338,16 +353,17 @@ class HomePageViewTests(TestCase):
 
         self.assertNotContains(response, 'http-equiv="refresh"')
 
-    def test_admin_menu_link_is_staff_only(self):
+    def test_admin_menu_link_requires_access_admin(self):
         response = self.client.get(reverse("main-page"))
-
         self.assertNotContains(response, 'href="/admin/"')
 
         self.user.is_staff = True
         self.user.save(update_fields=["is_staff"])
-
         response = self.client.get(reverse("main-page"))
+        self.assertNotContains(response, 'href="/admin/"')
 
+        self.user.user_permissions.add(Permission.objects.get(codename="access_admin"))
+        response = self.client.get(reverse("main-page"))
         self.assertContains(response, 'href="/admin/"')
 
     def test_menu_links_available_pages_and_marks_others_disabled(self):
@@ -367,9 +383,7 @@ class EventDetailViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="student", password="password")
         self.manager = User.objects.create_user(username="manager", password="password")
-        self.staff = User.objects.create_user(
-            username="staff", password="password", is_staff=True
-        )
+        self.rep = make_rep("rep")
         self.event = Event.objects.create(
             title="Sommerfest",
             description="Gemeinsam feiern.",
@@ -421,10 +435,14 @@ class EventDetailViewTests(TestCase):
         self.assertTrue(response.context["can_edit"])
         self.assertTrue(response.context["can_join"])
 
+        self.client.force_login(self.rep)
+        response = self.client.get(detail_url, HTTP_HX_REQUEST="true")
+        self.assertTrue(response.context["can_edit"])
+
         self.event.final = True
         self.event.save(update_fields=["final"])
 
-        for user in (self.user, self.manager, self.staff):
+        for user in (self.user, self.manager, self.rep):
             with self.subTest(user=user.username):
                 self.client.force_login(user)
                 response = self.client.get(detail_url, HTTP_HX_REQUEST="true")
@@ -655,16 +673,14 @@ class DurationWidgetTests(SimpleTestCase):
 class ParticipationTimeViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="student", password="password")
-        self.staff = User.objects.create_user(
-            username="staff", password="password", is_staff=True
-        )
+        self.rep = make_rep("rep")
         self.event = Event.objects.create(
             title="Arbeitseinsatz",
             description="",
             starting_date=timezone.now() - timedelta(days=2),
             ending_date=timezone.now() - timedelta(days=2) + timedelta(hours=4),
-            creator=self.staff,
-            manager=self.staff,
+            creator=self.rep,
+            manager=self.rep,
         )
         self.participation = EventParticipation.objects.create(
             event=self.event, user=self.user
@@ -686,8 +702,8 @@ class ParticipationTimeViewTests(TestCase):
             data[f"{prefix}-{index}-participation_time_minutes"] = minutes
         return data
 
-    def test_staff_detail_renders_split_duration_inputs(self):
-        self.client.force_login(self.staff)
+    def test_rep_detail_renders_split_duration_inputs(self):
+        self.client.force_login(self.rep)
 
         response = self.client.get(reverse("event-details", args=[self.event.pk]))
 
@@ -695,8 +711,8 @@ class ParticipationTimeViewTests(TestCase):
         self.assertContains(response, "participation_time_minutes")
         self.assertContains(response, "money-field__suffix")
 
-    def test_staff_can_set_zero_participation_time(self):
-        self.client.force_login(self.staff)
+    def test_rep_can_set_zero_participation_time(self):
+        self.client.force_login(self.rep)
         data = self.formset_data([(self.participation, "0:00")])
 
         response = self.client.post(
@@ -710,7 +726,7 @@ class ParticipationTimeViewTests(TestCase):
         self.participation.refresh_from_db()
         self.assertEqual(self.participation.participation_time, timedelta(0))
 
-    def test_non_staff_cannot_set_participation_times(self):
+    def test_student_cannot_set_participation_times(self):
         self.client.force_login(self.user)
         data = self.formset_data([(self.participation, "1:00")])
 
@@ -721,7 +737,7 @@ class ParticipationTimeViewTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_too_long_participation_time_rerenders_with_error(self):
-        self.client.force_login(self.staff)
+        self.client.force_login(self.rep)
         data = self.formset_data([(self.participation, "99:00")])
 
         response = self.client.post(
@@ -751,10 +767,12 @@ class ParticipationTimeViewTests(TestCase):
 
 class EventCreateViewTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="student", password="password")
+        self.user = make_rep("rep")
         self.other = User.objects.create_user(username="other", password="password")
-        self.user.profile.has_had_introduction = True
-        self.user.profile.save(update_fields=["has_had_introduction"])
+        self.limited_user = make_limited_creator("limited")
+        for user in (self.user, self.other, self.limited_user):
+            user.profile.has_had_introduction = True
+            user.profile.save(update_fields=["has_had_introduction"])
         self.client.force_login(self.user)
 
     def create_data(self, **overrides):
@@ -771,15 +789,16 @@ class EventCreateViewTests(TestCase):
         data.update(overrides)
         return data
 
-    def create_existing_event(self, index):
+    def create_existing_event(self, index, user=None):
         now = timezone.now()
+        creator = user or self.user
         return Event.objects.create(
             title=f"Bestehende Aktion {index}",
             description="",
             starting_date=now + timedelta(days=1),
             ending_date=now + timedelta(days=1, hours=1),
-            creator=self.user,
-            manager=self.user,
+            creator=creator,
+            manager=creator,
         )
 
     def test_create_form_renders_fragment_without_back_button(self):
@@ -862,8 +881,9 @@ class EventCreateViewTests(TestCase):
         self.assertEqual(Event.objects.count(), 0)
 
     def test_rate_limit_returns_feedback_for_htmx(self):
+        self.client.force_login(self.limited_user)
         for index in range(MAX_PROJECTS_PER_HOUR):
-            self.create_existing_event(index)
+            self.create_existing_event(index, user=self.limited_user)
 
         response = self.client.post(
             reverse("event-create"),
@@ -877,8 +897,9 @@ class EventCreateViewTests(TestCase):
         self.assertEqual(Event.objects.count(), MAX_PROJECTS_PER_HOUR)
 
     def test_rate_limit_redirects_with_status_without_htmx(self):
+        self.client.force_login(self.limited_user)
         for index in range(MAX_PROJECTS_PER_HOUR):
-            self.create_existing_event(index)
+            self.create_existing_event(index, user=self.limited_user)
 
         response = self.client.post(reverse("event-create"), self.create_data())
 
@@ -888,6 +909,35 @@ class EventCreateViewTests(TestCase):
             fetch_redirect_response=False,
         )
         self.assertEqual(Event.objects.count(), MAX_PROJECTS_PER_HOUR)
+
+    def test_rep_bypasses_rate_limit(self):
+        for index in range(MAX_PROJECTS_PER_HOUR):
+            self.create_existing_event(index)
+
+        response = self.client.post(
+            reverse("event-create"),
+            self.create_data(),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Aktion erfolgreich erstellt")
+        self.assertEqual(Event.objects.count(), MAX_PROJECTS_PER_HOUR + 1)
+
+    def test_student_is_denied_creation(self):
+        self.client.force_login(self.other)
+
+        response = self.client.post(
+            reverse("event-create"),
+            self.create_data(),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "Du bist nicht berechtigt, diese Aktion zu erstellen."
+        )
+        self.assertEqual(Event.objects.count(), 0)
 
     @patch("dashboard.views.events.can_create_event", return_value=False)
     def test_restricted_user_is_denied_creation(self, _can_create_event):
@@ -1167,12 +1217,11 @@ class UserViewTests(TestCase):
             last_name="Albers",
             email="ben@example.org",
         )
-        self.staff = User.objects.create_user(
+        self.admin = User.objects.create_superuser(
             username="staff",
             password="password",
             first_name="Clara",
             last_name="Meyer",
-            is_staff=True,
         )
         self.user.profile.has_had_introduction = True
         self.user.profile.save()
@@ -1372,8 +1421,8 @@ class UserViewTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("password"))
 
-    def test_staff_can_change_other_users_password_without_old_password(self):
-        self.client.force_login(self.staff)
+    def test_admin_can_change_other_users_password_without_old_password(self):
+        self.client.force_login(self.admin)
 
         response = self.client.post(
             reverse("change-password-popup", args=[self.other.pk]),
@@ -1596,9 +1645,7 @@ class RedirectHelperTests(SimpleTestCase):
 class EventEarningsViewTests(TestCase):
     def setUp(self):
         self.manager = User.objects.create_user(username="manager", password="password")
-        self.staff = User.objects.create_user(
-            username="staff", password="password", is_staff=True
-        )
+        self.rep = make_rep("rep")
         self.other = User.objects.create_user(username="other", password="password")
         self.event = Event.objects.create(
             title="Sommerfest",
@@ -1652,8 +1699,8 @@ class EventEarningsViewTests(TestCase):
         self.event.refresh_from_db()
         self.assertIsNone(self.event.earnings)
 
-    def test_staff_can_mark_earnings_received_and_finalize_event(self):
-        self.client.force_login(self.staff)
+    def test_rep_can_mark_earnings_received_and_finalize_event(self):
+        self.client.force_login(self.rep)
 
         response = self.client.post(
             reverse("set-earnings-received", args=[self.event.pk]),
@@ -1829,23 +1876,21 @@ class StatusFeedbackTests(TestCase):
 
 class UrlSmokeTests(TestCase):
     def setUp(self):
-        self.staff = User.objects.create_user(
-            username="smoke-staff", password="password", is_staff=True
-        )
-        self.staff.profile.has_had_introduction = True
-        self.staff.profile.save(update_fields=["has_had_introduction"])
+        self.rep = make_rep("smoke-rep")
+        self.rep.profile.has_had_introduction = True
+        self.rep.profile.save(update_fields=["has_had_introduction"])
         self.event = Event.objects.create(
             title="Smoke-Aktion",
             description="",
             starting_date=timezone.now() + timedelta(days=1),
             ending_date=timezone.now() + timedelta(days=1, hours=2),
-            creator=self.staff,
-            manager=self.staff,
+            creator=self.rep,
+            manager=self.rep,
         )
         self.join_request = JoinRequest.objects.create(
-            requestor=self.staff, event=self.event
+            requestor=self.rep, event=self.event
         )
-        self.client.force_login(self.staff)
+        self.client.force_login(self.rep)
 
     def urls(self):
         return (
@@ -1858,9 +1903,9 @@ class UrlSmokeTests(TestCase):
             reverse("event-edit", args=[self.event.pk]),
             reverse("join-request-details", args=[self.join_request.pk]),
             reverse("users"),
-            reverse("user-details", args=[self.staff.pk]),
-            reverse("user-edit", args=[self.staff.pk]),
-            reverse("change-password-popup", args=[self.staff.pk]),
+            reverse("user-details", args=[self.rep.pk]),
+            reverse("user-edit", args=[self.rep.pk]),
+            reverse("change-password-popup", args=[self.rep.pk]),
             reverse("introduction"),
             reverse("calendar"),
             reverse("contact"),
@@ -1883,9 +1928,9 @@ class UrlSmokeTests(TestCase):
             reverse("event-create"),
             reverse("event-edit", args=[self.event.pk]),
             reverse("join-request-details", args=[self.join_request.pk]),
-            reverse("user-details", args=[self.staff.pk]),
-            reverse("user-edit", args=[self.staff.pk]),
-            reverse("change-password-popup", args=[self.staff.pk]),
+            reverse("user-details", args=[self.rep.pk]),
+            reverse("user-edit", args=[self.rep.pk]),
+            reverse("change-password-popup", args=[self.rep.pk]),
             reverse("notifications"),
         )
 
@@ -1895,3 +1940,87 @@ class UrlSmokeTests(TestCase):
 
                 self.assertEqual(response.status_code, 200)
                 self.assertNotContains(response, "<html")
+
+
+class PermissionMatrixTests(TestCase):
+    def setUp(self):
+        self.student = User.objects.create_user(username="student", password="password")
+        self.manager = User.objects.create_user(username="manager", password="password")
+        self.rep = make_rep("rep")
+        self.superuser = User.objects.create_superuser(
+            username="superuser", password="password"
+        )
+        self.event = Event.objects.create(
+            title="Sommerfest",
+            description="",
+            starting_date=timezone.now() + timedelta(days=1),
+            ending_date=timezone.now() + timedelta(days=1, hours=2),
+            creator=self.manager,
+            manager=self.manager,
+        )
+
+    def request_for(self, user):
+        request = RequestFactory().get("/")
+        request.user = user
+        return request
+
+    def test_create_event_capability(self):
+        self.assertFalse(permissions.can_create_event(self.student))
+        self.assertTrue(permissions.can_create_event(self.rep))
+        self.assertTrue(permissions.can_create_event(self.superuser))
+
+    def test_reps_bypass_creation_limit(self):
+        self.assertFalse(permissions.can_bypass_event_creation_limit(self.student))
+        self.assertTrue(permissions.can_bypass_event_creation_limit(self.rep))
+        self.assertTrue(permissions.can_bypass_event_creation_limit(self.superuser))
+
+    def test_event_edit_respects_ownership_and_final_state(self):
+        self.assertFalse(permissions.can_edit_event(self.student, self.event))
+        self.assertTrue(permissions.can_edit_event(self.manager, self.event))
+        self.assertTrue(permissions.can_edit_event(self.rep, self.event))
+        self.assertTrue(permissions.can_delete_event(self.rep, self.event))
+
+        self.event.final = True
+        self.event.save(update_fields=["final"])
+
+        self.assertFalse(permissions.can_edit_event(self.manager, self.event))
+        self.assertFalse(permissions.can_edit_event(self.rep, self.event))
+        self.assertFalse(permissions.can_delete_event(self.superuser, self.event))
+
+    def test_join_request_and_participation_capabilities(self):
+        self.assertFalse(permissions.can_manage_join_requests(self.student, self.event))
+        self.assertTrue(permissions.can_manage_join_requests(self.manager, self.event))
+        self.assertTrue(permissions.can_manage_join_requests(self.rep, self.event))
+        self.assertFalse(permissions.can_manage_participation_times(self.student))
+        self.assertTrue(permissions.can_manage_participation_times(self.rep))
+
+    def test_only_reps_mark_earnings_received(self):
+        self.assertFalse(permissions.can_manage_earnings(self.manager))
+        self.assertTrue(permissions.can_manage_earnings(self.rep))
+        self.assertTrue(permissions.can_manage_earnings(self.superuser))
+
+    def test_user_management_is_superuser_only(self):
+        manager_request = self.request_for(self.manager)
+        rep_request = self.request_for(self.rep)
+        admin_request = self.request_for(self.superuser)
+
+        self.assertTrue(permissions.can_edit_user(manager_request, self.manager.pk))
+        self.assertFalse(permissions.can_edit_user(rep_request, self.manager.pk))
+        self.assertTrue(permissions.can_edit_user(admin_request, self.manager.pk))
+        self.assertFalse(permissions.can_change_password(rep_request, self.manager.pk))
+        self.assertTrue(permissions.can_change_password(admin_request, self.manager.pk))
+
+    def test_all_users_can_view_the_user_directory(self):
+        self.assertTrue(permissions.can_view_users(self.request_for(self.student)))
+        self.assertTrue(permissions.can_view_users(self.request_for(self.rep)))
+
+    def test_admin_site_requires_access_admin(self):
+        site = CapabilityAdminSite()
+
+        self.assertTrue(site.has_permission(self.request_for(self.superuser)))
+        self.assertFalse(site.has_permission(self.request_for(self.rep)))
+
+        self.student.is_staff = True
+        self.assertFalse(site.has_permission(self.request_for(self.student)))
+        self.assertFalse(permissions.can_access_admin(self.rep))
+        self.assertTrue(permissions.can_access_admin(self.superuser))

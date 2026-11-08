@@ -707,14 +707,14 @@ Define the codenames with `Meta.permissions` on `Event` (`create_event`,
 - [x] Add new non-superusers to `Schüler` in `dashboard/signals.py`; this covers
   `import_student_accounts` and admin-created accounts, so the command needs no
   change.
-- [ ] Admin: verify users can be put into several groups and document that a
+- [x] Admin: verify users can be put into several groups and document that a
   group is a role. No custom role UI.
-- [ ] Update every existing test that creates `is_staff=True`; those users no
+- [x] Update every existing test that creates `is_staff=True`; those users no
   longer have elevated app permissions, so put them in `Stufensprecher` instead.
-- [ ] Add permission-matrix tests, including negatives (student cannot create or
+- [x] Add permission-matrix tests, including negatives (student cannot create or
   edit a stranger’s event, rep cannot edit profiles or enter admin, superuser
   can, final event is read-only, manager can still edit their own event).
-- [ ] Write `docs/permissions.md` with the role × action × condition matrix and
+- [x] Write `docs/permissions.md` with the role × action × condition matrix and
   link it from `AGENTS.md`.
 
 ## Out of scope

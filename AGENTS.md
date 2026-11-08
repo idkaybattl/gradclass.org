@@ -28,7 +28,8 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - `gradclassorg/` — settings and root URLs.
 - `dashboard/views/` — function-based views split by feature: `core.py`,
   `auth.py`, `events.py`, `users.py`, `notifications.py`.
-- `dashboard/permissions.py` — permission checks shared by views.
+- `dashboard/permissions.py` — permission checks shared by views; see
+  `docs/permissions.md` for the role matrix and adding capabilities.
 - `dashboard/http_helpers.py` — `next`/`back` validation and HTMX redirects.
 - `dashboard/intro.py` — forced first-run introduction redirect and decorator.
 - `dashboard/feedback.py` — status-flag feedback messages and rendering.
@@ -50,6 +51,8 @@ points at a template that only exists in `oldtemplates/`, treat that as part of 
 
 ## Backend rules
 
+- Authorization is capability-based: use `dashboard/permissions.py` helpers,
+  never `is_staff` or group names. See `docs/permissions.md`.
 - Follow the existing function-based view style: `@login_required`,
   `@require_GET` / `@require_POST`, `get_object_or_404`.
 - Keep views thin. Put multi-step business logic in `services.py`; keep
