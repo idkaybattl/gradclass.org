@@ -652,11 +652,14 @@ capabilities are Django permissions, and superusers pass everything implicitly.
 
 - **Server admin = superuser.** No separate admin role.
 - **No non-superuser gets Django admin access for now.** Keep an `access_admin`
-  capability defined but unassigned so this can change later. `/admin/` still
-  requires `is_staff`, because Django gates the admin site on that flag.
+  capability defined but unassigned so this can change later. `/admin/` is gated
+  on `access_admin` via a custom `AdminSite`; Django's login form still requires
+  `is_staff`.
 - **`Schüler`** is the baseline group; every student account is in it.
 - **`Stufensprecher`** is the reps group. Only reps and superusers may create
   events.
+- **Reps are exempt from the event creation rate limit** through
+  `bypass_event_creation_limit`.
 - **Reps cannot edit user profiles or reset their passwords etc..** `manage_users` stays superuser-only.
 - **All users can view all users for now.** Enforce this through `view_all_users`,
   granted to both groups, so it can be revoked in admin without a code change.
@@ -674,13 +677,15 @@ capabilities are Django permissions, and superusers pass everything implicitly.
 | `manage_earnings` | when manager or creator | ✓ | ✓ |
 | `manage_participation_times` | – | ✓ | ✓ |
 | `manage_join_requests` | own events | ✓ | ✓ |
+| `bypass_event_creation_limit` | – | ✓ | ✓ |
 | `view_all_users` | ✓ | ✓ | ✓ |
 | `manage_users` | – | – | ✓ |
 | `access_admin` | – | – | ✓ |
 
 Define the codenames with `Meta.permissions` on `Event` (`create_event`,
 `edit_any_event`, `delete_any_event`, `approve_event`, `manage_earnings`,
-`manage_participation_times`, `manage_join_requests`) and on `UserProfile`
+`manage_participation_times`, `manage_join_requests`,
+`bypass_event_creation_limit`) and on `UserProfile`
 (`view_all_users`, `manage_users`, `access_admin`).
 
 ## Implementation checklist
@@ -689,11 +694,13 @@ Define the codenames with `Meta.permissions` on `Event` (`create_event`,
 - [x] Rewrite `dashboard/permissions.py`: permission constants and one `_can()`
   wrapper around `user.has_perm()`; keep the existing `can_*` names. Remove the
   `can_create_event() -> True` stub and all `is_staff` fallbacks.
-- [ ] Replace ad-hoc checks in `views/events.py` (`set_earnings_received`,
+- [x] Replace ad-hoc checks in `views/events.py` (`set_earnings_received`,
   `can_approve_payment`, the creation-limit `is_staff` bypass), `views/users.py`,
   and the admin link in `base.html` (`can_access_admin`).
-- [ ] `join_event`: drop the `is_staff` branch; only creator/manager are added
+- [x] `join_event`: drop the `is_staff` branch; only creator/manager are added
   directly, everyone else goes through a join request.
+- [x] Add `bypass_event_creation_limit` and grant it to `Stufensprecher`.
+- [x] Gate `/admin/` on `can_access_admin` via `CapabilityAdminSite`.
 - [x] Data migration: create content types and permission rows explicitly (do not
   rely on `post_migrate` ordering), create both groups, assign their permissions,
   and add every existing non-superuser to `Schüler`.
@@ -702,10 +709,11 @@ Define the codenames with `Meta.permissions` on `Event` (`create_event`,
   change.
 - [ ] Admin: verify users can be put into several groups and document that a
   group is a role. No custom role UI.
-- [ ] Tests: replace `is_staff=True` fixtures with group membership; cover the
-  matrix and negatives (student cannot create or edit a stranger’s event, rep
-  cannot edit profiles or enter admin, superuser can, final event is read-only,
-  manager can still edit their own event).
+- [ ] Update every existing test that creates `is_staff=True`; those users no
+  longer have elevated app permissions, so put them in `Stufensprecher` instead.
+- [ ] Add permission-matrix tests, including negatives (student cannot create or
+  edit a stranger’s event, rep cannot edit profiles or enter admin, superuser
+  can, final event is read-only, manager can still edit their own event).
 - [ ] Write `docs/permissions.md` with the role × action × condition matrix and
   link it from `AGENTS.md`.
 

@@ -130,7 +130,7 @@
                     <a class="menu-link" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
                         hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content"
                         hx-swap="innerHTML">Profil</a>
-                    {% if user.is_staff %}
+                    {% if can_access_admin %}
                     <a class="menu-link" href="{% url 'admin:index' %}">Admin</a>
                     {% endif %}
                     <form method="post" action="{% url 'logout' %}">

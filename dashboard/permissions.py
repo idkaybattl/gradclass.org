@@ -12,6 +12,7 @@ APPROVE_EVENT = "dashboard.approve_event"
 MANAGE_EARNINGS = "dashboard.manage_earnings"
 MANAGE_PARTICIPATION_TIMES = "dashboard.manage_participation_times"
 MANAGE_JOIN_REQUESTS = "dashboard.manage_join_requests"
+BYPASS_EVENT_CREATION_LIMIT = "dashboard.bypass_event_creation_limit"
 VIEW_ALL_USERS = "dashboard.view_all_users"
 MANAGE_USERS = "dashboard.manage_users"
 ACCESS_ADMIN = "dashboard.access_admin"
@@ -23,6 +24,10 @@ def _can(user, permission):
 
 def can_create_event(user):
     return _can(user, CREATE_EVENT)
+
+
+def can_bypass_event_creation_limit(user):
+    return _can(user, BYPASS_EVENT_CREATION_LIMIT)
 
 
 def can_edit_event(user, event):

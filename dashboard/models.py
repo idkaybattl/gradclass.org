@@ -52,6 +52,7 @@ class Event(models.Model):
             ("manage_earnings", "Einnahmen verwalten"),
             ("manage_participation_times", "Arbeitszeiten verwalten"),
             ("manage_join_requests", "Teilnahmeanfragen verwalten"),
+            ("bypass_event_creation_limit", "Erstellungslimit umgehen"),
         ]
 
 

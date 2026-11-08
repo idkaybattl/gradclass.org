@@ -38,7 +38,7 @@ CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="*").split
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "gradclassorg.admin_site.CapabilityAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -71,6 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "dashboard.context_processors.admin_access",
                 "dashboard.context_processors.unread_notifications",
             ],
         },

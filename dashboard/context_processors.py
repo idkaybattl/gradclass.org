@@ -1,4 +1,9 @@
 from .notifications import get_unread_notifications
+from .permissions import can_access_admin
+
+
+def admin_access(request):
+    return {"can_access_admin": can_access_admin(request.user)}
 
 
 def unread_notifications(request):

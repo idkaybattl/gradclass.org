@@ -27,8 +27,11 @@ from ..intro import introduction_required
 from ..models import Event, EventParticipation, JoinRequest
 from ..notifications import Notification, NotificationVerbChoices
 from ..permissions import (
+    can_bypass_event_creation_limit,
     can_create_event,
+    can_delete_event,
     can_edit_event,
+    can_manage_earnings,
     can_manage_join_requests,
     can_manage_participation_times,
 )
@@ -45,7 +48,10 @@ def get_event_creation_limit_error(user):
     events_in_last_hour = user_events.filter(
         created_at__gte=current_time - timedelta(hours=1)
     ).count()
-    if events_in_last_hour >= MAX_PROJECTS_PER_HOUR and not user.is_staff:
+    if (
+        events_in_last_hour >= MAX_PROJECTS_PER_HOUR
+        and not can_bypass_event_creation_limit(user)
+    ):
         return (
             f"Du kannst maximal {MAX_PROJECTS_PER_HOUR} Aktionen pro Stunde erstellen."
         )
@@ -53,7 +59,10 @@ def get_event_creation_limit_error(user):
     events_in_last_day = user_events.filter(
         created_at__gte=current_time - timedelta(days=1)
     ).count()
-    if events_in_last_day >= MAX_PROJECTS_PER_DAY and not user.is_staff:
+    if (
+        events_in_last_day >= MAX_PROJECTS_PER_DAY
+        and not can_bypass_event_creation_limit(user)
+    ):
         return f"Du kannst maximal {MAX_PROJECTS_PER_DAY} Aktionen pro Tag erstellen."
 
     return None
@@ -259,6 +268,7 @@ def event_details_context(
     participant_ids = {participant.pk for participant in participants}
     is_participant = user.pk in participant_ids
     can_edit = can_edit_event(user, event)
+    can_delete = can_delete_event(user, event)
     can_manage_times = can_manage_participation_times(user)
 
     if earnings_form is None:
@@ -292,10 +302,10 @@ def event_details_context(
         "participants": participants,
         "can_edit": can_edit,
         "is_participant": is_participant,
-        "can_delete": can_edit,
+        "can_delete": can_delete,
         "can_leave": is_participant and not event.final,
         "can_join": not is_participant and not event.final,
-        "can_approve_payment": user.is_staff,
+        "can_approve_payment": can_manage_earnings(user),
         "can_manage_participation_times": can_manage_times,
         "earnings_form": earnings_form,
         "earnings_received_form": earnings_received_form,
@@ -376,7 +386,7 @@ def join_event(request, event_id):
     if event.participants.filter(pk=user.pk).exists():
         return event_action_response(request, event, "already-participant")
 
-    if user.is_staff or user.pk in {event.creator_id, event.manager_id}:
+    if user.pk in {event.creator_id, event.manager_id}:
         EventParticipation.objects.get_or_create(event=event, user=user)
         return event_action_response(request, event, "joined")
 
@@ -521,7 +531,7 @@ def leave_event(request, event_id):
 def delete_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if not can_edit_event(request.user, event):
+    if not can_delete_event(request.user, event):
         return event_action_response(
             request,
             event,
@@ -567,7 +577,7 @@ def set_event_earnings(request, event_id):
 def set_earnings_received(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if not request.user.is_staff:
+    if not can_manage_earnings(request.user):
         return event_action_response(request, event, "edit-denied")
 
     form = SetEarningsReceivedForm(request.POST, instance=event)
