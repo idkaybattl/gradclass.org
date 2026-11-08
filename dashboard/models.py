@@ -43,6 +43,17 @@ class Event(models.Model):
     def __str__(self):
         return str(self.title)
 
+    class Meta:
+        permissions = [
+            ("create_event", "Aktionen erstellen"),
+            ("edit_any_event", "Beliebige Aktionen bearbeiten"),
+            ("delete_any_event", "Beliebige Aktionen löschen"),
+            ("approve_event", "Aktionen freigeben"),
+            ("manage_earnings", "Einnahmen verwalten"),
+            ("manage_participation_times", "Arbeitszeiten verwalten"),
+            ("manage_join_requests", "Teilnahmeanfragen verwalten"),
+        ]
+
 
 class EventParticipation(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
@@ -110,6 +121,13 @@ class UserProfile(models.Model):
         result = past_participations.aggregate(total=Sum("participation_time"))
         # If there are no matching rows, return a zero timedelta
         return result["total"] or timedelta(0)
+
+    class Meta:
+        permissions = [
+            ("view_all_users", "Alle Nutzer:innen einsehen"),
+            ("manage_users", "Nutzer:innen verwalten"),
+            ("access_admin", "Adminbereich betreten"),
+        ]
 
 
 class JoinRequest(models.Model):
