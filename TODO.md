@@ -654,8 +654,8 @@ capabilities are Django permissions, and superusers pass everything implicitly.
 - **No non-superuser gets Django admin access for now.** Keep an `access_admin`
   capability defined but unassigned so this can change later. `/admin/` still
   requires `is_staff`, because Django gates the admin site on that flag.
-- **`Schüler:in`** is the baseline group; every student account is in it.
-- **`Stufensprecher:in`** is the reps group. Only reps and superusers may create
+- **`Schüler`** is the baseline group; every student account is in it.
+- **`Stufensprecher`** is the reps group. Only reps and superusers may create
   events.
 - **Reps cannot edit user profiles or reset their passwords etc..** `manage_users` stays superuser-only.
 - **All users can view all users for now.** Enforce this through `view_all_users`,
@@ -666,7 +666,7 @@ capabilities are Django permissions, and superusers pass everything implicitly.
 
 ## Roles and capabilities
 
-| Capability | `Schüler:in` | `Stufensprecher:in` | Superuser |
+| Capability | `Schüler` | `Stufensprecher` | Superuser |
 |---|:--:|:--:|:--:|
 | `create_event` | – | ✓ | ✓ |
 | `edit_any_event`, `delete_any_event` | – | ✓ | ✓ |
@@ -685,8 +685,8 @@ Define the codenames with `Meta.permissions` on `Event` (`create_event`,
 
 ## Implementation checklist
 
-- [ ] Add the `Meta.permissions` entries and the migration.
-- [ ] Rewrite `dashboard/permissions.py`: permission constants and one `_can()`
+- [x] Add the `Meta.permissions` entries and the migration.
+- [x] Rewrite `dashboard/permissions.py`: permission constants and one `_can()`
   wrapper around `user.has_perm()`; keep the existing `can_*` names. Remove the
   `can_create_event() -> True` stub and all `is_staff` fallbacks.
 - [ ] Replace ad-hoc checks in `views/events.py` (`set_earnings_received`,
@@ -694,10 +694,10 @@ Define the codenames with `Meta.permissions` on `Event` (`create_event`,
   and the admin link in `base.html` (`can_access_admin`).
 - [ ] `join_event`: drop the `is_staff` branch; only creator/manager are added
   directly, everyone else goes through a join request.
-- [ ] Data migration: create content types and permission rows explicitly (do not
+- [x] Data migration: create content types and permission rows explicitly (do not
   rely on `post_migrate` ordering), create both groups, assign their permissions,
-  and add every existing non-superuser to `Schüler:in`.
-- [ ] Add new non-superusers to `Schüler:in` in `dashboard/signals.py`; this covers
+  and add every existing non-superuser to `Schüler`.
+- [x] Add new non-superusers to `Schüler` in `dashboard/signals.py`; this covers
   `import_student_accounts` and admin-created accounts, so the command needs no
   change.
 - [ ] Admin: verify users can be put into several groups and document that a

@@ -1,16 +1,27 @@
 # signals.py
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import JoinRequest, UserProfile
 from .notifications import Notification, NotificationVerbChoices
 
+DEFAULT_GROUP_NAME = "Schüler"
+
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.get_or_create(user=instance)  # pyright: ignore[reportAttributeAccessIssue]
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def add_default_group(sender, instance, created, **kwargs):
+    if not created or instance.is_superuser:
+        return
+    group, _ = Group.objects.get_or_create(name=DEFAULT_GROUP_NAME)
+    instance.groups.add(group)
 
 
 @receiver(post_save, sender=JoinRequest)
