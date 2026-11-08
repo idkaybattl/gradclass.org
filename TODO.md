@@ -1,13 +1,13 @@
 # TODO — Frontend rewrite parity
 
-Goal: bring the new frontend (`dashboard/templates/`, `dashboard/static/dashboard/`)
-back to the feature set of the previous frontend (`dashboard/oldtemplates/`,
-`dashboard/oldstatics/`, and the `main` branch views), then split `views.py` into
-maintainable modules.
+Status: the parity rewrite is complete. `dashboard/templates/` and
+`dashboard/static/dashboard/` are the only frontend; the old archive
+(`dashboard/oldtemplates/`, `dashboard/oldstatics/`) has been removed and is
+recoverable from git history. Sections 1–9 are kept as the record of that work;
+new work starts at §10.
 
 Ground rules from `AGENTS.md`:
 
-- Do not edit `oldtemplates/` or `oldstatics/`; they are the reference only.
 - Use `vars.css` tokens and `components.css` (`.btn`, `.field`, `.input`,
   `.checkbox`, `.errorlist`) instead of new colours/radii/sizes.
 - Keep German user-facing strings.
@@ -148,8 +148,7 @@ in the same container instead:
 - [x] Add tests for the manager picker: search filters users, selecting a result
   updates the hidden input, create defaults to the request user, edit shows the
   existing manager, and a missing manager re-renders with an error.
-- [x] Port the old date validation from `oldstatics/js/events.js` to
-  `static/dashboard/js/event-form.js`:
+- [x] Port the old date validation to `static/dashboard/js/event-form.js`:
   - `endInput.min = startInput.value`.
   - Custom validity “Das Ende muss nach dem Beginn liegen.”
   - Run on input/change, initialise on `DOMContentLoaded` and
@@ -187,9 +186,8 @@ in the same container instead:
   `hx-target="#overlay-content"`. Render the button only when
   `can_create_event` is true (see the future restriction below).
 - [x] **Port the participants widget to the active template set.**
-  `EventForm` points at `widgets/participants_widget.html`, but that file only
-  exists under `oldtemplates/`. The create/edit form currently raises
-  `TemplateDoesNotExist`.
+  `EventForm` now uses `widgets/user_search_widget.html`; the old
+  `participants_widget.html` lived in the removed archive.
   - [x] Create `templates/widgets/participants_widget.html` based on the old
     template, keeping: `data-participants-widget`, `data-field-name`,
     selected list with remove buttons, search input, available list, hidden
@@ -566,8 +564,8 @@ These are small, but their templates are missing, so direct URLs currently raise
 - [x] All existing `messages.*` calls are invisible because `base.html` has no
   messages block; replace them with the feedback pattern rather than adding a
   messages block.
-- [x] Old `view` functions reference templates that only exist in
-  `oldtemplates/`; after each step, render the URL and confirm.
+- [x] The old views referenced templates that only existed in the archive; each
+  URL was rendered after its port.
 - [x] `EventForm` participants widget references
   `widgets/participants_widget.html`, which does not exist in the active
   templates; create/edit currently fails.
@@ -891,8 +889,8 @@ contains the phone number or personal addresses in `HEAD`.
 - Login-gating prevents search indexing, not scraping. That is acceptable:
   every logged-in user can already see these fields on `/users/<id>/`. Treat
   the page as class-visible, not secret.
-- No history rewrite for now. `HEAD` gets cleaned; old commits and
-  `oldtemplates/` keep the values.
+- No history rewrite for now. `HEAD` is clean; old commits still contain the
+  values. The archive was removed from the working tree.
 
 ## Implementation checklist
 
@@ -922,9 +920,9 @@ contains the phone number or personal addresses in `HEAD`.
   addresses in all blobs, force-push all refs, ask GitHub support to purge
   cached commits, accept changed SHAs and stale forks). Do it in one pass for
   all PII if it ever becomes necessary.
-- Redacting `dashboard/oldtemplates/contact.html` and
-  `oldtemplates/introduction.html`; they still contain the old contact details
-  but are not rendered. Redact only if `HEAD` must be completely free of them.
+- Redacting the old contact details from git history; they are gone from `HEAD`
+  but remain in past commits. Only needed if the repository must be completely
+  free of them.
 - The `Moritz` signature in `send_account_mails.py`; the command stays
   deprecated and untouched.
 

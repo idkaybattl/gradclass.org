@@ -9,8 +9,9 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Server-rendered Django templates; HTMX for partial updates.
 - German user-facing text currently.
 - Main app: `dashboard`. Dev database: SQLite; production: Postgres.
-- The frontend is being rewritten. The old UI is archived in
-  `dashboard/oldtemplates/` and `dashboard/oldstatics/`.
+- The frontend rewrite is complete. `dashboard/templates/` and
+  `dashboard/static/dashboard/` are the only frontend in the tree; the previous
+  UI was removed.
 
 ## Commands
 
@@ -43,11 +44,6 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - `dashboard/management/commands/` — account import/mail commands.
 - `dashboard/templates/` — active templates.
 - `dashboard/static/dashboard/` — active CSS, JS, fonts, icons.
-- `dashboard/oldtemplates/`, `dashboard/oldstatics/` — archived; do not use or
-  edit.
-
-The active template set is sparse while the rewrite is in progress. If a view
-points at a template that only exists in `oldtemplates/`, treat that as part of the rewrite and ask before restoring old markup.
 
 ## Backend rules
 
