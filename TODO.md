@@ -643,92 +643,163 @@ These are small, but their templates are missing, so direct URLs currently raise
 
 ---
 
-# 10. General permissions system (next after parity)
+# 10. Permissions system (next after parity)
 
-Goal: stop making every decision through `request.user.is_staff`. “Staff or not”
-is too coarse for real classes: they will want several admins, a teacher/advisor,
-event coordinators, ordinary students, and different visibility rules. The future
-“only staff may create events” restriction is the first consumer of this system.
+Goal: one module answers “may this user do X?”. Roles are Django groups,
+capabilities are Django permissions, and superusers pass everything implicitly.
 
-## Model
+## Decided
 
-- [ ] Prefer Django’s built-in auth **groups + permissions** before adding a custom
-  role table. Define domain capabilities as permission codenames (custom
-  `Meta.permissions` on the relevant models where useful) and check them through
-  one module.
-- [ ] Keep `dashboard/permissions.py` as the **only** place that answers “may this
-  user do X?”. Views and templates must not re-implement `is_staff` logic.
-- [ ] Combine two kinds of rules in the helpers:
-  - **Capability** (role/group permission): create events, approve events,
-    manage earnings, manage users, view all users, edit any event, manage site
-    config.
-  - **Object relationship** (ownership): creator/manager may edit their own
-    event; participants may leave; staff/coordinators may edit any event until
-    it is final.
-- [ ] Deny by default. Every new action gets a named `can_*` helper and a test.
-  Views return 403 or the feedback/error pattern instead of silently redirecting.
-- [ ] Templates receive booleans from the view (`can_edit`, `can_delete`,
-  `can_create_event`, `can_view_users`, …). Do not call permission helpers from
-  templates.
+- **Server admin = superuser.** No separate admin role.
+- **No non-superuser gets Django admin access for now.** Keep an `access_admin`
+  capability defined but unassigned so this can change later. `/admin/` still
+  requires `is_staff`, because Django gates the admin site on that flag.
+- **`Schüler:in`** is the baseline group; every student account is in it.
+- **`Stufensprecher:in`** is the reps group. Only reps and superusers may create
+  events.
+- **Reps cannot edit user profiles or reset their passwords etc..** `manage_users` stays superuser-only.
+- **All users can view all users for now.** Enforce this through `view_all_users`,
+  granted to both groups, so it can be revoked in admin without a code change.
+- **Groups are additive.** A user can hold several roles; permissions are the
+  union. Put each capability in the narrowest group that needs it.
+- Keep per-event `creator`/`manager` object rules independent of groups.
 
-## Suggested capabilities and roles
+## Roles and capabilities
 
-- [ ] Capabilities, at minimum:
-  - `create_event` (future staff-only restriction)
-  - `edit_any_event`, `delete_any_event`
-  - `approve_event` / finalise event
-  - `manage_earnings` (set earnings, mark earnings received)
-  - `manage_participation_times` (staff adjustment of individual working times)
-  - `manage_join_requests`
-  - `view_all_events` / `view_past_events`
-  - `view_all_users`
-  - `manage_users` (edit profiles, reset passwords)
-  - `manage_site_config` (branding, legal pages, feature flags)
-  - `moderate_gallery` (only if the gallery feature is added)
-- [ ] Suggested groups:
-  - **Site admin**: everything, including Django admin and site config.
-  - **Staff/advisor**: approve events, manage earnings, view all users/events.
-  - **Coordinator**: create/edit events, manage join requests, maybe manage
-    earnings; not necessarily Django admin.
-  - **Student**: create events only if enabled; join/leave; edit own events;
-    view what the privacy policy allows.
-- [ ] Keep the per-event `creator`/`manager` rules independent of groups; a
-  student manager can still edit their event even if they cannot edit all events.
-- [ ] Decide the visibility defaults explicitly: user directory, profile fields,
-  past events, earnings. These are privacy decisions as much as permissions.
+| Capability | `Schüler:in` | `Stufensprecher:in` | Superuser |
+|---|:--:|:--:|:--:|
+| `create_event` | – | ✓ | ✓ |
+| `edit_any_event`, `delete_any_event` | – | ✓ | ✓ |
+| `approve_event` | – | ✓ | ✓ |
+| `manage_earnings` | when manager or creator | ✓ | ✓ |
+| `manage_participation_times` | – | ✓ | ✓ |
+| `manage_join_requests` | own events | ✓ | ✓ |
+| `view_all_users` | ✓ | ✓ | ✓ |
+| `manage_users` | – | – | ✓ |
+| `access_admin` | – | – | ✓ |
 
-## Implementation steps
+Define the codenames with `Meta.permissions` on `Event` (`create_event`,
+`edit_any_event`, `delete_any_event`, `approve_event`, `manage_earnings`,
+`manage_participation_times`, `manage_join_requests`) and on `UserProfile`
+(`view_all_users`, `manage_users`, `access_admin`).
 
-- [ ] Inventory every current authorization decision (`grep` for `is_staff`,
-  `is_superuser`, `can_*`, `creator`, `manager`, `participants`) and map each to a
-  capability or object rule.
-- [ ] Add the `can_*` helpers and role groups in a data migration so existing
-  deployments get sensible defaults.
-- [ ] Replace `can_create_event`’s temporary `return True` with the real
-  capability check; keep the same helper name so the view/button code does not
-  change again.
-- [ ] Replace the other ad-hoc checks in views one at a time; keep `is_staff` as
-  an admin fallback during the transition, then remove the fallback.
-- [ ] Add a small admin screen or document how to manage groups in Django admin;
-  self-hosters need a non-code way to appoint admins/coordinators.
-- [ ] Write a permission matrix in `docs/permissions.md` / `AGENTS.md`:
-  role × action × object condition.
-- [ ] Add tests for the matrix, including negative cases (student cannot edit a
-  stranger’s event, coordinator cannot change site config, manager can edit own
-  event, final event is read-only).
-- [ ] Add audit logging for sensitive changes (earnings, finalisation, user
-  profile/password changes, role changes).
+## Implementation checklist
 
-## Deliberately out of scope for now
+- [ ] Add the `Meta.permissions` entries and the migration.
+- [ ] Rewrite `dashboard/permissions.py`: permission constants and one `_can()`
+  wrapper around `user.has_perm()`; keep the existing `can_*` names. Remove the
+  `can_create_event() -> True` stub and all `is_staff` fallbacks.
+- [ ] Replace ad-hoc checks in `views/events.py` (`set_earnings_received`,
+  `can_approve_payment`, the creation-limit `is_staff` bypass), `views/users.py`,
+  and the admin link in `base.html` (`can_access_admin`).
+- [ ] `join_event`: drop the `is_staff` branch; only creator/manager are added
+  directly, everyone else goes through a join request.
+- [ ] Data migration: create content types and permission rows explicitly (do not
+  rely on `post_migrate` ordering), create both groups, assign their permissions,
+  and add every existing non-superuser to `Schüler:in`.
+- [ ] Add new non-superusers to `Schüler:in` in `dashboard/signals.py`; this covers
+  `import_student_accounts` and admin-created accounts, so the command needs no
+  change.
+- [ ] Admin: verify users can be put into several groups and document that a
+  group is a role. No custom role UI.
+- [ ] Tests: replace `is_staff=True` fixtures with group membership; cover the
+  matrix and negatives (student cannot create or edit a stranger’s event, rep
+  cannot edit profiles or enter admin, superuser can, final event is read-only,
+  manager can still edit their own event).
+- [ ] Write `docs/permissions.md` with the role × action × condition matrix and
+  link it from `AGENTS.md`.
 
-- Per-cohort roles and multi-tenant isolation (see the generalisation discussion;
-  do not build until a single-tenant deployment is stable).
-- A full custom role UI. Django groups + a documented matrix are enough first.
-- Field-level permissions. Start with view/action-level rules and object
-  ownership; add field-level visibility only if the privacy policy requires it.
+## Out of scope
 
-This becomes the next major work item after the parity rewrite, before the
-broader multi-class generalisation work (config, Docker, setup, i18n).
+- Custom `Role` model, custom role UI, or a permission backend such as
+  `django-guardian`; ownership rules stay in `permissions.py`.
+- Per-cohort roles and multi-tenant isolation.
+- Field-level profile privacy; revisit after this lands.
+
+# 11. Email Infrastructure
+
+## 11.1 General Email System
+
+## 11.2 Password Reset via sending E-Mail
+
+# 12. remove personal contact info from repo
+
+# 13. (Datenschutz/Impressum)
+
+# 14. Abikasse
+
+# 15. Single Question Votings with Suggestions (Abimotto)
+- keep the questions modular so that they can be reused in multiquestion polls
+- single questions with different answer types:
+  - number in range
+  - multiselect
+  - ...
+
+# 16. Quotes Page
+
+- vertical list of quotes newest to oldest
+- searchbar on top
+- on its right "neues Zitat" button
+  - overlay
+  - quote field
+  - quoted person field
+  - extra info field
+  - date picker autofilled as today
+  - submit button
+- displayed quotes shown as:
+  > hochgeladen von: [uploader] am [date]
+  > "[quote]"
+  > - [quoted person] ([extra infos])
+
+# 17. Gallery
+
+- videos and photos
+- heavily limit uploads per person:
+  - file size
+  - amount of items
+  - video length
+  - resolution to 1080p
+  - per day and per hour or smn
+
+# 18. Notifications
+
+- push Notifications for IOS and Android
+- email Notifications
+- popup when opening the site
+  - do you want notifications
+  - [email] toggle on/off
+  - tutorial for ios notifications by add to home screen... or just the option to turn them on for android
+- add notification settings somewhere
+  - toggleble things
+
+# 19. Tiktok and Insta Links 
+
+- just linking to them ( no embedding for now :( )
+
+# 20. Title Card
+
+- with fox animation i have done :]
+
+# 21. Profile Pictures 
+
+- export layers of the file as individual assets, group them as they are in krita
+- first: 
+  - random select assets and overlay them
+  - for all users randomly generated pfps
+- later:
+  - custom picker for all the assets
+
+# 22. News/Announcements
+
+# 23. Android Back Button Handling
+
+# 24. Introduction update
+
+# 25. Calendar
+
+# 26. Comments to Events
+
+# 27. Audit Logging
 
 
 # next stuff:
