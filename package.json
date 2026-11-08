@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/idkaybattl/whgabi28.git"
+    "url": "git+https://github.com/idkaybattl/gradclass.org.git"
   },
   "keywords": [],
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/idkaybattl/whgabi28/issues"
+    "url": "https://github.com/idkaybattl/gradclass.org/issues"
   },
-  "homepage": "https://github.com/idkaybattl/whgabi28#readme",
+  "homepage": "https://github.com/idkaybattl/gradclass.org#readme",
   "dependencies": {
     "cropperjs": "^2.1.1",
     "htmx.org": "^2.0.10"
