@@ -1488,23 +1488,266 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 
 # 16. Quotes Page
 
-- vertical list of quotes newest to oldest
-- searchbar on top
-- on its right "neues Zitat" button
-  - overlay
-  - quote field
-  - quoted person field
-  - extra info field
-  - date picker autofilled as today
-  - submit button
-- displayed quotes shown as:
-  > hochgeladen von: [uploader] am [date]
-  > "[quote]"
-  > - [quoted person] ([extra infos])
+Goal: a shared quote wall for single-line quotes and dialogues. A quote is an
+ordered list of lines; every line has a free-text speaker and text.
 
-- Datenschutz: quotes contain personal data of the quoted person. Require the
-  uploader’s confirmation and add a takedown path; mention the category in the
-  privacy page.
+## Decided
+
+**Data model**
+
+- `Quote`: uploader, `spoken_on`, `extra_info`, `created_at`. The quote text and
+  speakers live on its lines, not on the quote.
+- `QuoteLine`: quote, speaker, text, position. A normal quote is one line; a
+  joint quote is one line whose speaker is “Max und Moritz”; a dialogue is
+  several lines.
+- Speaker names stay free text. No user FK and no notifications to quoted
+  people: names are freely chosen, so a link or notification would be
+  misleading and bypassable.
+- `extra_info` belongs to the quote, not to a line.
+- Quote order is `-spoken_on`, `-created_at`; line order is `position`.
+- `spoken_on` is the date the quote was said, not the upload date. It defaults
+  to today and is what the card displays. `created_at` is only the ordering
+  tie-break and audit value.
+
+**Authoring**
+
+- One line editor for every quote, not a separate “dialogue mode”.
+- The first line is required. “Zeile hinzufügen” appends rows; blank extra rows
+  are ignored.
+- A speaker input accepts free text and may contain several names.
+- A shared datalist suggests speakers already entered in the current quote
+  only. No cross-quote suggestions and no user accounts.
+- No consent checkbox. The form shows a short hint that the uploader is
+  responsible for the named person’s consent.
+- All logged-in users can create quotes.
+
+**Display**
+
+- `/quotes/` is the full-page vertical list, newest first.
+- One line renders as a normal quote with attribution:
+  `— Max und Moritz (Bio LK)`.
+- Multiple lines render speaker-prefixed (`Max: …` / `Moritz: …`), with
+  `extra_info` below.
+- No quote detail overlay: the card contains everything. Actions live on the
+  card.
+- The uploader name links to the existing profile overlay.
+
+**Moderation and reporting**
+
+- `manage_quotes` capability for `Stufensprecher` and superuser.
+- The uploader or a `manage_quotes` holder can delete a quote. Delete is a
+  normal POST/redirect to `?status=quote-deleted`; no inline HTMX swap.
+- Any logged-in user except the uploader can report a quote. Reporting never
+  hides the quote automatically.
+- `QuoteReport` stores quote, reporter, optional reason and `created_at`; one
+  report per user and quote.
+- Reps are notified in-app. `Notification` gets a `QUOTE_REPORTED` verb; the
+  target is the report and the URL is `/quotes/#reports`.
+- `/quotes/` shows an “Offene Meldungen” section only to `manage_quotes`
+  holders, with quote excerpt, reporter, reason, “Zitat löschen” and “Meldung
+  verwerfen”.
+- Deleting a quote cascades its lines and reports.
+
+**Page plumbing**
+
+- Search is client-side over line text, speakers, `extra_info` and uploader
+  name. Reuse `searchItems` from `search.js`.
+- No pagination in v1; all quotes load. Revisit if the list grows past a few
+  hundred.
+- Create and report use overlay fragments with full-page fallbacks; direct
+  non-HTMX GETs redirect to `/quotes/`.
+- Success feedback uses `components/_feedback.html`: create offers “Zur Liste”
+  and “Weiteres Zitat”; invalid HTMX forms re-render with 200 and preserve
+  `next_url`.
+
+## Layout
+
+`/quotes/`:
+
+- Header “Zitate”.
+- Toolbar: search input left, “Neues Zitat” button right; stacks on mobile.
+- Feedback panel if a `?status=` flag is present.
+- Optional “Offene Meldungen” block for reps, `id="reports"`.
+- Vertical quote list: meta line, quote/dialogue, attribution, small action row
+  (Löschen / Melden).
+- Empty state “Keine Zitate gefunden.”
+
+Create overlay:
+
+- Header “Neues Zitat”.
+- Line editor rows: speaker input (datalist) and textarea, with a remove
+  control.
+- “Zeile hinzufügen”.
+- “Zusatzinfo (optional)”.
+- “Datum” date picker, default today.
+- Short responsibility hint; no checkbox.
+- Submit “Hinzufügen”.
+
+Report overlay:
+
+- Header “Zitat melden”.
+- Quote excerpt for context.
+- “Grund (optional)” textarea.
+- Submit “Melden”.
+
+Single-line card:
+
+> hochgeladen von: Lena am 11.11.2026
+> „Wir sind hier, um zu bleiben.“
+> — Max und Moritz (Bio LK)
+
+Dialogue card:
+
+> hochgeladen von: Lena am 11.11.2026
+> Max: „Hast du die Klausur gelernt?“
+> Moritz: „Ich habe sie mir angeschaut.“
+> (Bio LK)
+
+## Implementation checklist
+
+**Models and permissions**
+
+- [ ] `Quote`: `uploader` FK, `spoken_on` DateField (default
+  `timezone.localdate`), `extra_info` CharField (blank), `created_at`.
+  `Meta.ordering = ["-spoken_on", "-created_at"]`; `Meta.permissions =
+  [("manage_quotes", "Zitate verwalten")]`; `__str__` returns a short
+  first-line preview.
+- [ ] `QuoteLine`: `quote` FK related_name `lines`, `speaker` CharField
+  (max_length=200), `text` TextField, `position` PositiveSmallIntegerField.
+  `Meta.ordering = ["position", "id"]`.
+- [ ] `QuoteReport`: `quote` FK related_name `reports` (CASCADE), `reporter` FK
+  related_name `quote_reports`, `reason` TextField (blank), `created_at`.
+  `unique_together = ("quote", "reporter")`.
+- [ ] Add `manage_quotes` constant and helpers in `permissions.py`:
+  `can_manage_quotes(user)`, `can_delete_quote(user, quote)` (uploader or
+  `manage_quotes`), `can_report_quote(user, quote)` (not the uploader).
+- [ ] Data migration grants `manage_quotes` to `Stufensprecher`; update
+  `docs/permissions.md`.
+- [ ] `makemigrations` + `migrate`.
+
+**Forms and services**
+
+- [ ] `QuoteForm` for `extra_info` and `spoken_on`; date input uses
+  `type="date"`.
+- [ ] `QuoteLineForm` for `speaker` and `text`; speaker input uses
+  `list="quote-speaker-options"`.
+- [ ] `QuoteLineFormSet = inlineformset_factory(Quote, QuoteLine, extra=1,
+  min_num=1, validate_min=True, can_delete=True)`.
+- [ ] `QuoteReportForm` for the optional reason.
+- [ ] `save_quote(form, formset, user)` in `services.py`: transaction, set the
+  uploader, save the quote, save lines in form order with `position=0..n-1`,
+  honor deleted forms.
+- [ ] Never accept a client-supplied position; derive it from row order.
+
+**Views and URLs**
+
+- [ ] `views/quotes.py` with `quotes`, `quote_create`, `quote_delete`,
+  `quote_report`, `quote_report_dismiss`.
+- [ ] `quotes`: login and introduction required; prefetch `lines` and
+  `reports__reporter`; compute per-quote `can_delete` and `can_report`
+  (`can_report` is false for the uploader or when this user already reported);
+  pass open reports and `can_manage_quotes`.
+- [ ] `quote_create`: GET/POST, HTMX partial plus full-page fallback; validate
+  form and formset; success feedback with actions; non-HTMX redirect to
+  `?status=quote-created`.
+- [ ] `quote_delete`: POST only; permission check; delete; redirect to
+  `?status=quote-deleted` (support HTMX feedback for robustness).
+- [ ] `quote_report`: GET/POST overlay; reject the uploader and duplicate
+  reports; create the report and notify reps; redirect or feedback with
+  `quote-reported` / `quote-already-reported`.
+- [ ] `quote_report_dismiss`: POST only; `manage_quotes` required; delete the
+  report; redirect to `?status=report-dismissed`.
+- [ ] URLs: `quotes`, `quote-create`, `quote-delete`, `quote-report`,
+  `quote-report-dismiss`.
+- [ ] Add `QUOTE_REPORTED` to `NotificationVerbChoices`; `__str__` and
+  `get_url` point at `/quotes/#reports`; notify all users with
+  `manage_quotes` (including superusers) without duplicates.
+
+**Templates and assets**
+
+- [ ] `templates/quotes.html`; reuse the existing list page shell classes and
+  add quote-specific classes.
+- [ ] `templates/quotes/_quote_card.html` with single-line and dialogue
+  rendering, delete/report actions and search data.
+- [ ] `templates/quotes/_quote_form.html` (fragment) and `quotes/form.html`
+  (full-page fallback).
+- [ ] `templates/quotes/_report_form.html` (fragment) and `quotes/report.html`
+  (full-page fallback).
+- [ ] Reps-only reports section `id="reports"` with delete and dismiss forms.
+- [ ] `static/dashboard/css/quotes.css`: vertical list, card variants, line
+  editor, report section; tokens only.
+- [ ] `static/dashboard/js/quotes.js`: `initQuotesList` search; add it to
+  `PAGE_INITIALIZERS`.
+- [ ] `static/dashboard/js/quote-form.js`: `initQuoteForms` add/remove rows and
+  current-quote speaker datalist; add it to `PAGE_INITIALIZERS` and load it
+  from `base.html`.
+- [ ] Link `quotes.css` from `base.html`; enable “Zitate” in the menu.
+- [ ] Add feedback statuses for create, delete, report, dismiss and denied
+  cases.
+- [ ] Register `Quote` (with a `QuoteLineInline`) and `QuoteReport` in admin;
+  add search fields for text, speakers, uploader and reporter.
+
+**Tests and validation**
+
+- [ ] Create with one line sets uploader, date and position.
+- [ ] Create with several lines preserves row order; blank extra rows are
+  ignored.
+- [ ] Missing or empty line is rejected, including `min_num`.
+- [ ] Single-line and dialogue cards render correctly.
+- [ ] List order is `-spoken_on`, `-created_at`.
+- [ ] Uploader can delete own; unrelated student cannot; `manage_quotes`
+  holder can delete any.
+- [ ] Report creates one row and notifies reps; duplicate report is rejected;
+  uploader cannot report own quote.
+- [ ] Rep can dismiss a report; non-rep cannot.
+- [ ] Anonymous access redirects to login.
+- [ ] Invalid HTMX create/report re-renders the partial with 200; direct GET
+  redirects to `/quotes/`.
+- [ ] `manage.py check`, `collectstatic`, `manage.py test`; render `/quotes/`,
+  the create overlay and the report overlay.
+
+## Datenschutz
+
+- Quotes contain the quoted people’s names, the uploader’s identity, the quote
+  date and optional context. Visible to logged-in members only; no public or
+  shareable view.
+- Report reasons may contain personal data; visible only to `manage_quotes`
+  holders.
+- No consent checkbox. The form carries a short responsibility hint; the report
+  button and the contact/reps path are the takedown route.
+- Deleting a quote removes its lines and reports. Retention after Abi 2028 is
+  deferred.
+- Add the quotes category to §13 when this ships. No third-party processors are
+  involved.
+
+## Open
+
+- Exact wording of the responsibility hint.
+- Should quote creation and reporting be rate-limited? Default: no for v1.
+- Should uploaders be able to edit their own quote? Default: no; delete and
+  re-add.
+- Is `extra_info` always quote-level, or does any use case need per-line info?
+  Default: quote-level.
+- Should report reasons be required? Default: optional.
+- Do reports also need email? Default: in-app notifications only.
+- When does the list need pagination? Default: only after it becomes noticeably
+  slow.
+
+## Out of scope
+
+- Upvotes/downvotes and sorting beyond search.
+- Editing quotes.
+- Comments, forum integration and quote discussion.
+- Notifications to quoted people; names remain free text.
+- Linking speakers to user accounts, avatars or profiles.
+- Images, audio or video quotes.
+- Anonymous submissions and public/shareable quotes.
+- A generic report model for other features; extract one when a second feature
+  needs it.
+- Pagination/load more.
+- Audit logging beyond the report rows.
+- Reporting for events, users, Abikasse or poll suggestions; quotes are the
+  only reported content in v1. §14’s existing moderation stays unchanged.
 
 # 17. Gallery
 

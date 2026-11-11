@@ -134,8 +134,14 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 ## Working style
 
 - Make the smallest change that solves the task.
-- For larger work (several files, a new pattern, schema or API changes),
-  outline a short plan before editing.
+- During feature planning, have a conversation, not a monologue. Discuss the
+  current question, suggest a few options with tradeoffs, and ask for
+  confirmation. Keep answers short; do not dump a full plan before the key
+  decisions are settled.
+- For larger work (several files, a new pattern, schema or API changes), outline
+  a short plan only once the open decisions are resolved, then edit.
+- Critically question the user's ideas. Point out tradeoffs, risks, and
+  simpler alternatives instead of just agreeing.
 - Stop and ask when the request is ambiguous, has multiple reasonable
   interpretations, or when you see a materially simpler approach. Do not
   silently choose a different design.
