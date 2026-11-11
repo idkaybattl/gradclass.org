@@ -1033,8 +1033,11 @@ suggested option list. Single-choice only for now, but modelled around
 
 - All logged-in users can suggest; max 3 per user, editable and withdrawable
   until the suggestion deadline.
-- Suggestions and their authors are visible to everyone from the moment they are
-  submitted. Suggestions are not anonymous.
+- Suggestion text is visible to everyone from the moment it is submitted. The
+  author is stored (`Option.created_by`) but visible only to the poll’s managers
+  (creator or `manage_polls` holders); voters never see who suggested an option.
+- Suggestions are therefore pseudonymous to voters, not anonymous in the
+  database.
 - Moderators can approve, reject, edit wording and merge duplicates. Merging
   and editing happen before voting opens; options are frozen afterwards.
 - Rejected or removed suggestions disappear entirely; no tombstones.
@@ -1105,10 +1108,11 @@ Poll overlay (bottom sheet, full detail):
 - Phase body:
   - Entwurf: question and option summary, “Bearbeiten”, and the start action
     (“Vorschläge starten”, or “Abstimmung starten” for fixed options).
-  - Vorschläge: scattered-box wall; each box shows the option text and author,
-    own boxes get edit/withdraw, and the “Vorschlag hinzufügen” form sits below.
-    Removed suggestions are not rendered at all.
-  - Moderation: suggestion list with approve/reject/edit/merge and
+  - Vorschläge: scattered-box wall; each box shows the option text. Managers
+    also see the author; everyone else does not. Own boxes get edit/withdraw,
+    and the “Vorschlag hinzufügen” form sits below. Removed suggestions are not
+    rendered at all.
+  - Moderation: suggestion list with the author, approve/reject/edit/merge and
     “Abstimmung starten”.
   - Abstimmung: options as selectable cards and an “Abstimmen” button. After
     voting, the current choice is marked and “Stimme ändern” stays available
@@ -1143,8 +1147,8 @@ Tiebreaker (later):
   do not store a status column that can go stale.
 - [ ] `Question`: poll FK, prompt, order, `kind` (only `single_choice` now).
 - [ ] `Option`: question FK, label, order, `created_by` (nullable for fixed
-  options), state (`suggested`, `approved`, `rejected`, `merged`), and
-  `merged_into` FK to self (nullable).
+  options; never rendered to non-managers), state (`suggested`, `approved`,
+  `rejected`, `merged`), and `merged_into` FK to self (nullable).
 - [ ] `QuestionParticipation`: question FK, user FK, `created_at`, keyed token
   hash, `unique(question, user)`. The only place the voter is recorded.
 - [ ] `Ballot`: question FK, random unique `token`. No user FK, by design.
@@ -1203,6 +1207,8 @@ Tiebreaker (later):
 - [ ] Only `manage_polls` holders and the creator can create, edit or moderate;
   students get the denied feedback.
 - [ ] Students can suggest and vote.
+- [ ] Suggestion authors are visible to the poll creator and `manage_polls`
+  holders and absent from the HTML for everyone else.
 - [ ] One vote per user per question; a second first-vote POST adds no vote.
 - [ ] A vote can be changed until the deadline; the old ballot row is replaced,
   not duplicated.
@@ -1222,8 +1228,10 @@ Tiebreaker (later):
   participation row records that someone voted, and a cookie-held token allows
   changing the vote. Add this to §13 when polls ship, together with the statement
   that only aggregates are shown. Say “pseudonym” rather than “anonym”.
-- Suggestions are attributed and visible to everyone; add them to the §13 data
-  list when this ships.
+- Suggestions store their author (`Option.created_by`), but authorship is
+  visible only to the poll’s managers; voters see the text only. Add this to the
+  §13 data list when this ships and say “pseudonym gegenüber Abstimmenden”, not
+  “anonym”.
 - No third parties; everything stays on the self-hosted server.
 
 ## Out of scope
@@ -1859,7 +1867,7 @@ placeholder art.
       - with single choices
       - with suggested choices:
         - deadline
-        - people can input answer options (not anonymously)
+        - people can input answer options (author visible only to poll managers)
         - they need to be moderatable
         - after dealine and moderating everyone can vote among suggested options
         - important for Abimotto voting
