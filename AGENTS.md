@@ -33,6 +33,7 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
   `docs/permissions.md` for the role matrix and adding capabilities.
 - `docs/environment.md` — every environment variable, its default and whether it
   is required.
+- `docs/email.md` — mail settings, reset delivery rules and the admin fallback.
 - `dashboard/http_helpers.py` — `next`/`back` validation and HTMX redirects.
 - `dashboard/intro.py` — forced first-run introduction redirect and decorator.
 - `dashboard/feedback.py` — status-flag feedback messages and rendering.

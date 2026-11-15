@@ -854,13 +854,13 @@ Order matters: settings first, then the reset flow, then the admin fallback.
 
 ### 4. Tests, validation and docs
 
-- [ ] Tests using `django.core.mail.outbox`: reset sends only to
+- [x] Tests using `django.core.mail.outbox`: reset sends only to
   `external_mail`; a user without one produces no mail but still shows the
   generic done page; an unknown or iServ-only address produces no mail; the
   token stops working after the password changes; the admin link action is
   gated on `manage_users`.
-- [ ] Run `manage.py check` and render the four pages plus the login page.
-- [ ] Add a short `docs/email.md` (settings keys, which address receives mail,
+- [x] Run `manage.py check` and render the four pages plus the login page.
+- [x] Add a short `docs/email.md` (settings keys, which address receives mail,
   admin fallback) and link it from `AGENTS.md` if it becomes a convention.
 
 ## Out of scope
