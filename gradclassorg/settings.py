@@ -150,6 +150,42 @@ LOGOUT_REDIRECT_URL = "/login/?logged_out=1"
 
 LOGIN_URL = "/login"
 
+
+# Email
+#
+# Leave EMAIL_HOST empty in dev: mails are then printed to the terminal. Reset
+# links are built from request.get_host()/request.is_secure(), so production
+# needs an accurate ALLOWED_HOSTS and, behind a TLS proxy, an ops-side
+# SECURE_PROXY_SSL_HEADER.
+
+
+def _env_flag(name, default=False):
+    value = os.environ.get(name, "").strip().lower()
+    if not value:
+        return default
+    return value in {"1", "true", "yes", "on"}
+
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND") or (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST
+    else "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT") or 587)
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_SSL = _env_flag("EMAIL_USE_SSL")
+EMAIL_USE_TLS = not EMAIL_USE_SSL and _env_flag("EMAIL_USE_TLS", default=True)
+EMAIL_TIMEOUT = 10
+
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL") or "noreply@gradclass.org"
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# From stays noreply; replies go to the monitored class contact address.
+DEFAULT_REPLY_TO = os.environ.get("DEFAULT_REPLY_TO") or "moritz.fechte@gmail.com"
+
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # one day
+
 DATETIME_INPUT_FORMATS = [
     "%Y-%m-%dT%H:%M",
 ]

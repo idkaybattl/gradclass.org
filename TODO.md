@@ -763,19 +763,20 @@ Order matters: settings first, then the reset flow, then the admin fallback.
 
 ### 1. Settings and sending domain
 
-- [ ] Add the mail block to `gradclassorg/settings.py`, read from env with
+- [x] Add the mail block to `gradclassorg/settings.py`, read from env with
   sensible defaults: `EMAIL_BACKEND`, `EMAIL_HOST`, `EMAIL_PORT`,
   `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS` /
   `EMAIL_USE_SSL` (mutually exclusive), `EMAIL_TIMEOUT = 10`,
   `DEFAULT_FROM_EMAIL`, `SERVER_EMAIL = DEFAULT_FROM_EMAIL`.
-- [ ] Use `django.core.mail.backends.console.EmailBackend` in dev when
+- [x] Use `django.core.mail.backends.console.EmailBackend` in dev when
   `EMAIL_HOST` is empty, so reset links can be opened from the terminal.
   Tests already get `locmem` and `django.core.mail.outbox` automatically.
-- [ ] Add `PASSWORD_RESET_TIMEOUT = 60 * 60 * 24` (one day).
-- [ ] Create `.env.example` at the repo root listing every mail key with empty
+- [x] Add `PASSWORD_RESET_TIMEOUT = 60 * 60 * 24` (one day).
+- [x] Create `.env.example` at the repo root listing every mail key with empty
   values; `.env` stays gitignored.
 - [ ] Set a monitored static `Reply-To` (e.g. the class contact address) while
-  `From` stays noreply, so replies do not vanish.
+  `From` stays noreply, so replies do not vanish. (`DEFAULT_REPLY_TO` is in
+  settings; it is applied to the reset mail in §2.)
 - [ ] Ops, not code: SPF, DKIM and DMARC for the sending domain, and the
   `DEFAULT_FROM_EMAIL` address must be authorized by the SMTP account.
   Otherwise reset mails land in spam.
@@ -783,7 +784,7 @@ Order matters: settings first, then the reset flow, then the admin fallback.
   `SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")` if a proxy
   terminates TLS. Reset links are built from `request.is_secure()` and
   `request.get_host()`, so otherwise they go out as `http://` or with the wrong
-  host.
+  host. (Env/deployment only; `ALLOWED_HOSTS` already reads from env.)
 
 ### 2. Password reset flow
 
@@ -1267,6 +1268,9 @@ price is an estimate only.
   goal, add/edit/delete entries, export CSV, and edit the ticket configuration.
   Superusers pass everything implicitly. There is no separate admin role and no
   `Kassenwart` group.
+- Users without `manage_abikasse` see the balance, goal, progress and their
+  ticket card only. Ledger entries are manager-only: no per-entry visibility for
+  everyone, and no personal contributions to hide.
 - `AbikasseEntry` is a single ledger for income and expenses: `kind`
   (`income`/`expense`), `amount` (positive `Decimal`), `description`, `date`,
   optional `event`, `source` (`manual`/`event`), `created_by`, `created_at`,
@@ -1308,11 +1312,11 @@ price is an estimate only.
 
 - A user always sees their own points and ticket estimate.
 - A new capability `view_any_points` on `UserProfile.Meta.permissions` allows
-  seeing another user’s points. Granted to `Stufensprecher`; superusers pass
-  implicitly.
+  seeing another user’s points and their ticket estimate. Points and the derived
+  estimate always travel together; there is no separate estimate capability.
+  Granted to `Stufensprecher`; superusers pass implicitly.
 - The users list stays points-free. The section appears in
   `users/_user_details.html` only for self or `view_any_points`.
-- Ticket estimates are personal and are not covered by `view_any_points`.
 
 **Ticket estimate**
 
@@ -1326,6 +1330,9 @@ price is an estimate only.
 - `available = Abikasse.balance()`;
   `R = fixed_costs + per_head_costs × N_est − available`.
 - `credit(user) = total_points(user) × point_value`.
+- `point_value` is both the earnings-to-points divisor and the points-to-credit
+  multiplier, so it cancels out of the earnings share apart from flooring:
+  changing it scales only the hours credit. That is intended; do not “fix” it.
 - `base = (R + Σ credit) / N_est`.
 - `price_per_ticket(user) = base − credit(user) / ticket_count(user)`;
   `total(user) = ticket_count(user) × base − credit(user)`.
@@ -1365,8 +1372,8 @@ price is an estimate only.
 - Summary: Kassenstand, Ziel, progress bar.
 - Ticket card: own points, head-count input, Grundpreis, own ticket price, total,
   “Schätzung vom …”.
-- Ledger: date, description, kind, amount, optional running total; newest first;
-  empty state.
+- Ledger (managers only): date, description, kind, amount, optional running
+  total; newest first; empty state.
 - Add/edit entry in the bottom sheet; delete through the feedback pattern.
 
 Index profile card:
@@ -1376,7 +1383,8 @@ Index profile card:
 Profile overlay:
 
 - “Arbeitspunkte” section for self/reps/superusers: total, `Arbeitspunkte`,
-  `Ertragspunkte`, short explanation. No per-event list.
+  `Ertragspunkte`, short explanation, and the user’s current ticket estimate. No
+  per-event list.
 
 German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 `Arbeitspunkte`, `Ertragspunkte`, `Punkte gesamt`, `Grundpreis`,
@@ -1420,14 +1428,16 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 
 **Views and URLs**
 
-- [ ] `abikasse` full page, `view_abikasse`.
+- [ ] `abikasse` full page, `view_abikasse`; pass ledger entries to the template
+  only for `manage_abikasse`.
 - [ ] `abikasse_entry_create/edit/delete`, `manage_abikasse`, POST + HTMX
   feedback; `@require_POST` for delete.
 - [ ] `abikasse_export` CSV, `manage_abikasse`.
 - [ ] `ticket_count_update` (POST) and the estimate partial; owner only.
 - [ ] `main_page`: add the current user’s estimate to the context and update the
   `.fund` card.
-- [ ] `user_details`: add points for self/`view_any_points`.
+- [ ] `user_details`: add points and the ticket estimate for
+  self/`view_any_points`.
 - [ ] Keep `next` handling in `http_helpers.py`; no inline redirects.
 
 **Templates, CSS, JS**
@@ -1445,14 +1455,17 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 
 - [ ] Points: school vs freetime weighting, final-only, ended-only, earnings
   share proportional to hours, zero-hour events skipped, floor, no events.
-- [ ] Visibility: self sees points; rep and superuser see another user’s points;
-  unrelated student does not; users list never shows points.
+- [ ] Visibility: self sees points and the estimate; rep and superuser see
+  another user’s points and estimate; an unrelated student sees neither; the
+  users list never shows points.
 - [ ] Ledger: balance, income/expense, auto entry on final, idempotent update,
-  no entry for missing earnings, edit/delete permissions, CSV.
+  no entry for missing earnings, edit/delete permissions, CSV; a student gets
+  the summary but no entry rows.
 - [ ] Estimate: default 5 tickets, base formula, own price, total, cap at 0,
-  hidden when config incomplete, count update changes the price, other users
-  cannot see it.
-- [ ] Index profile card renders the estimate; profile overlay renders points.
+  hidden when config incomplete, count update changes the price, and a student
+  cannot see another user’s estimate.
+- [ ] Index profile card renders the estimate; profile overlay renders points and
+  the estimate.
 - [ ] Overlay partials contain no `<html>`; invalid forms re-render with 200.
 
 **Validation**
@@ -1466,20 +1479,14 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
   limited to self, `Stufensprecher` and superusers (`view_any_points`); no
   leaderboard.
 - The ledger is internal financial data. All logged-in users see the aggregate
-  and entry descriptions; individual contributions are not tracked in v1.
+  (balance, goal, progress); entry details are limited to `manage_abikasse`.
+  Individual contributions are not tracked in v1.
 - No payment provider and no third party. Add points, ticket estimate and ledger
   to §13 when this ships; retention after Abi 2028 is deferred.
 - Audit logging (§27) covers ledger edits once it lands.
 
 ## Open
 
-- Confirm that “points” means `hours + earnings/x` (earnings converted at `1/x`)
-  rather than a separate euro amount.
-- Confirm that the earnings share uses unweighted hours; the original formula
-  does.
-- Should reps see other users’ ticket estimates? Default: no, points only.
-- Should all ledger entries be visible to all users, or only the aggregate?
-  Default: entries visible; no personal contributions to hide.
 - Review the `work_kind` default for existing events after the migration.
 
 ## Out of scope

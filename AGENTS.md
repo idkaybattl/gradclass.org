@@ -31,6 +31,8 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
   `auth.py`, `events.py`, `users.py`, `notifications.py`.
 - `dashboard/permissions.py` — permission checks shared by views; see
   `docs/permissions.md` for the role matrix and adding capabilities.
+- `docs/environment.md` — every environment variable, its default and whether it
+  is required.
 - `dashboard/http_helpers.py` — `next`/`back` validation and HTMX redirects.
 - `dashboard/intro.py` — forced first-run introduction redirect and decorator.
 - `dashboard/feedback.py` — status-flag feedback messages and rendering.
@@ -131,6 +133,15 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Icons use `.logo` with the inline `--icon` pattern; follow it.
 - Icons, fonts, and vendored libraries are assets, not code to edit.
 
+## Working from `TODO.md`
+
+- Work in small steps: one checklist subsection at a time. Implement, validate,
+  then stop and report so the user can review and commit before you continue.
+- Mark the items you finished as `[x]` in `TODO.md` in that same step.
+- Do not silently reorder sections. If the section you were asked for depends on
+  unfinished work or the order is unclear, say which order you plan to take and
+  get it confirmed before editing.
+
 ## Working style
 
 - Make the smallest change that solves the task.
@@ -152,6 +163,19 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Do not add dependencies, commit, or push unless asked.
 - Comments only where they explain structure, intent, or a non-obvious
   constraint.
+
+## Self-review
+
+- Re-read your own diff after every code change, before validating and before
+  moving on to the next item.
+- Ask: is this the smallest change that solves the task? Can it be shorter —
+  fewer files, helpers, options, parameters, layers? Is anything here fluff for
+  this app's purpose: a generic abstraction with one caller, a config knob
+  nobody sets, unused hooks, speculative "for later" code, dead branches,
+  duplicated helpers?
+- Adjust the change to the answer: drop the fluff, inline the single-use
+  abstraction, remove the unused parameter or setting, merge the extra file.
+  Then validate.
 
 ## Validation
 
