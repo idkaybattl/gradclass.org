@@ -983,24 +983,31 @@ kept current as features ship. No Impressum, no cookie banner.
 - [ ] Add a `Stand` date and bump it on every change.
 - [ ] Render the page logged out and logged in; run `manage.py check`.
 
-## 13.2 Gallery and image consent (design open)
+## 13.2 Gallery and image consent
 
-Constraints to keep when designing it:
+Constraints; the full design is in §17.
 
 - One-time per-user consent, stored with the consent text version, timestamp
-  and revocation state. Separate page/flow, not the introduction.
+  and revocation state. Separate page/flow, not the introduction. Uploads
+  require the current version.
 - Consent text: purpose (internal gallery), scope (login-only), legal basis
-  (Art. 6(1)(a), §22 KUG), voluntariness, withdrawal, and that minors need a
-  legal representative’s consent.
-- Upload form: one attestation checkbox (“nur Bilder, für die eine Einwilligung
-  der abgebildeten Personen vorliegt”), stored per upload. Not a dialog per
-  image or post.
+  (Art. 6(1)(a), §22 KUG), voluntariness, withdrawal, that minors need a legal
+  representative’s consent, and the uploader commitment (“nur Medien, für die
+  die abgebildeten Personen eingewilligt haben”).
+- No per-upload attestation checkbox. The commitment lives in the one-time
+  consent text; uploads are still consent-gated server-side.
+- Multi-upload is the normal flow; every file is tied to the uploader’s current
+  consent and processed locally.
 - Withdrawal: “Fotos von mir nicht veröffentlichen” in the profile plus a
-  takedown request via contact; existing images hidden or removed.
+  takedown request via contact; existing images are hidden or removed by
+  `manage_gallery`.
+- Media is login-only: no public or shareable URLs. Serve through the
+  authenticated route (Django in development, Caddy `forward_auth` +
+  `file_server` in production).
 - Do not ship gallery uploads before the consent flow and the privacy section
   exist.
 - Extend the privacy page with the photo section when this lands: categories,
-  retention, no recipients, withdrawal.
+  retention, local processing, no recipients, withdrawal.
 
 ## 13.3 Deferred
 
@@ -1751,17 +1758,380 @@ Dialogue card:
 
 # 17. Gallery
 
-- videos and photos
-- heavily limit uploads per person:
-  - file size
-  - amount of items
-  - video length
-  - resolution to 1080p
-  - per day and per hour or smn
+Goal: a login-only feed for photos and videos, uploaded in batches and
+optionally linked to events. Files are processed locally with Pillow and ffmpeg
+and served only to logged-in users. No albums, public links, likes or comments.
 
-- login-only; no public or shareable albums
-- Datenschutz: see 13.2. No uploads before the one-time image consent, upload
-  attestation and privacy section exist.
+## Decided
+
+**Media and storage**
+
+- Photos and videos are both in v1.
+- Photos are re-encoded to WebP: display file with the longest edge at most
+  1920 px, thumbnail at most 480 px. HEIC is accepted via `pillow-heif`;
+  animated GIFs are rejected.
+- Videos are validated with `ffprobe` and transcoded to MP4/H.264/AAC with
+  `+faststart`, longest edge at most 1920 px (1080p at 16:9). A poster frame is
+  extracted for the grid and the detail view.
+- Only the processed display file and thumbnail/poster are kept. The original
+  upload is deleted after processing; this removes EXIF/GPS and saves disk.
+- Files live under `media/gallery/{originals,display,thumbs}/<uuid>.<ext>`.
+  The model carries a `uuid` used by `upload_to`, so names are opaque. The
+  originals directory is transient.
+- `GalleryItem.status` is `queued`, `processing`, `ready` or `failed`. Only
+  ready, non-hidden items are listed.
+
+**Feed and event link**
+
+- `/gallery/` is a flat grid, newest `taken_at` first with `created_at` as the
+  tie-break.
+- No albums. `?event=<id>` filters the same page and shows a clearable chip;
+  event detail links there. Event-linked items still appear in the main feed.
+- `GalleryItem.event` is a nullable FK with `on_delete=SET_NULL`; deleting an
+  event never deletes media.
+- All logged-in users may upload and may attach an upload to any event. The
+  event detail preselects that event in the upload panel.
+- Event detail shows the media count, the newest six ready thumbnails and
+  “Alle ansehen”.
+
+**Upload and consent**
+
+- Upload requires the current one-time gallery consent. There is no per-upload
+  checkbox; the consent text contains the uploader commitment (“nur Medien,
+  für die die abgebildeten Personen eingewilligt haben”). Consent is versioned,
+  timestamped and revocable.
+- Multi-upload is the primary flow: select many files, one request per file,
+  one shared event for the batch, per-file caption and date, per-file progress
+  and errors. One failed file does not abort the batch.
+- Items become visible when processing finishes; there is no batch publish
+  step. Closing the panel does not cancel processing.
+- Uploaders may edit caption, date and event, and delete their own items.
+- A reported item is hidden from everyone except `manage_gallery` holders and
+  its uploader until the report is resolved.
+
+**Serving**
+
+- No public `MEDIA_URL`. Media is reachable only through
+  `/gallery/media/<uuid>/<variant>/` (`display` or `thumb`); the view checks
+  login and hidden state.
+- Development and fallback: Django `FileResponse` (Django 6 supports Range).
+- Production: Caddy `forward_auth` against a small Django endpoint, then
+  `file_server` from the media root for native Range/sendfile. The Caddyfile
+  is deployment configuration, not part of the repo.
+- Responses use a private cache policy; no public CDN or shared cache.
+
+**Moderation and reports**
+
+- Any logged-in user except the uploader can report a ready, visible item.
+  One report per user and item. Reasons: “Unangemessen”, “Ohne Einwilligung”,
+  “Sonstiges”, plus an optional note.
+- The first report hides the item pending review and notifies every user with
+  `manage_gallery`.
+- `manage_gallery` holders get a “Gemeldet” tab on `/gallery/` and the report
+  details in the item. Resolution is “Behalten” (restore, resolve reports) or
+  “Löschen” (delete item and files; reports cascade).
+- No automatic NSFW detection and no auto-delete after a count of reports.
+
+**Permissions**
+
+- `manage_gallery`: delete any item, resolve reports, see hidden items.
+- `bypass_gallery_limits`: skip the hourly/daily counters and the batch cap.
+- Both are granted to `Stufensprecher` and held implicitly by superusers.
+- Uploading needs no capability; consent and limits are the only gates.
+
+**Limits**
+
+| Limit | Value |
+| --- | --- |
+| Photo file size | 15 MB |
+| Photo display / thumbnail | 1920 px / 480 px longest edge |
+| Video file size | 100 MB |
+| Video duration | 90 s |
+| Video output | H.264/AAC, longest edge ≤ 1920 px |
+| Files per batch | 20 |
+| Uploads per user | 20 per hour, 60 per day |
+| Per-user total storage | open, see “Open” |
+
+Per-file format, size and duration limits always apply; `bypass_gallery_limits`
+only lifts the counters and the batch cap.
+
+**Home page**
+
+- After the core gallery works, the desktop home page gets a slideshow of
+  recent ready items. §20’s title card is independent.
+
+**Data model**
+
+- `GalleryItem`: `uuid`, `batch_id`, `uploader` FK, `event` FK (SET_NULL),
+  `kind` (`photo`/`video`), `status`, `original`, `file`, `thumbnail`,
+  `caption`, `taken_at` (defaults to upload time, replaced by metadata),
+  `width`, `height`, `duration`, `size`, `is_hidden`, `failure_reason`,
+  `created_at`, `processed_at`.
+- `batch_id` is a server-generated UUID handed to the upload panel; every file
+  request in the session carries it, which makes the per-batch cap and status
+  polling possible without trusting a client-side counter.
+- `GalleryConsent`: `user` FK, `version`, `accepted_at`, `revoked_at`.
+- `GalleryReport`: `item` FK, `reporter` FK, `reason`, `note`, `created_at`,
+  `resolved_at`, `resolved_by`; `unique_together = ("item", "reporter")`.
+  Deleting the item cascades its reports, so there is no “deleted” resolution
+  row to keep.
+- `UserProfile.publish_photos_opt_out`: the profile checkbox “Fotos von mir
+  nicht veröffentlichen”. It is a signal for takedowns, not an automated
+  removal.
+- Deleting an item removes display files and thumbnails via `post_delete`; the
+  original is already gone.
+
+## Layout
+
+`/gallery/`:
+
+- Header “Gallerie” with the upload button top-right; visible to every user.
+- Filter row: “Alle”, “Fotos”, “Videos”, plus a clearable event chip when
+  `?event=` is active and a “Gemeldet (N)” chip for `manage_gallery`.
+- Responsive grid of square tiles; thumbnail/poster with a small photo/video
+  badge. Hidden items carry a “Gemeldet” marker for managers.
+- “Mehr laden” button (HTMX) while more items exist; empty state
+  “Noch keine Medien.”
+- Without current consent, the upload button leads to the consent page first;
+  after accepting, return to `/gallery/` (or the event detail) with a feedback
+  action that opens the upload panel.
+
+Item detail overlay:
+
+- Media on top (image, or `video` with controls, `playsinline`,
+  `preload="metadata"` and the poster), then caption, uploader, date and event
+  link.
+- Actions: “Bearbeiten” (own), “Melden” (not own), “Löschen” (own or
+  `manage_gallery`).
+- For `manage_gallery`: reports with reporter, reason, note and
+  “Behalten”/“Löschen”.
+
+Upload overlay:
+
+- Event select (preselected from an event), drop zone and multi-file input.
+- One row per file: preview, filename/size, caption input, date input, remove,
+  progress bar and processing status.
+- “Hochladen” starts the queue; files over the batch cap stay in the list with
+  a clear error.
+- Summary feedback with counts and per-file errors.
+- Direct non-HTMX GET redirects to `/gallery/`. Multi-upload requires JS; a
+  no-JS single-file fallback is out of scope.
+
+Event detail:
+
+- “Medien” card with the count, newest six thumbnails and “Alle ansehen”
+  (`/gallery/?event=<id>`), plus an upload button that preselects the event.
+  The card renders even with no media, so the upload entry point is reachable.
+
+## Implementation checklist
+
+**Settings, dependencies, models**
+
+- [ ] Add `Pillow` and `pillow-heif` to `requirements.txt`; document `ffmpeg`
+  as a system dependency.
+- [ ] `settings.py`: `MEDIA_ROOT = BASE_DIR / "media"`; do not add a public
+  `MEDIA_URL` route. Keep `FILE_UPLOAD_MAX_MEMORY_SIZE` small enough that
+  uploads land in temp files.
+- [ ] `GalleryItem`, `GalleryConsent`, `GalleryReport` in `models.py` with the
+  fields above; `Meta.ordering = ["-taken_at", "-created_at"]` and
+  `Meta.permissions` on `GalleryItem` for `manage_gallery` and
+  `bypass_gallery_limits`; add indexes for `(status, taken_at)` and
+  `(event, status, taken_at)`.
+- [ ] Add `publish_photos_opt_out` to `UserProfile` and to the profile form.
+- [ ] `makemigrations` + `migrate`; data migration grants both capabilities to
+  `Stufensprecher`; update `docs/permissions.md`.
+- [ ] Register the models in `admin.py` with useful list displays and filters.
+- [ ] `post_delete` signal (or model override) deletes display, thumbnail and
+  any remaining original.
+- [ ] Update `AGENTS.md`: new `dashboard/views/gallery.py`, `gallery.py`,
+  `process_gallery_media` command, `gallery.css`/`gallery-upload.js`, and the
+  media-serving rule.
+
+**Consent and Datenschutz**
+
+- [ ] Land §13.1 first; the privacy page must exist before uploads ship.
+- [ ] Consent version constant and `user_has_current_consent(user)` helper in
+  `gallery.py`.
+- [ ] `/gallery/consent/` full page (not overlay) with the consent text,
+  version, “Einwilligen” POST and “Ablehnen” (returns to gallery).
+- [ ] POST creates a `GalleryConsent` row for the current version; accepting
+  again always creates a new row and revoked rows stay as history.
+- [ ] Profile shows the current consent state with a “Widerrufen” POST;
+  revocation sets `revoked_at` and blocks further uploads.
+- [ ] Gate upload endpoints server-side: missing/revoked consent returns a
+  feedback panel with a link to the consent page; direct GET redirects there
+  with validated `next`.
+- [ ] Add “Fotos von mir nicht veröffentlichen” to the profile form and save it
+  to `UserProfile.publish_photos_opt_out`.
+- [ ] Add the gallery section to the privacy page: categories, purposes,
+  consent and withdrawal, local processing, retention, no recipients.
+
+**Processing pipeline**
+
+- [ ] `dashboard/gallery.py` (media helpers): limits, extension and MIME
+  validation (sniff content, do not trust the extension), rate-limit counters,
+  `taken_at` extraction, display/thumb paths.
+- [ ] Image pipeline: open with Pillow, set `Image.MAX_IMAGE_PIXELS` to
+  reject decompression bombs, `ImageOps.exif_transpose`, read
+  `DateTimeOriginal`, reject invalid/animated images, convert to RGB, resize
+  longest edge to 1920, save WebP; build a 480 px thumbnail.
+- [ ] Video pipeline: `ffprobe` JSON for duration/resolution/codec; reject over
+  limits; transcode with libx264/AAC, longest edge scaled to 1920,
+  `-movflags +faststart`, `-pix_fmt yuv420p`; extract a poster at 1 s.
+- [ ] Normalise naive EXIF timestamps to the current timezone; ignore future
+  timestamps; fall back to the upload time.
+- [ ] Status transitions in a service: `queued` → `processing` → `ready`, or
+  `failed` with `failure_reason`; never leave a row in `processing` after a
+  crash.
+- [ ] `manage.py process_gallery_media`: one-shot or loop,
+  `select_for_update` (`skip_locked`), single worker, retry cap, stale-
+  `processing` recovery.
+- [ ] Delete the original on success and after the final failed attempt; keep
+  only display files and thumbnails for ready items.
+- [ ] Deployment: systemd service/timer for the worker; gunicorn timeout high
+  enough for uploads; Caddy `forward_auth` + `file_server` block.
+- [ ] Tests for limits, both pipelines (small fixtures), failure paths and
+  original cleanup.
+
+**Views, URLs and upload API**
+
+- [ ] `views/gallery.py`: `gallery`, `gallery_item`, `gallery_consent`,
+  `gallery_upload`, `gallery_upload_file`, `gallery_upload_status`,
+  `gallery_item_edit`, `gallery_item_delete`, `gallery_media`,
+  `gallery_media_auth`, `gallery_report`, `gallery_report_resolve`.
+- [ ] `gallery`: login + introduction; parse and validate `event`; filter by
+  kind; paginate/load more; manager report tab; pass consent state for the
+  upload button.
+- [ ] `gallery_item`: overlay partial + full-page fallback; include reports for
+  `manage_gallery`; compute actions per permission.
+- [ ] `gallery_consent`: full page; POST with validated `next`; revision keeps
+  history.
+- [ ] `gallery_upload`: overlay partial; generate a `batch_id`, preselect
+  event; redirect direct non-HTMX GETs to `/gallery/`.
+- [ ] `gallery_upload_file`: POST only, one file per request with `batch_id`,
+  CSRF, consent, rate limits, size/type/duration validation; enforce the batch
+  cap server-side; create `status=queued`; return the row state the JS needs
+  (item id, status).
+- [ ] `gallery_upload_status`: GET by `batch_id`, scoped to the uploader;
+  return statuses and thumbnail URLs for polling; never expose other users’
+  pending items.
+- [ ] `gallery_item_edit`: POST; own item; caption, `taken_at`, event; re-render
+  the detail or return feedback.
+- [ ] `gallery_item_delete`: POST; uploader or `manage_gallery`; delete row and
+  files; feedback or redirect with `?status=`.
+- [ ] `gallery_media`: `login_required`, resolve UUID/variant, reject hidden
+  items unless manager/uploader; `FileResponse` with a private cache policy.
+- [ ] `gallery_media_auth`: internal endpoint for Caddy; returns 204/401 and
+  reads the original path from `X-Forwarded-Uri`; login and hidden checks, no
+  HTML body.
+- [ ] `gallery_report`: overlay GET/POST; reject uploader and duplicates;
+  create report, set `is_hidden`, notify managers; feedback
+  `gallery-reported` / `gallery-already-reported`.
+- [ ] `gallery_report_resolve`: POST; `manage_gallery`; “Behalten” resolves
+  the report and unhides the item only when no unresolved reports remain;
+  “Löschen” deletes the item.
+- [ ] Add `GALLERY_REPORTED` to `NotificationVerbChoices`; `__str__` names the
+  item/uploader, `get_url` returns the item overlay URL, `open_as_popup` true.
+- [ ] Add a `users_with_capability(permission)` helper returning distinct users
+  with the capability through direct permissions, group permissions or
+  superuser status; use it instead of group names for report notifications.
+- [ ] URLs: `gallery`, `gallery-item`, `gallery-consent`, `gallery-upload`,
+  `gallery-upload-file`, `gallery-upload-status`, `gallery-item-edit`,
+  `gallery-item-delete`, `gallery-media`, `gallery-media-auth`,
+  `gallery-report`, `gallery-report-resolve`.
+- [ ] Feedback statuses for uploaded/processing, report, resolve, delete,
+  limits, consent required and invalid file.
+
+**Templates and assets**
+
+- [ ] `templates/gallery.html`, `gallery/_item_card.html`,
+  `gallery/_item_detail.html`, `gallery/_item_form.html`,
+  `gallery/_upload.html`, `gallery/_upload_row.html`, `gallery/_report.html`,
+  `gallery/consent.html`, plus full-page fallbacks.
+- [ ] `static/dashboard/css/gallery.css`: grid, tiles, media viewer, upload
+  rows/progress, report panel; tokens only.
+- [ ] `static/dashboard/js/gallery.js`: grid initialisation and preview object
+  URLs; `window.initGallery`.
+- [ ] `static/dashboard/js/gallery-upload.js`: file list, previews, per-row
+  metadata, sequential upload with progress (`XMLHttpRequest` for upload
+  progress), status polling, remove; `window.initGalleryUpload`.
+- [ ] Reuse a shared CSRF-token helper instead of duplicating the cookie
+  parsing in `htmx-setup.js`.
+- [ ] Call the initialisers from `base.js` on `DOMContentLoaded` and
+  `htmx:afterSwap`; keep them idempotent and scoped to `root`.
+- [ ] Add CSS/JS to `base.html`; enable “Gallerie” in the menu and footer.
+- [ ] Overlay fragments have no `{% extends %}` and depend only on their own
+  view context.
+
+**Event integration**
+
+- [ ] Event detail context: ready, non-hidden items for the event, count and
+  newest six.
+- [ ] Add the “Medien” card and upload link to `events/_event_details.html`;
+  the upload link carries `back=<event detail>`.
+- [ ] Gallery view validates `?event=`; show the chip with the event title and
+  a clear link.
+- [ ] Home slideshow: recent ready items, pause on hover/focus, respect
+  `prefers-reduced-motion`, link to the item overlay.
+
+**Tests and validation**
+
+- [ ] Consent: upload without consent redirects/rejects; accepting works;
+  revocation blocks further uploads.
+- [ ] Limits: per-file size/type/duration, batch cap, hourly/daily counters,
+  bypass capability.
+- [ ] Multi-upload: partial success; one item per file; caption, date and event
+  are saved per file.
+- [ ] Pipeline: image resize/WebP/EXIF strip/date; video transcode/poster/
+  duration; originals deleted.
+- [ ] Media auth: anonymous, logged-in, uploader, manager and hidden-item
+  cases; no public URL.
+- [ ] Event filter and event detail media section.
+- [ ] Reports: hide on first report, duplicate rejected, uploader cannot
+  report own item, managers notified; keep and delete resolutions.
+- [ ] Delete own vs manager vs unrelated user.
+- [ ] `manage.py check`, `collectstatic` and `manage.py test`; render the
+  gallery, upload panel, item detail, consent page, report panel and event
+  detail.
+
+## Datenschutz
+
+- Photos and videos show people; the gallery is login-only with no public or
+  shareable URLs.
+- Consent is one-time, versioned and revocable; the text includes the uploader
+  commitment. Revocation blocks uploads and starts the takedown path.
+- Processing is local (Pillow/ffmpeg); Caddy serves bytes but there is no
+  third-party recipient.
+- EXIF/GPS is stripped and originals are deleted; only display files and
+  thumbnails remain.
+- Reports contain the reporter’s identity and an optional note, visible only to
+  `manage_gallery` holders.
+- Add the gallery section to §13.1 when this ships; retention after Abi 2028 is
+  deferred.
+
+## Open
+
+- The numeric limits are proposals; adjust after the first real upload.
+- Per-user total storage cap and a disk-space warning for the home server.
+- Caddy details: media root, cache headers, upload timeouts.
+- Should failed uploads keep the original for debugging, or delete it
+  immediately? Default: delete after the final attempt.
+- Should the uploader name link to the profile overlay? Default: yes.
+- Slideshow placement and timing on the home page.
+
+## Out of scope
+
+- Albums, collections, public/shareable links and external embedding.
+- Likes/upvotes, comments, reactions and tagging people.
+- Editing or deleting other users’ items outside `manage_gallery`.
+- Automatic NSFW or face detection; reports are manual.
+- Search over captions/uploaders; filters are type and event only.
+- No-JS multi-upload, resumable and chunked uploads.
+- 4K/HDR/Dolby Vision transcoding, playlists and long videos.
+- Audio-only or document uploads, and downloading originals.
+- Notifications for new uploads (only reports notify).
+- A generic report model shared with quotes; extract one when quotes needs it.
+- Audit logging beyond the report rows.
 
 # 18. Notifications
 
@@ -2034,7 +2404,9 @@ placeholder art.
 - Datenschutz: user-generated content, covered as “von dir erstellte Inhalte”.
   Define moderation, deletion and retention.
 
-# 27. Audit Logging
+# 27. Security and Audit Logging
+
+failed login limits
 
 - Datenschutz: new processing (who did what, when). Add it to the logs section
   and define access and retention.
@@ -2067,7 +2439,6 @@ placeholder art.
   - uploading images
   - and videos
   - on desktop slideshow of recent gallery posts
-  - poster is public
   - getting date from image/video metadata?
   - make them connectable to events
     - events need an upload button
