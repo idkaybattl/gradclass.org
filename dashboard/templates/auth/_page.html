@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block base_head %}
+<link rel="stylesheet" href="{% static 'dashboard/css/login.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <section class="card login-card">
+        {% block card %}{% endblock %}
+    </section>
+</div>
+{% endblock %}

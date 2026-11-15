@@ -17,6 +17,15 @@
     font-size: var(--font-size-sm);
 }
 
+.login-hint {
+    font-size: var(--font-size-sm);
+    opacity: 0.8;
+}
+
+.login-card>.login-hint {
+    margin-top: 16px;
+}
+
 .login-form {
     display: grid;
     gap: 14px;

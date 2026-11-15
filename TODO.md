@@ -774,9 +774,9 @@ Order matters: settings first, then the reset flow, then the admin fallback.
 - [x] Add `PASSWORD_RESET_TIMEOUT = 60 * 60 * 24` (one day).
 - [x] Create `.env.example` at the repo root listing every mail key with empty
   values; `.env` stays gitignored.
-- [ ] Set a monitored static `Reply-To` (e.g. the class contact address) while
+- [x] Set a monitored static `Reply-To` (e.g. the class contact address) while
   `From` stays noreply, so replies do not vanish. (`DEFAULT_REPLY_TO` is in
-  settings; it is applied to the reset mail in §2.)
+  settings and passed as `reply_to` on the reset mail.)
 - [ ] Ops, not code: SPF, DKIM and DMARC for the sending domain, and the
   `DEFAULT_FROM_EMAIL` address must be authorized by the SMTP account.
   Otherwise reset mails land in spam.
@@ -788,33 +788,35 @@ Order matters: settings first, then the reset flow, then the admin fallback.
 
 ### 2. Password reset flow
 
-- [ ] Add the four routes to `dashboard/urls.py` using
+- [x] Add the four routes to `dashboard/urls.py` using
   `auth_views.PasswordResetView`, `PasswordResetDoneView`,
   `PasswordResetConfirmView` and `PasswordResetCompleteView`, with German paths
   and names (`password-reset`, `password-reset-done`,
   `password-reset-confirm`, `password-reset-complete`). These views are
   logged-out; `introduction_required` is decorator-based, so it does not
   interfere.
-- [ ] Pass explicit template names. `django.contrib.admin` is first in
+- [x] Pass explicit template names. `django.contrib.admin` is first in
   `INSTALLED_APPS`, so its `registration/password_reset_*` templates win over
   same-named files in `dashboard/templates/`. Use
   `dashboard/templates/auth/password_reset/{form,done,confirm,complete}.html`
   and set `template_name` on each view.
-- [ ] Set `success_url` explicitly on the reset and confirm views
+- [x] Set `success_url` explicitly on the reset and confirm views
   (`password-reset-done`, `password-reset-complete`); the defaults point at
   Django's `password_reset_*` names, which this project does not use.
-- [ ] Add the email templates as
+- [x] Add the email templates as
   `dashboard/templates/emails/password_reset_subject.txt` and
   `dashboard/templates/emails/password_reset.txt` (plain text, German, no HTML
   alternative), and point the form at them with `subject_template_name` /
   `email_template_name`. Do not rely on
   `registration/password_reset_email.html`.
-- [ ] Build the reset pages on the logged-out shell used by
+- [x] Build the reset pages on the logged-out shell used by
   `registration/login.html`; the flow is full-page, not an overlay. Do not
   assume the navbar or overlay shell.
-- [ ] Subclass `PasswordResetForm` in `dashboard/forms.py`:
-  - `clean_email` accepts either the iServ address (`User.email`) or
-    `profile.external_mail`, case-insensitive, `is_active=True` only.
+- [x] Subclass `PasswordResetForm` in `dashboard/forms.py`:
+  - `get_users()` matches either the iServ address (`User.email`) or
+    `profile.external_mail`, case-insensitive, `is_active=True` only. No
+    `clean_email` hook is needed: the email field already validates the format
+    and an unknown address must not produce an error.
   - `get_users()` returns the matches; override `save()` so each mail goes to
     that user's `profile.external_mail`. Django's default targets the submitted
     address, which may be the iServ one.
@@ -824,14 +826,14 @@ Order matters: settings first, then the reset flow, then the admin fallback.
     form does not leak account existence.
   - Send one mail per matched user to that user's own address, so a duplicate
     address is resolved per owner instead of being ambiguous.
-- [ ] Build the confirm link from the request (`request.get_host()` /
+- [x] Build the confirm link from the request (`request.get_host()` /
   `request.is_secure()`) plus `default_token_generator`, so the proxy settings
   above apply. Do not hardcode the domain.
-- [ ] Add a "Passwort vergessen?" link to the login page.
-- [ ] Add the same static hint on the form and done pages: "Wenn du keine
+- [x] Add a "Passwort vergessen?" link to the login page.
+- [x] Add the same static hint on the form and done pages: "Wenn du keine
   externe E-Mail hinterlegt hast, wende dich an Moritz." It is shown to
   everyone, so it leaks nothing.
-- [ ] Label the input in German and say what is accepted: iServ or external
+- [x] Label the input in German and say what is accepted: iServ or external
   address.
 
 ### 3. Admin fallback: generated reset link

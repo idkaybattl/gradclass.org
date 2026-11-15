@@ -117,6 +117,7 @@
             </div>
 
             <!-- Menu: slides in from the right. -->
+            {% if user.is_authenticated %}
             <div class="overlay overlay--menu" id="menu-overlay" data-dismiss="right" role="dialog" aria-label="Menü">
                 <div class="overlay-handle overlay-handle--side" aria-hidden="true"></div>
                 <div class="overlay-content">
@@ -139,6 +140,7 @@
                     </form>
                 </div>
             </div>
+            {% endif %}
         </div>
         {% endblock %}
     </main>

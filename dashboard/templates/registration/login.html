@@ -1,37 +1,28 @@
-{% extends 'base.html' %}
-
-{% load static %}
+{% extends 'auth/_page.html' %}
 
 {% block title %}Login{% endblock %}
 
-{% block base_head %}
-<link rel="stylesheet" href="{% static 'dashboard/css/login.css' %}" />
-{% endblock %}
+{% block card %}
+<h2>Willkommen zurück</h2>
 
-{% block content %}
-<div class="login-page">
-    <section class="card login-card">
-        <h2>Willkommen zurück</h2>
+{% if request.GET.logged_out %}
+<p class="login-feedback">Du wurdest erfolgreich ausgeloggt.</p>
+{% endif %}
 
-        {% if request.GET.logged_out %}
-        <p class="login-feedback">Du wurdest erfolgreich ausgeloggt.</p>
-        {% endif %}
+<form method="post" class="login-form">
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
+    {{ form.non_field_errors }}
 
-        <form method="post" class="login-form">
-            {% csrf_token %}
-            {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
-            {{ form.non_field_errors }}
+    {% for field in form %}
+    <p class="field">
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+    </p>
+    {% endfor %}
 
-            {% for field in form %}
-            <p class="field">
-                {{ field.label_tag }}
-                {{ field }}
-                {{ field.errors }}
-            </p>
-            {% endfor %}
-
-            <button type="submit" class="btn">Login</button>
-        </form>
-    </section>
-</div>
+    <button type="submit" class="btn">Login</button>
+    <p><a href="{% url 'password-reset' %}">Passwort vergessen?</a></p>
+</form>
 {% endblock %}

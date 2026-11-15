@@ -1,5 +1,5 @@
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import path, reverse_lazy
 
 from . import forms
 from .views import auth, core, events, notifications, users
@@ -11,6 +11,40 @@ urlpatterns = [
         name="login",
     ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    # password reset
+    path(
+        "passwort-vergessen/",
+        auth_views.PasswordResetView.as_view(
+            form_class=forms.PasswordResetForm,
+            template_name="auth/password_reset/form.html",
+            subject_template_name="emails/password_reset_subject.txt",
+            email_template_name="emails/password_reset.txt",
+            success_url=reverse_lazy("password-reset-done"),
+        ),
+        name="password-reset",
+    ),
+    path(
+        "passwort-vergessen/gesendet/",
+        auth_views.PasswordResetDoneView.as_view(
+            template_name="auth/password_reset/done.html",
+        ),
+        name="password-reset-done",
+    ),
+    path(
+        "passwort-zuruecksetzen/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name="auth/password_reset/confirm.html",
+            success_url=reverse_lazy("password-reset-complete"),
+        ),
+        name="password-reset-confirm",
+    ),
+    path(
+        "passwort-zuruecksetzen/fertig/",
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="auth/password_reset/complete.html",
+        ),
+        name="password-reset-complete",
+    ),
     path("set_password/", auth.password_set, name="set-password"),
     path("", core.main_page, name="main-page"),
     path("introduction/", auth.introduction, name="introduction"),

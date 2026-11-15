@@ -3,12 +3,23 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+)
+from django.contrib.auth.forms import (
+    PasswordResetForm as DjangoPasswordResetForm,
+)
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.forms import inlineformset_factory
+from django.template import loader
 from django.utils import timezone
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from phonenumber_field.formfields import PhoneNumberField
 
 from .durations import format_duration, split_duration
@@ -23,6 +34,64 @@ class LoginForm(AuthenticationForm):
         "invalid_login": "Anmeldung fehlgeschlagen. Benutzername oder Passwort ist falsch.",
         "inactive": "Dieses Konto ist deaktiviert.",
     }
+
+
+class PasswordResetForm(DjangoPasswordResetForm):
+    """Find accounts by iServ or external address, deliver only to the latter."""
+
+    email = forms.EmailField(
+        label="IServ- oder externe E‑Mail",
+        max_length=254,
+        widget=forms.EmailInput(attrs={"autocomplete": "email"}),
+    )
+
+    def get_users(self, email):
+        return User.objects.select_related("profile").filter(
+            Q(is_active=True)
+            & (Q(email__iexact=email) | Q(profile__external_mail__iexact=email))
+        )
+
+    def save(
+        self,
+        request,
+        use_https=False,
+        token_generator=default_token_generator,
+        from_email=None,
+        subject_template_name="emails/password_reset_subject.txt",
+        email_template_name="emails/password_reset.txt",
+        html_email_template_name=None,
+        extra_email_context=None,
+    ):
+        # html_email_template_name is part of the view's call signature; mails
+        # stay plain text, so it is ignored.
+        host = request.get_host()
+        context = {
+            "protocol": "https" if use_https else "http",
+            "domain": host,
+            **(extra_email_context or {}),
+        }
+        subject = "".join(
+            loader.render_to_string(subject_template_name, context).splitlines()
+        )
+
+        for user in self.get_users(self.cleaned_data["email"]):
+            to_email = user.profile.external_mail
+            if not to_email:
+                continue
+
+            user_context = {
+                **context,
+                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                "token": token_generator.make_token(user),
+                "user": user,
+            }
+            EmailMultiAlternatives(
+                subject,
+                loader.render_to_string(email_template_name, user_context),
+                from_email,
+                [to_email],
+                reply_to=[settings.DEFAULT_REPLY_TO],
+            ).send()
 
 
 class UserSearchWidget(forms.Widget):

@@ -1,0 +1,11 @@
+{% extends 'auth/_page.html' %}
+
+{% block title %}Passwort geändert{% endblock %}
+
+{% block card %}
+<h2>Passwort geändert</h2>
+
+<p>Dein Passwort wurde gespeichert. Du kannst dich jetzt anmelden.</p>
+
+<p><a class="btn" href="{% url 'login' %}">Zum Login</a></p>
+{% endblock %}

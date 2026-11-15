@@ -1,0 +1,16 @@
+{% extends 'auth/_page.html' %}
+
+{% block title %}E-Mail unterwegs{% endblock %}
+
+{% block card %}
+<h2>E-Mail unterwegs</h2>
+
+<p>
+    Wenn zu der Adresse ein aktives Konto mit hinterlegter externer E-Mail gehört,
+    ist der Link jetzt unterwegs. Er ist einen Tag lang gültig.
+</p>
+
+{% include "auth/password_reset/_hint.html" %}
+
+<p><a class="btn" href="{% url 'login' %}">Zurück zum Login</a></p>
+{% endblock %}
