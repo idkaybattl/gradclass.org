@@ -1,4 +1,8 @@
+from django.contrib.auth.tokens import default_token_generator
 from django.db import transaction
+from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from .models import Event, EventParticipation
 from .notifications import notify_participants, notify_time_frame_changed
@@ -114,3 +118,16 @@ def save_event(form, user):
     notify_participants(event, old, new)
 
     return event
+
+
+def build_password_reset_url(user, request):
+    """Absolute one-time reset link, for out-of-band delivery."""
+    return request.build_absolute_uri(
+        reverse(
+            "password-reset-confirm",
+            kwargs={
+                "uidb64": urlsafe_base64_encode(force_bytes(user.pk)),
+                "token": default_token_generator.make_token(user),
+            },
+        )
+    )

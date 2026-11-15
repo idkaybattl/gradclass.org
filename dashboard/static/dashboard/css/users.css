@@ -28,6 +28,16 @@
     gap: 8px;
 }
 
+.copy-field {
+    display: flex;
+    gap: 8px;
+}
+
+.copy-field .input {
+    flex: 1;
+    min-width: 0;
+}
+
 .user-detail__section {
     display: flex;
     flex-direction: column;

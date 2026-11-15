@@ -68,6 +68,10 @@ def can_view_users(request):
     return _can(request.user, VIEW_ALL_USERS)
 
 
+def can_manage_users(user):
+    return _can(user, MANAGE_USERS)
+
+
 def can_edit_user(request, user_id):
     return request.user.pk == user_id or _can(request.user, MANAGE_USERS)
 

@@ -35,6 +35,10 @@ STATUS_FEEDBACK = {
         "error",
         "Du bist nicht berechtigt, dieses Passwort zu ändern.",
     ),
+    "reset-link-denied": (
+        "error",
+        "Du bist nicht berechtigt, einen Reset-Link zu erzeugen.",
+    ),
     "profile-updated": ("success", "Profil erfolgreich bearbeitet"),
     "password-updated": ("success", "Passwort erfolgreich geändert"),
     "intro-profile-saved": ("success", "Profil gespeichert"),

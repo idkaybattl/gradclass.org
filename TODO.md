@@ -838,16 +838,18 @@ Order matters: settings first, then the reset flow, then the admin fallback.
 
 ### 3. Admin fallback: generated reset link
 
-- [ ] Add `build_password_reset_url(user, request)` in `dashboard/services.py`
+- [x] Add `build_password_reset_url(user, request)` in `dashboard/services.py`
   returning the absolute `password-reset-confirm` URL, built from
   `urlsafe_base64_encode(force_bytes(user.pk))` and
   `default_token_generator.make_token(user)`.
-- [ ] Add a `manage_users`-gated action on the user details overlay that shows
+- [x] Add a `manage_users`-gated action on the user details overlay that shows
   the link once with a copy button. Use the existing capability helpers
   (`MANAGE_USERS` / `can_change_password`); do not introduce a new role check.
-- [ ] The action sends no mail and must not log the link or put it in the URL.
+  (Done as `can_manage_users()` around `MANAGE_USERS`; the action is POST-only,
+  hidden for your own profile.)
+- [x] The action sends no mail and must not log the link or put it in the URL.
   Submit with POST + CSRF; no `next` redirect, since it only renders the link.
-- [ ] Keep the existing "set password" action as the last resort; the link
+- [x] Keep the existing "set password" action as the last resort; the link
   action is preferred because it never exposes a password.
 
 ### 4. Tests, validation and docs

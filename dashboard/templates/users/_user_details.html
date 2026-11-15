@@ -7,6 +7,13 @@
 
     {% if can_change_password %}
     <div class="user-detail__actions">
+        {% if can_reset_link %}
+        <form method="post" action="{{ reset_link_url }}" hx-post="{{ reset_link_url }}" hx-target="#overlay-content"
+            hx-swap="innerHTML">
+            {% csrf_token %}
+            <button type="submit" class="btn" hx-disabled-elt="this">Reset-Link erzeugen</button>
+        </form>
+        {% endif %}
         <a class="btn" href="{{ password_url }}" data-overlay-open="overlay" hx-get="{{ password_url }}"
             hx-target="#overlay-content" hx-swap="innerHTML">Passwort ändern</a>
     </div>

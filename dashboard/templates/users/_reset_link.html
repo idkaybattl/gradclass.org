@@ -1,0 +1,13 @@
+<div class="user-detail">
+    {% include "components/_overlay_header.html" with title="Reset-Link" back_url=back_url %}
+
+    <p>
+        Mit diesem Link kann sich {{ display_name }} ein neues Passwort setzen.
+        Er läuft nach einem Tag ab und wird nicht per E-Mail verschickt.
+    </p>
+
+    <div class="copy-field" data-copy-field>
+        <input class="input" type="text" value="{{ reset_url }}" readonly aria-label="Reset-Link" />
+        <button type="button" class="btn" data-copy-button>Kopieren</button>
+    </div>
+</div>

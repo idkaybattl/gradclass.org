@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from ..durations import format_duration
 from ..feedback import get_feedback, render_feedback
@@ -18,7 +18,13 @@ from ..http_helpers import (
     render_page_or_partial,
 )
 from ..intro import introduction_required
-from ..permissions import can_change_password, can_edit_user, can_view_users
+from ..permissions import (
+    can_change_password,
+    can_edit_user,
+    can_manage_users,
+    can_view_users,
+)
+from ..services import build_password_reset_url
 
 User = get_user_model()
 
@@ -41,6 +47,7 @@ def user_details_context(request, user, *, back_url=None, status=None, feedback=
     detail_url = user_details_url(user, back_url=back_url)
     can_edit = can_edit_user(request, user.pk)
     may_change_password = can_change_password(request, user.pk)
+    can_reset_link = can_manage_users(request.user) and user.pk != request.user.pk
     display_name = user.get_full_name() or user.username
 
     edit_url = ""
@@ -82,6 +89,8 @@ def user_details_context(request, user, *, back_url=None, status=None, feedback=
         "participation_events": participation_events,
         "can_edit": can_edit,
         "can_change_password": may_change_password,
+        "can_reset_link": can_reset_link,
+        "reset_link_url": reverse("user-reset-link", kwargs={"user_id": user.pk}),
         "next_url": next_url,
         "back_url": back_url,
         "detail_url": detail_url,
@@ -140,6 +149,35 @@ def user_details(request, user_id):
         user,
         back_url=get_safe_back_url(request),
         status=request.GET.get("status"),
+    )
+
+
+@login_required
+@require_POST
+def user_reset_link(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+
+    if not can_manage_users(request.user):
+        feedback = get_feedback(
+            "reset-link-denied",
+            action_url=user_details_url(user),
+            action_label="Zum Profil",
+            action_htmx=True,
+        )
+        if is_htmx_request(request):
+            return render_feedback(request, feedback)
+
+        return redirect(user_details_url(user, status="reset-link-denied"))
+
+    return render_page_or_partial(
+        request,
+        "users/reset_link.html",
+        "users/_reset_link.html",
+        {
+            "display_name": user.get_full_name() or user.username,
+            "reset_url": build_password_reset_url(user, request),
+            "back_url": user_details_url(user),
+        },
     )
 
 

@@ -111,6 +111,11 @@ urlpatterns = [
     path("users/<int:user_id>/", users.user_details, name="user-details"),
     path("users/<int:user_id>/edit/", users.edit_user, name="user-edit"),
     path(
+        "users/<int:user_id>/reset-link/",
+        users.user_reset_link,
+        name="user-reset-link",
+    ),
+    path(
         "users/<int:user_id>/change_password_popup/",
         auth.change_password_popup,
         name="change-password-popup",

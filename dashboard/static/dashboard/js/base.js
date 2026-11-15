@@ -320,6 +320,7 @@ const PAGE_INITIALIZERS = [
   "initEventsList",
   "initUsersList",
   "initIntroduction",
+  "initCopyFields",
 ];
 
 function initPage(root = document) {
