@@ -1811,13 +1811,26 @@ and served only to logged-in users. No albums, public links, likes or comments.
 
 **Serving**
 
-- No public `MEDIA_URL`. Media is reachable only through
-  `/gallery/media/<uuid>/<variant>/` (`display` or `thumb`); the view checks
-  login and hidden state.
-- Development and fallback: Django `FileResponse` (Django 6 supports Range).
+- `MEDIA_ROOT` and `MEDIA_URL` come from the environment. `MEDIA_ROOT`
+  defaults to `BASE_DIR / "media"` and is the storage location; `MEDIA_URL`
+  defaults to `/gallery/media/` and is the browser-facing prefix, not a public
+  static mapping.
+- `MEDIA_ROOT` may be an absolute path outside the repo. The web and worker
+  processes need write access to `originals/`, `display/` and `thumbs/`; the
+  Caddy process needs read access. Back up `display/` and `thumbs/`; originals
+  are transient.
+- `MEDIA_URL` must be a same-origin path. An absolute or cross-site URL would
+  drop the session cookie for `<img>`/`<video>` requests and add a third party,
+  so it is not supported in v1.
+- Media is reachable only through `<MEDIA_URL><uuid>/<variant>/` (`display` or
+  `thumb`); the view checks login and hidden state. Build URLs with a
+  `gallery_media_url` helper/template tag, never with `FileField.url`.
+- Development and fallback: Django `FileResponse` mounted under the configured
+  prefix (Django 6 supports Range).
 - Production: Caddy `forward_auth` against a small Django endpoint, then
-  `file_server` from the media root for native Range/sendfile. The Caddyfile
-  is deployment configuration, not part of the repo.
+  `file_server` from `MEDIA_ROOT` for native Range/sendfile. The Caddyfile uses
+  the same prefix and file root; it is deployment configuration, not part of
+  the repo.
 - Responses use a private cache policy; no public CDN or shared cache.
 
 **Moderation and reports**
@@ -1929,9 +1942,15 @@ Event detail:
 
 - [ ] Add `Pillow` and `pillow-heif` to `requirements.txt`; document `ffmpeg`
   as a system dependency.
-- [ ] `settings.py`: `MEDIA_ROOT = BASE_DIR / "media"`; do not add a public
-  `MEDIA_URL` route. Keep `FILE_UPLOAD_MAX_MEMORY_SIZE` small enough that
-  uploads land in temp files.
+- [ ] `settings.py`: read `MEDIA_ROOT` and `MEDIA_URL` from the environment;
+  default to `BASE_DIR / "media"` and `/gallery/media/`. Accept an absolute
+  `MEDIA_ROOT` outside the repo. Require `MEDIA_URL` to be a same-origin path
+  (leading slash, no host); fail fast otherwise. Do not add a public static
+  route.
+- [ ] Ensure `MEDIA_ROOT` and the `originals/`, `display/` and `thumbs/`
+  subdirectories exist and are writable by web and worker, with read access
+  for Caddy; document ownership. Keep `FILE_UPLOAD_MAX_MEMORY_SIZE` small
+  enough that uploads land in temp files.
 - [ ] `GalleryItem`, `GalleryConsent`, `GalleryReport` in `models.py` with the
   fields above; `Meta.ordering = ["-taken_at", "-created_at"]` and
   `Meta.permissions` on `GalleryItem` for `manage_gallery` and
@@ -2021,6 +2040,8 @@ Event detail:
   files; feedback or redirect with `?status=`.
 - [ ] `gallery_media`: `login_required`, resolve UUID/variant, reject hidden
   items unless manager/uploader; `FileResponse` with a private cache policy.
+  Mount the route under `settings.MEDIA_URL` (strip slashes) so development
+  follows the configured prefix.
 - [ ] `gallery_media_auth`: internal endpoint for Caddy; returns 204/401 and
   reads the original path from `X-Forwarded-Uri`; login and hidden checks, no
   HTML body.
@@ -2048,6 +2069,9 @@ Event detail:
   `gallery/_item_detail.html`, `gallery/_item_form.html`,
   `gallery/_upload.html`, `gallery/_upload_row.html`, `gallery/_report.html`,
   `gallery/consent.html`, plus full-page fallbacks.
+- [ ] Add a `gallery_media_url` template tag/helper built from
+  `settings.MEDIA_URL`; use it for grid thumbnails, detail media and video
+  posters. Never use `FileField.url` for gallery files.
 - [ ] `static/dashboard/css/gallery.css`: grid, tiles, media viewer, upload
   rows/progress, report panel; tokens only.
 - [ ] `static/dashboard/js/gallery.js`: grid initialisation and preview object
