@@ -8,10 +8,13 @@
     width: min(100%, 360px);
     margin: auto;
     padding: 24px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .login-feedback {
-    margin-top: 16px;
     padding: 8px 10px;
     border-style: solid;
     font-size: var(--font-size-sm);
@@ -22,14 +25,9 @@
     opacity: 0.8;
 }
 
-.login-card>.login-hint {
-    margin-top: 16px;
-}
-
 .login-form {
     display: grid;
     gap: 14px;
-    margin-top: 20px;
 }
 
 @media (max-width: 400px) {
