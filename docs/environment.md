@@ -34,6 +34,12 @@ works for dev; the production rows below say what must be set there.
 Behind a TLS-terminating proxy, `SECURE_PROXY_SSL_HEADER` must also be set in
 settings so reset links are built as `https://`; it is not env-driven yet.
 
+## Contact page
+
+| Variable | Required | Default | What it does |
+|---|:--:|---|---|
+| `CONTACT_USER_ID` | optional | empty | ID of the user whose profile supplies the contact page details. Empty uses the first active superuser. |
+
 ## Email
 
 All mail keys are optional. With `EMAIL_HOST` empty, dev uses Django's console

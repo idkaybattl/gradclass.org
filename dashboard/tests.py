@@ -1612,6 +1612,75 @@ class StaticPageViewTests(TestCase):
         self.assertContains(response, f'href="{reverse("calendar")}"')
 
 
+class ContactViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="student", password="password")
+        self.user.profile.has_had_introduction = True
+        self.user.profile.save(update_fields=["has_had_introduction"])
+        self.client.force_login(self.user)
+
+    def test_contact_shows_superuser_profile_details(self):
+        contact = User.objects.create_superuser(
+            username="maintainer",
+            password="password",
+            email="iserv@whg.example",
+            first_name="Moritz",
+            last_name="Fechte",
+        )
+        contact.profile.external_mail = "moritz@example.com"
+        contact.profile.phone_number = "+491712952470"
+        contact.profile.save()
+
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, "Moritz Fechte")
+        self.assertContains(response, 'href="tel:+491712952470"')
+        self.assertContains(response, "0171 2952470")
+        self.assertContains(response, 'href="mailto:moritz@example.com"')
+        self.assertNotContains(response, "iserv@whg.example")
+
+    def test_contact_hides_empty_rows_and_shows_fallback(self):
+        User.objects.create_superuser(
+            username="maintainer",
+            password="password",
+            first_name="Moritz",
+            last_name="Fechte",
+        )
+
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, "Moritz Fechte")
+        self.assertContains(response, "Zurzeit sind keine Kontaktdaten hinterlegt.")
+        self.assertNotContains(response, "tel:")
+        self.assertNotContains(response, "mailto:")
+
+    def test_contact_user_id_setting_wins(self):
+        first = User.objects.create_superuser(
+            username="first", password="password", first_name="First"
+        )
+        first.profile.external_mail = "first@example.com"
+        first.profile.save()
+        second = User.objects.create_superuser(
+            username="second", password="password", first_name="Second"
+        )
+        second.profile.external_mail = "second@example.com"
+        second.profile.save()
+
+        with self.settings(CONTACT_USER_ID=second.pk):
+            response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, "Second")
+        self.assertContains(response, "second@example.com")
+        self.assertNotContains(response, "first@example.com")
+
+    def test_contact_without_superuser_renders_fallback(self):
+        response = self.client.get(reverse("contact"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<h1>Kontakt</h1>")
+        self.assertContains(response, "Zurzeit sind keine Kontaktdaten hinterlegt.")
+
+
 class RedirectHelperTests(SimpleTestCase):
     def setUp(self):
         self.factory = RequestFactory()

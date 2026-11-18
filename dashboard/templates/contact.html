@@ -13,12 +13,23 @@
         </p>
 
         <h2>Persönlich bei mir</h2>
-        <p>Moritz Fechte</p>
+        {% if contact_user %}
+        <p>{{ contact_user.get_full_name|default:contact_user.username }}</p>
+        {% endif %}
+        {% if contact_profile.phone_number or contact_profile.external_mail %}
         <ul class="page__contact">
-            <li>WhatsApp etc.: <a href="tel:+491712952470">+49 171 2952470</a></li>
-            <li>IServ: <a href="mailto:moritz.fechte@whg.ms.de">moritz.fechte@whg.ms.de</a></li>
-            <li>Mail: <a href="mailto:moritz.fechte@gmail.com">moritz.fechte@gmail.com</a></li>
+            {% if contact_profile.phone_number %}
+            {% with phone=contact_profile.phone_number %}
+            <li>Telefon: <a href="tel:{{ phone.as_e164 }}">{{ phone.as_national }}</a></li>
+            {% endwith %}
+            {% endif %}
+            {% if contact_profile.external_mail %}
+            <li>Mail: <a href="mailto:{{ contact_profile.external_mail }}">{{ contact_profile.external_mail }}</a></li>
+            {% endif %}
         </ul>
+        {% else %}
+        <p>Zurzeit sind keine Kontaktdaten hinterlegt.</p>
+        {% endif %}
 
         <p>
             Der ganze Quellcode liegt außerdem komplett offen auf

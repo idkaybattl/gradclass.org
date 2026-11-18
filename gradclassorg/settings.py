@@ -150,6 +150,10 @@ LOGOUT_REDIRECT_URL = "/login/?logged_out=1"
 
 LOGIN_URL = "/login"
 
+# Contact page: user whose profile supplies the shown contact details.
+# Empty means "first active superuser".
+CONTACT_USER_ID = os.environ.get("CONTACT_USER_ID")
+
 
 # Email
 #

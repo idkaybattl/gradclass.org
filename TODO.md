@@ -899,23 +899,23 @@ contains the phone number or personal addresses in `HEAD`.
 
 ## Implementation checklist
 
-- [ ] Add `_get_contact_user()` in `dashboard/views/core.py`: prefer
+- [x] Add `_get_contact_user()` in `dashboard/views/core.py`: prefer
   `settings.CONTACT_USER_ID`, otherwise
   `User.objects.filter(is_superuser=True, is_active=True).order_by("pk").first()`,
   with `select_related("profile")`.
-- [ ] Pass `contact_user` and `contact_profile` from `contact` to
+- [x] Pass `contact_user` and `contact_profile` from `contact` to
   `contact.html`; handle "no superuser" and "no profile" without crashing.
-- [ ] Replace the static name, phone, IServ and Gmail rows in
+- [x] Replace the static name, phone, IServ and Gmail rows in
   `dashboard/templates/contact.html`:
   - name from `get_full_name|default:username`;
   - phone link uses `as_e164`, display uses `as_national`;
   - external mail only when set;
   - omit empty rows and show a neutral fallback when nothing is set.
-- [ ] Fill `phone_number` and `external_mail` on the superuser's profile (data
+- [x] Fill `phone_number` and `external_mail` on the superuser's profile (data
   step, not code) and confirm the page renders them.
-- [ ] Tests: superuser values render; an empty profile hides the rows; an
+- [x] Tests: superuser values render; an empty profile hides the rows; an
   explicit `CONTACT_USER_ID` wins; no superuser renders without error.
-- [ ] Run `manage.py check` and render `/contact/`.
+- [x] Run `manage.py check` and render `/contact/`.
 
 ## Deferred / out of scope
 
