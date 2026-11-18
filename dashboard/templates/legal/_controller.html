@@ -1,0 +1,21 @@
+{% comment %}
+Name and contact details of the controller. Used by the public privacy page
+(phone hidden) and by the contact page (phone shown).
+{% endcomment %}
+{% if contact_user %}
+<p>{{ contact_user.get_full_name|default:contact_user.username }}</p>
+{% endif %}
+{% if show_phone and contact_profile.phone_number or contact_profile.external_mail %}
+<ul class="page__contact">
+    {% if show_phone and contact_profile.phone_number %}
+    {% with phone=contact_profile.phone_number %}
+    <li>Telefon: <a href="tel:{{ phone.as_e164 }}">{{ phone.as_national }}</a></li>
+    {% endwith %}
+    {% endif %}
+    {% if contact_profile.external_mail %}
+    <li>Mail: <a href="mailto:{{ contact_profile.external_mail }}">{{ contact_profile.external_mail }}</a></li>
+    {% endif %}
+</ul>
+{% else %}
+<p>Zurzeit sind keine Kontaktdaten hinterlegt.</p>
+{% endif %}

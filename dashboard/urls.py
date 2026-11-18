@@ -122,6 +122,8 @@ urlpatterns = [
     ),
     # contact
     path("contact/", core.contact, name="contact"),
+    # legal, public
+    path("datenschutz/", core.datenschutz, name="datenschutz"),
     # polls
     path("polls/", core.polls, name="polls"),
 ]

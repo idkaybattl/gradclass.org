@@ -886,6 +886,8 @@ contains the phone number or personal addresses in `HEAD`.
 
 - Keep the contact page content and layout; only change where the values come
   from. Name, phone, external mail and the GitHub link stay.
+- The page renders the shared Datenschutz text below the contact card (§13);
+  the phone stays the only detail that is login-only.
 - Source the values from the contact user's `UserProfile`: optional
   `CONTACT_USER_ID` setting, otherwise the first active superuser. No model
   change or migration.
@@ -947,10 +949,18 @@ kept current as features ship. No Impressum, no cookie banner.
   `csrftoken`); htmx uses `sessionStorage` for its history cache. No analytics,
   no third-party embeds, self-hosted fonts and JS.
 - **The privacy page is public.** `/datenschutz/` renders without login; the
-  login page is the only other public page. Link it from login, footer and menu.
-- **Controller contact is the personal mail.** Accepted that it is public and
-  scrapable. A role address (`kontakt@`/`datenschutz@`) is a later optional
-  improvement.
+  login page is the only other public page. Link it from the login card and the
+  menu; the footer stays icon-only.
+- **One text, two pages.** The text lives in `legal/_privacy_body.html`.
+  `/datenschutz/` is the public page; `/kontakt/` renders the same body below the
+  contact card for logged-in users. One text to keep current, two audiences, no
+  second copy.
+- **The controller block shows once per page.** `legal/_controller.html` renders
+  name and mail, plus the phone when `show_phone=True`. The contact page passes
+  it, the privacy page omits it, and no page repeats the name or mail.
+- **Controller contact is the personal mail.** Name and mail are public on
+  `/datenschutz/` because Art. 13(1)(a) DSGVO needs an identifiable controller;
+  the phone number stays login-only. A role address remains optional (13.3).
 - **Hosting is self-hosted at home in Germany.** No hosting processor; Art. 32
   duties (HTTPS, updates, backups, access control) stay with the maintainer.
 - **Brevo handles outgoing app mail.** The sending domain is managed at INWX;
@@ -963,30 +973,40 @@ kept current as features ship. No Impressum, no cookie banner.
   finished the intro, so it needs its own page/step. It must be one-time,
   per-user and revocable; a grade-wide agreement is not a substitute for
   individual consent (Art. 7 DSGVO, §22 KUG).
+- **Retention as stated on the page.** Account, profile, participations and
+  earnings until the account is deleted (end of the Abitur year or on request);
+  notifications go with the account. No dedicated access logging is configured,
+  so the page states only what the default server journal keeps and that it is
+  not evaluated.
+- **`Stand` is a date, not a version.** Bump the date by hand whenever the text
+  changes.
 - **Features flag their Datenschutz impact.** Sections that need a privacy-text
   update or a consent flow say so with a `Datenschutz:` line.
 
 ## 13.1 Now: current-state page
 
-- [ ] Add `dashboard/templates/legal/privacy.html` in the existing `page`/`card`
-  style; German; roughly one screen.
-- [ ] Sections: Verantwortlicher (name + personal mail), Daten, Zweck und
-  Rechtsgrundlage, Empfänger (Brevo, plus INWX if the mailbox is hosted there),
-  Speicherdauer, Cookies, Rechte, Stand/Version.
-- [ ] Cover only existing processing: account (username, name, school mail,
+- [x] Add `dashboard/templates/legal/_privacy_body.html`: German, roughly one
+  screen, existing `page`/`card` style, self-contained. `legal/privacy.html` is a
+  thin public page that includes it; `contact.html` includes it below the
+  contact card.
+- [x] Sections: Verantwortlicher, Daten, Zweck und Rechtsgrundlage, Empfänger
+  (Brevo, INWX for domain/DNS), Speicherdauer, Cookies, Rechte, Stand.
+- [x] Cover only existing processing: account (username, name, school mail,
   password hash), optional profile fields (external mail, phone, birthday,
   bio), participation/earnings, notifications and read flags, server logs.
-- [ ] Legal bases: Art. 6(1)(b) for the account, Art. 6(1)(f) for
+- [x] Legal bases: Art. 6(1)(b) for the account, Art. 6(1)(f) for
   security/usage; optional profile fields are voluntary.
-- [ ] State that there is no analytics, tracking or third-party embedding.
-- [ ] Add `datenschutz/` to `dashboard/urls.py` with a public `@require_GET`
+- [x] State that there is no analytics, tracking or third-party embedding.
+- [x] Add `datenschutz/` to `dashboard/urls.py` with a public `@require_GET`
   view: no `@login_required`, no `introduction_required`.
-- [ ] Link it from `registration/login.html` (the footer block only renders for
-  authenticated users) and from the authenticated footer/menu.
-- [ ] Read the controller name and mail from settings or the §12 contact user,
+- [x] Link it from the login card (that page has no footer) and the menu. The
+  footer stays icon-only, so it carries no link.
+- [x] Read the controller name and mail from settings or the §12 contact user,
   so there is one place to change them.
-- [ ] Add a `Stand` date and bump it on every change.
-- [ ] Render the page logged out and logged in; run `manage.py check`.
+- [x] Add a `Stand` date (no version number) and bump it on every change.
+- [x] Tests: anonymous render, phone stays off the public page, intro gate is
+  ignored, contact page includes the notice and shows the name once.
+- [x] Render the page logged out and logged in; run `manage.py check`.
 
 ## 13.2 Gallery and image consent
 
@@ -1016,7 +1036,7 @@ Constraints; the full design is in §17.
 
 ## 13.3 Deferred
 
-- Role address for the controller contact.
+- Role address for the controller contact; the personal mail is public for now.
 - Account deletion and data export UI; until then handle Art. 15/17 requests
   manually via the contact page.
 - Revisit the Impressum if the site becomes public or commercial.

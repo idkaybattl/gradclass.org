@@ -13,28 +13,15 @@
         </p>
 
         <h2>Persönlich bei mir</h2>
-        {% if contact_user %}
-        <p>{{ contact_user.get_full_name|default:contact_user.username }}</p>
-        {% endif %}
-        {% if contact_profile.phone_number or contact_profile.external_mail %}
-        <ul class="page__contact">
-            {% if contact_profile.phone_number %}
-            {% with phone=contact_profile.phone_number %}
-            <li>Telefon: <a href="tel:{{ phone.as_e164 }}">{{ phone.as_national }}</a></li>
-            {% endwith %}
-            {% endif %}
-            {% if contact_profile.external_mail %}
-            <li>Mail: <a href="mailto:{{ contact_profile.external_mail }}">{{ contact_profile.external_mail }}</a></li>
-            {% endif %}
-        </ul>
-        {% else %}
-        <p>Zurzeit sind keine Kontaktdaten hinterlegt.</p>
-        {% endif %}
+        {% include 'legal/_controller.html' with show_phone=True %}
 
         <p>
             Der ganze Quellcode liegt außerdem komplett offen auf
             <a href="https://github.com/idkaybattl/gradclass.org/" target="_blank" rel="noopener noreferrer">GitHub</a>.
         </p>
+
+        <h2>Datenschutz</h2>
+        {% include 'legal/_privacy_body.html' %}
     </section>
 </div>
 {% endblock %}

@@ -90,32 +90,32 @@ class ContactViewTests(TestCase):
             username="maintainer",
             password="password",
             email="iserv@whg.example",
-            first_name="Moritz",
-            last_name="Fechte",
+            first_name="Kontakt",
+            last_name="Person",
         )
-        contact.profile.external_mail = "moritz@example.com"
-        contact.profile.phone_number = "+491712952470"
+        contact.profile.external_mail = "kontakt@example.com"
+        contact.profile.phone_number = "+491701234567"
         contact.profile.save()
 
         response = self.client.get(reverse("contact"))
 
-        self.assertContains(response, "Moritz Fechte")
-        self.assertContains(response, 'href="tel:+491712952470"')
-        self.assertContains(response, "0171 2952470")
-        self.assertContains(response, 'href="mailto:moritz@example.com"')
+        self.assertContains(response, "Kontakt Person")
+        self.assertContains(response, 'href="tel:+491701234567"')
+        self.assertContains(response, "0170 1234567")
+        self.assertContains(response, 'href="mailto:kontakt@example.com"')
         self.assertNotContains(response, "iserv@whg.example")
 
     def test_contact_hides_empty_rows_and_shows_fallback(self):
         User.objects.create_superuser(
             username="maintainer",
             password="password",
-            first_name="Moritz",
-            last_name="Fechte",
+            first_name="Kontakt",
+            last_name="Person",
         )
 
         response = self.client.get(reverse("contact"))
 
-        self.assertContains(response, "Moritz Fechte")
+        self.assertContains(response, "Kontakt Person")
         self.assertContains(response, "Zurzeit sind keine Kontaktdaten hinterlegt.")
         self.assertNotContains(response, "tel:")
         self.assertNotContains(response, "mailto:")
@@ -145,3 +145,54 @@ class ContactViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<h1>Kontakt</h1>")
         self.assertContains(response, "Zurzeit sind keine Kontaktdaten hinterlegt.")
+
+
+class PrivacyViewTests(TestCase):
+    def setUp(self):
+        self.contact = User.objects.create_superuser(
+            username="maintainer",
+            password="password",
+            email="iserv@whg.example",
+            first_name="Kontakt",
+            last_name="Person",
+        )
+        self.contact.profile.external_mail = "kontakt@example.com"
+        self.contact.profile.phone_number = "+491701234567"
+        self.contact.profile.save()
+
+    def test_privacy_page_renders_without_login(self):
+        response = self.client.get(reverse("datenschutz"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<h1>Datenschutz</h1>")
+        self.assertContains(response, "Kontakt Person")
+        self.assertContains(response, 'href="mailto:kontakt@example.com"')
+        self.assertContains(response, "Speicherdauer")
+        self.assertNotContains(response, "iserv@whg.example")
+
+    def test_privacy_page_keeps_the_phone_number_login_only(self):
+        response = self.client.get(reverse("datenschutz"))
+
+        self.assertNotContains(response, "tel:")
+        self.assertNotContains(response, "1234567")
+
+    def test_privacy_page_ignores_the_introduction_gate(self):
+        user = User.objects.create_user(username="student", password="password")
+        self.assertFalse(user.profile.has_had_introduction)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("datenschutz"))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_contact_page_includes_the_privacy_notice(self):
+        user = User.objects.create_user(username="student", password="password")
+        user.profile.has_had_introduction = True
+        user.profile.save(update_fields=["has_had_introduction"])
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, "Speicherdauer")
+        self.assertContains(response, "tel:+491701234567")
+        self.assertContains(response, "Kontakt Person", count=1)

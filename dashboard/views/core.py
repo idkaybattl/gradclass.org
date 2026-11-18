@@ -58,6 +58,17 @@ def contact(request):
     )
 
 
+@require_GET
+def datenschutz(request):
+    contact_user = _get_contact_user()
+    contact_profile = getattr(contact_user, "profile", None)
+    return render(
+        request,
+        "legal/privacy.html",
+        {"contact_user": contact_user, "contact_profile": contact_profile},
+    )
+
+
 @login_required
 @require_GET
 @introduction_required
