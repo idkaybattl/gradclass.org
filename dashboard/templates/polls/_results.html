@@ -1,0 +1,29 @@
+<div class="poll-results" id="poll-results"
+    {% if phase == "voting" %}
+    hx-get="{% url 'poll-results' poll.id %}"
+    hx-trigger="every 15s"
+    hx-swap="outerHTML"
+    {% endif %}>
+    {% if is_tie %}
+    <p class="poll-results__tie">Gleichstand</p>
+    {% endif %}
+
+    <ul class="poll-results__list">
+        {% for result in results %}
+        <li class="poll-result">
+            <div class="poll-result__head">
+                <span class="poll-result__label">{{ result.option.label }}</span>
+                <span class="poll-result__value">{{ result.percent }} % · {{ result.votes }}/{{ total_votes }}</span>
+            </div>
+            <div class="poll-result__bar" role="img"
+                aria-label="{{ result.option.label }}: {{ result.percent }} Prozent">
+                <span style="width: {{ result.percent }}%"></span>
+            </div>
+        </li>
+        {% empty %}
+        <li>Noch keine Stimmen.</li>
+        {% endfor %}
+    </ul>
+
+    <p class="poll-results__turnout">{{ total_votes }} Stimme{{ total_votes|pluralize:"n" }}</p>
+</div>

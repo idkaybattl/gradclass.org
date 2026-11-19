@@ -1072,8 +1072,9 @@ suggested option list. Single-choice only for now, but modelled around
   database.
 - Managers can approve, reject, edit wording and merge duplicates at any time
   before voting opens; options are frozen afterwards.
+- New suggestions are approved immediately. Moderation is optional: managers
+  reject, edit or merge as needed.
 - Rejected or removed suggestions disappear entirely; no tombstones.
-- Suggested options only become votable after moderation.
 - `Poll.suggestions_public` defaults to on: suggestions are visible to everyone
   from the start of the phase, pending and approved together. When it is off,
   suggestions stay manager-only until voting opens; only approved options are
@@ -1122,9 +1123,10 @@ suggested option list. Single-choice only for now, but modelled around
 **List and UI**
 
 - The feature is called “Umfragen” everywhere (nav, page header, feedback).
-- `/polls/` is a full page with a switcher at the top: “Offen”, “Geschlossen”
-  and “Entwürfe”. The drafts tab renders only for the creator or `manage_polls`
-  holders. Reuse the events switcher pattern instead of copying it.
+- `/polls/` is a full page with a switcher at the top: “Offen”, “Alle”,
+  “Geschlossen” and “Entwürfe”. The drafts tab renders only for the creator or
+  `manage_polls` holders. Reuse the events switcher pattern instead of copying
+  it.
 - Poll detail opens as an overlay; creating and editing use a full-page form,
   like events.
 - Phases: Entwurf, Vorschläge, Moderation, Abstimmung, Beendet, derived from
@@ -1140,7 +1142,8 @@ suggested option list. Single-choice only for now, but modelled around
 `/polls/` (full page):
 
 - Header: “Umfragen”, with “Neue Umfrage” for `manage_polls` holders.
-- Switcher: “Offen” / “Geschlossen” / “Entwürfe”; “Entwürfe” only for managers.
+- Switcher: “Offen” / “Alle” / “Geschlossen” / “Entwürfe”; “Entwürfe” only
+  for managers.
 - Card grid: title, status badge, one-line description, relevant deadline and
   turnout. Clicking a card opens the overlay.
 
@@ -1157,10 +1160,10 @@ Poll overlay (bottom sheet, full detail):
     form sits below.
   - Moderation: the same list with approve/reject/edit/merge and “Abstimmung
     starten”.
-  - Abstimmung: options as selectable cards, an “Abstimmen” button and, when
-    results are public, the live bar per option with turnout. After voting, the
-    current choice is marked and “Stimme ändern” stays available until the
-    deadline. Managers get “Abstimmung beenden”.
+  - Abstimmung: live result bars above the options, then the selectable cards
+    and “Abstimmen”. After voting, the current choice is marked and “Stimme
+    ändern” stays available until the deadline. Managers get “Abstimmung
+    beenden”.
   - Beendet: results as bars with “12 % · 6/50”, total votes, and “Gleichstand”
     when tied. Internal polls show no results to students.
 
@@ -1169,8 +1172,11 @@ Create/edit (full page):
 - Title (the question in v1) and description.
 - Mode: fixed options or suggestions.
 - Suggestion deadline and the suggestions-public toggle (only in suggestion
-  mode); voting deadline; results-public toggle.
-- Option editor for fixed options.
+  mode); results-public toggle.
+- Option editor for fixed options: add/remove rows, reorder by dragging or with
+  the arrow keys; hidden in suggestion mode.
+- The voting deadline is optional here. If it is missing when voting starts, a
+  prompt asks for it first.
 - v1 has exactly one question; its fields are the page body.
 
 Tiebreaker (later):
@@ -1226,56 +1232,66 @@ Tiebreaker (later):
 
 **Views and URLs**
 
-- [ ] `polls` list: full page, open/closed/drafts switcher. The drafts filter
-  is manager-only. Server-side filter param and/or the events-style client
-  filter, whichever reuses less code.
-- [ ] `poll_details`: overlay, phase-dependent content (suggestion list, vote
+- [x] `polls` list: full page, switcher with Offen/Alle/Geschlossen/Entwürfe.
+  The drafts filter is manager-only. Filtering happens on the client like the
+  events switcher; `?filter=` only selects the initial tab. Both reuse the
+  shared `.switcher` component.
+- [x] `poll_details`: overlay, phase-dependent content (suggestion list, vote
   form, results).
-- [ ] `poll_create` / `poll_edit`: full page, creator or `manage_polls` only.
-- [ ] `poll_suggest`, `poll_vote`, `poll_moderate`: POST + HTMX partials with the
+- [x] `poll_create` / `poll_edit`: full page, creator or `manage_polls` only.
+- [x] `poll_suggest`, `poll_vote`, `poll_moderate`: POST + HTMX partials with the
   feedback pattern; no Django messages.
-- [ ] Invalid HTMX forms re-render the partial with errors and preserved
-  `next_url`; normal success uses `redirect_next_or`.
-- [ ] Enforce the voting deadline and participation uniqueness on POST; a second
-  vote returns the “already voted” feedback.
+- [x] Invalid HTMX forms re-render the details partial with errors and preserved
+  `next_url`; phase and suggestion actions re-render the open overlay instead of
+  redirecting.
+- [x] Enforce the voting deadline and participation uniqueness on POST; a second
+  vote changes the existing ballot when the cookie is valid and returns the
+  “Stimmzettel fehlt” feedback otherwise.
+- [x] `poll_start_voting` prompts for a voting deadline when none is set (or it
+  has passed); submitting the prompt sets the deadline and starts voting.
 
 **Templates and UI**
 
-- [ ] `polls.html` list with status badges and the card switcher.
-- [ ] `polls/_poll_details.html`, `_suggestion_list.html`, `_vote_form.html`,
+- [x] `polls.html` list with status badges and the card switcher.
+- [x] `polls/_poll_details.html`, `_suggestion_list.html`, `_vote_form.html`,
   `_results.html`.
-- [ ] Suggestion list: plain list, randomised order per render, manager-only
+- [x] Suggestion list: plain list, randomised order per render, manager-only
   author and moderation actions.
-- [ ] Results: a bar per option with “12 % · 6/50” (percentage and fraction of
+- [x] Results: a bar per option with “12 % · 6/50” (percentage and fraction of
   votes cast), total votes, tie shown as “Gleichstand”; hidden from students
   when `results_public` is off.
-- [ ] German copy; add new statuses to `STATUS_FEEDBACK`.
+- [x] German copy; add new statuses to `STATUS_FEEDBACK`.
+- [x] Option editor widget with add/remove rows and pointer or keyboard
+  reordering; deadline and option fields follow the selected mode.
 
 **Tests**
 
-- [ ] Only `manage_polls` holders and the creator can create, edit or moderate;
+- [x] Only `manage_polls` holders and the creator can create, edit or moderate;
   students get the denied feedback.
-- [ ] Students can suggest and vote.
-- [ ] Suggestion authors are visible to the poll creator and `manage_polls`
+- [x] Students can suggest and vote.
+- [x] New suggestions are approved by default.
+- [x] Suggestion authors are visible to the poll creator and `manage_polls`
   holders and absent from the HTML for everyone else.
-- [ ] One vote per user per question; a second first-vote POST adds no vote.
-- [ ] A vote can be changed until the deadline; the old ballot row is replaced,
+- [x] One vote per user per question; a second first-vote POST adds no vote.
+- [x] A vote can be changed until the deadline; the old ballot row is replaced,
   not duplicated.
-- [ ] A change with a missing or foreign ballot cookie is rejected.
-- [ ] A vote after the deadline is rejected.
-- [ ] Ending suggestions early moves the poll to moderation; ending voting early
+- [x] A change with a missing or foreign ballot cookie is rejected.
+- [x] A vote after the deadline is rejected.
+- [x] Starting voting without a deadline renders the deadline prompt; submitting
+  it starts voting. A poll created without a voting deadline is valid.
+- [x] Ending suggestions early moves the poll to moderation; ending voting early
   closes it and reveals results.
-- [ ] Suggestions are visible immediately, removed suggestions disappear
+- [x] Suggestions are visible immediately, removed suggestions disappear
   entirely, merging works before voting, and no option edits are possible
   afterwards.
-- [ ] Results are aggregate-only and show percentage and fraction. Students see
+- [x] Results are aggregate-only and show percentage and fraction. Students see
   them live when `results_public` is on, never when it is off; managers always
   see them.
-- [ ] With `suggestions_public` off, students see no suggestions until voting
+- [x] With `suggestions_public` off, students see no suggestions until voting
   opens.
-- [ ] Drafts appear only in the manager-only “Entwürfe” tab.
-- [ ] A tie renders as “Gleichstand”.
-- [ ] Render list, detail, create/edit, and the HTMX variants.
+- [x] Drafts appear only in the manager-only “Entwürfe” tab.
+- [x] A tie renders as “Gleichstand”.
+- [x] Render list, detail, create/edit, and the HTMX variants.
 
 ## Datenschutz
 

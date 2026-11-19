@@ -1,0 +1,80 @@
+{% if mode == "edit" %}
+{% url 'poll-edit' poll.id as form_action %}
+{% else %}
+{% url 'poll-create' as form_action %}
+{% endif %}
+
+<form class="event-form" method="post" action="{{ form_action }}" data-poll-form hx-post="{{ form_action }}"
+    hx-target="#overlay-content" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    {% if mode == "edit" %}
+    {% include "components/_overlay_header.html" with title="Umfrage bearbeiten" back_url=back_url %}
+    {% else %}
+    {% include "components/_overlay_header.html" with title="Neue Umfrage" %}
+    {% endif %}
+
+    {{ form.non_field_errors }}
+
+    <p class="field">
+        {{ form.title.errors }}
+        {{ form.title.label_tag }}
+        {{ form.title }}
+    </p>
+
+    <p class="field">
+        {{ form.description.errors }}
+        {{ form.description.label_tag }}
+        {{ form.description }}
+    </p>
+
+    <p class="field">
+        {{ form.mode.errors }}
+        {{ form.mode.label_tag }}
+        {{ form.mode }}
+    </p>
+
+    <p class="field" data-poll-suggestion-field {% if not suggestion_mode %}hidden{% endif %}>
+        {{ form.suggestion_deadline.errors }}
+        {{ form.suggestion_deadline.label_tag }}
+        {{ form.suggestion_deadline }}
+    </p>
+
+    <p class="field">
+        {{ form.voting_deadline.errors }}
+        {{ form.voting_deadline.label_tag }}
+        {{ form.voting_deadline }}
+    </p>
+
+    <p class="field" data-poll-suggestion-field {% if not suggestion_mode %}hidden{% endif %}>
+        {{ form.suggestions_public.errors }}
+        <label class="checkbox">
+            {{ form.suggestions_public }}
+            {{ form.suggestions_public.label }}
+        </label>
+    </p>
+
+    <p class="field">
+        {{ form.results_public.errors }}
+        <label class="checkbox">
+            {{ form.results_public }}
+            {{ form.results_public.label }}
+        </label>
+    </p>
+
+    <div class="field" data-poll-option-field {% if suggestion_mode %}hidden{% endif %}>
+        {{ form.options.errors }}
+        {{ form.options.label_tag }}
+        {{ form.options }}
+        <span class="poll-form__help">{{ form.options.help_text }}</span>
+    </div>
+
+    <div class="event-form__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">
+            {% if mode == "edit" %}Fertig{% else %}Erstellen{% endif %}
+        </button>
+    </div>
+</form>

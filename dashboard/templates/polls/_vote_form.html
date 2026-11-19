@@ -1,0 +1,29 @@
+{% if can_vote %}
+<form method="post" action="{% url 'poll-vote' poll.id %}" hx-post="{% url 'poll-vote' poll.id %}"
+    hx-target="#overlay-content" hx-swap="innerHTML">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    <fieldset class="poll-vote">
+        <legend class="poll-vote__legend">Wähle eine Option</legend>
+        {% for option in options %}
+        <label class="poll-vote__option">
+            <input type="radio" name="option" value="{{ option.id }}" {% if option.id == current_option_id %}checked{% endif %} required />
+            <span>{{ option.label }}</span>
+        </label>
+        {% endfor %}
+    </fieldset>
+
+    <button type="submit" class="btn" hx-disabled-elt="this">
+        {% if has_voted %}Stimme ändern{% else %}Abstimmen{% endif %}
+    </button>
+
+    {% if has_voted and not current_option_id %}
+    <p class="poll-hint">
+        Deine bisherige Stimme ist in diesem Browser nicht auffindbar. Sie kann deshalb nicht geändert werden.
+    </p>
+    {% endif %}
+</form>
+{% endif %}

@@ -1,3 +1,8 @@
+import hashlib
+import hmac
+import secrets
+
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -6,7 +11,16 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .models import Event, EventParticipation, Option, Poll
+from .models import (
+    Ballot,
+    BallotVote,
+    Event,
+    EventParticipation,
+    Option,
+    Poll,
+    Question,
+    QuestionParticipation,
+)
 from .notifications import notify_participants, notify_time_frame_changed
 
 
@@ -194,3 +208,113 @@ def close_poll_voting(poll):
     poll.voting_closed_at = timezone.now()
     poll.save(update_fields=["voting_closed_at"])
     return poll
+
+
+@transaction.atomic
+def save_poll(form, user):
+    poll = form.save(commit=False)
+    if poll.pk is None:
+        poll.creator = user
+    elif poll.phase != Poll.Phase.DRAFT:
+        raise ValidationError("Nur Entwürfe können bearbeitet werden.")
+    poll.save()
+
+    question, _ = Question.objects.get_or_create(
+        poll=poll, defaults={"prompt": poll.title}
+    )
+    if question.prompt != poll.title:
+        question.prompt = poll.title
+        question.save(update_fields=["prompt"])
+
+    question.options.all().delete()
+    for index, label in enumerate(form.cleaned_data["option_labels"]):
+        Option.objects.create(question=question, label=label, order=index)
+    return poll
+
+
+MAX_SUGGESTIONS_PER_USER = 3
+
+
+def add_poll_suggestion(question, user, label):
+    existing = question.options.filter(
+        created_by=user,
+        state__in=[Option.State.SUGGESTED, Option.State.APPROVED],
+    ).count()
+    if existing >= MAX_SUGGESTIONS_PER_USER:
+        raise ValidationError("Du kannst höchstens drei Vorschläge machen.")
+
+    return Option.objects.create(
+        question=question,
+        label=label,
+        created_by=user,
+        state=Option.State.APPROVED,
+    )
+
+
+BALLOT_COOKIE_PREFIX = "poll_ballot_"
+BALLOT_SALT = "dashboard.poll-ballot"
+
+
+def ballot_cookie_name(question):
+    return f"{BALLOT_COOKIE_PREFIX}{question.pk}"
+
+
+def _hash_ballot_token(user, token):
+    message = f"{user.pk}:{token}".encode()
+    return hmac.new(settings.SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()
+
+
+def read_poll_vote(question, user, token):
+    """Option id of the ballot the cookie points to, if it is this user's."""
+    if not token:
+        return None
+
+    participation = QuestionParticipation.objects.filter(
+        question=question, user=user
+    ).first()
+    if participation is None or not hmac.compare_digest(
+        participation.token_hash, _hash_ballot_token(user, token)
+    ):
+        return None
+
+    vote = (
+        BallotVote.objects.filter(ballot__question=question, ballot__token=token)
+        .values_list("option_id", flat=True)
+        .first()
+    )
+    return vote
+
+
+def cast_poll_vote(question, option, user, token=None):
+    """Create or change the user's vote.
+
+    Returns ``(status, new_token)`` where status is ``voted``, ``vote-changed``
+    or ``ballot-lost`` and ``new_token`` is only set on the first vote.
+    """
+    participation = QuestionParticipation.objects.filter(
+        question=question, user=user
+    ).first()
+
+    if participation is not None:
+        if not token or not hmac.compare_digest(
+            participation.token_hash, _hash_ballot_token(user, token)
+        ):
+            return "ballot-lost", None
+
+        ballot = Ballot.objects.filter(question=question, token=token).first()
+        if ballot is None:
+            return "ballot-lost", None
+
+        BallotVote.objects.update_or_create(ballot=ballot, defaults={"option": option})
+        return "vote-changed", None
+
+    new_token = secrets.token_hex(32)
+    with transaction.atomic():
+        ballot = Ballot.objects.create(question=question, token=new_token)
+        BallotVote.objects.create(ballot=ballot, option=option)
+        QuestionParticipation.objects.create(
+            question=question,
+            user=user,
+            token_hash=_hash_ballot_token(user, new_token),
+        )
+    return "voted", new_token

@@ -1,0 +1,16 @@
+<div class="poll-voting-deadline">
+    <h3>Abstimmungsfrist festlegen</h3>
+    <p class="poll-hint">Bevor die Abstimmung starten kann, braucht sie ein Ende.</p>
+
+    <form method="post" action="{% url 'poll-start-voting' poll.id %}" hx-post="{% url 'poll-start-voting' poll.id %}"
+        hx-target="#overlay-content" hx-swap="innerHTML">
+        {% csrf_token %}
+        <p class="field">
+            {{ voting_deadline_form.voting_deadline.errors }}
+            {{ voting_deadline_form.voting_deadline.label_tag }}
+            {{ voting_deadline_form.voting_deadline }}
+            <span class="poll-form__help">{{ voting_deadline_form.voting_deadline.help_text }}</span>
+        </p>
+        <button type="submit" class="btn" hx-disabled-elt="this">Abstimmung starten</button>
+    </form>
+</div>

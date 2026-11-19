@@ -1,14 +1,48 @@
 {% extends 'base.html' %}
 
-{% block title %}Demokratie{% endblock %}
+{% load static %}
+
+{% block title %}Umfragen{% endblock %}
 
 {% block content %}
-<div class="page">
-    <h1>Demokratie</h1>
+<div class="polls-page" data-polls-page>
+    <div class="polls-page__header">
+        <h1>Umfragen</h1>
+        {% if can_create_poll %}
+        <a class="btn" href="{% url 'poll-create' %}" data-overlay-open="overlay" hx-get="{% url 'poll-create' %}"
+            hx-target="#overlay-content" hx-swap="innerHTML">Neue Umfrage</a>
+        {% endif %}
+    </div>
 
-    <section class="card page__body">
-        <p>Bitte noch ein bisschen warten, bis ihr euer Mitspracherecht zur Verfügung gestellt bekommt.</p>
-        <p>Feature ist noch in der Entwicklung …</p>
-    </section>
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
+
+    <div class="switcher" role="group" aria-label="Umfragen anzeigen">
+        <button type="button" class="switcher__button" data-polls-filter="open"
+            aria-pressed="{% if filter_open %}true{% else %}false{% endif %}">Offen</button>
+        <button type="button" class="switcher__button" data-polls-filter="all"
+            aria-pressed="{% if filter_all %}true{% else %}false{% endif %}">Alle</button>
+        <button type="button" class="switcher__button" data-polls-filter="closed"
+            aria-pressed="{% if filter_closed %}true{% else %}false{% endif %}">Geschlossen</button>
+        {% if show_drafts %}
+        <button type="button" class="switcher__button" data-polls-filter="drafts"
+            aria-pressed="{% if filter_drafts %}true{% else %}false{% endif %}">Entwürfe</button>
+        {% endif %}
+    </div>
+
+    <div class="polls-grid" data-polls-grid>
+        {% for item in poll_items %}
+        {% include "polls/_poll_card.html" with poll=item.poll phase=item.phase turnout=item.turnout %}
+        {% endfor %}
+
+        <p class="polls-empty" data-polls-empty {% if poll_items %}hidden{% endif %}>
+            Keine Umfragen gefunden.
+        </p>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'dashboard/js/polls.js' %}" defer></script>
 {% endblock %}

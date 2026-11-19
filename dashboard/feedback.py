@@ -42,6 +42,44 @@ STATUS_FEEDBACK = {
     "profile-updated": ("success", "Profil erfolgreich bearbeitet"),
     "password-updated": ("success", "Passwort erfolgreich geändert"),
     "intro-profile-saved": ("success", "Profil gespeichert"),
+    "poll-created": ("success", "Umfrage erstellt."),
+    "poll-updated": ("success", "Umfrage gespeichert."),
+    "poll-create-denied": (
+        "error",
+        "Du bist nicht berechtigt, Umfragen zu erstellen.",
+    ),
+    "poll-edit-denied": (
+        "error",
+        "Du bist nicht berechtigt, diese Umfrage zu bearbeiten.",
+    ),
+    "poll-not-draft": ("error", "Nur Entwürfe können bearbeitet werden."),
+    "poll-phase-denied": (
+        "error",
+        "Diese Aktion ist in dieser Phase nicht möglich.",
+    ),
+    "suggestions-started": ("success", "Vorschlagsphase gestartet."),
+    "suggestions-ended": ("error", "Die Vorschlagsphase ist beendet."),
+    "suggestions-closed": ("success", "Vorschläge geschlossen."),
+    "voting-started": ("success", "Abstimmung gestartet."),
+    "voting-closed": ("success", "Abstimmung beendet."),
+    "suggestion-added": ("success", "Vorschlag hinzugefügt."),
+    "suggestion-updated": ("success", "Vorschlag gespeichert."),
+    "suggestion-withdrawn": ("success", "Vorschlag zurückgezogen."),
+    "suggestion-approved": ("success", "Vorschlag freigegeben."),
+    "suggestion-rejected": ("success", "Vorschlag abgelehnt."),
+    "suggestion-merged": ("success", "Vorschläge zusammengeführt."),
+    "moderation-denied": (
+        "error",
+        "Du bist nicht berechtigt, diese Umfrage zu moderieren.",
+    ),
+    "vote-invalid": ("error", "Diese Option gehört nicht zur Umfrage."),
+    "vote-closed": ("error", "Die Abstimmung ist beendet."),
+    "voted": ("success", "Stimme abgegeben."),
+    "vote-changed": ("success", "Stimme geändert."),
+    "ballot-lost": (
+        "error",
+        "Deine Stimme kann nicht geändert werden: Der Stimmzettel fehlt in diesem Browser.",
+    ),
 }
 
 

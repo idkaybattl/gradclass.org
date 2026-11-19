@@ -26,16 +26,16 @@
             aria-label="Aktionen durchsuchen" autocomplete="off" />
 
         <div class="events-controls">
-            <div class="events-switcher" role="group" aria-label="Aktionen anzeigen">
-                <button type="button" class="events-switcher__button" data-events-filter="upcoming"
+            <div class="switcher" role="group" aria-label="Aktionen anzeigen">
+                <button type="button" class="switcher__button" data-events-filter="upcoming"
                     aria-pressed="{% if initial_filter == 'upcoming' %}true{% else %}false{% endif %}">
                     Anstehend
                 </button>
-                <button type="button" class="events-switcher__button" data-events-filter="all"
+                <button type="button" class="switcher__button" data-events-filter="all"
                     aria-pressed="{% if initial_filter == 'all' %}true{% else %}false{% endif %}">
                     Alle
                 </button>
-                <button type="button" class="events-switcher__button" data-events-filter="past"
+                <button type="button" class="switcher__button" data-events-filter="past"
                     aria-pressed="{% if initial_filter == 'past' %}true{% else %}false{% endif %}">
                     Vergangen
                 </button>

@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
 from . import forms
-from .views import auth, core, events, notifications, users
+from .views import auth, core, events, notifications, polls, users
 
 urlpatterns = [
     path(
@@ -125,5 +125,36 @@ urlpatterns = [
     # legal, public
     path("datenschutz/", core.datenschutz, name="datenschutz"),
     # polls
-    path("polls/", core.polls, name="polls"),
+    path("polls/", polls.polls, name="polls"),
+    path("polls/create/", polls.poll_create, name="poll-create"),
+    path("polls/<int:poll_id>/", polls.poll_details, name="poll-details"),
+    path("polls/<int:poll_id>/edit/", polls.poll_edit, name="poll-edit"),
+    path(
+        "polls/<int:poll_id>/start-suggestions/",
+        polls.poll_start_suggestions,
+        name="poll-start-suggestions",
+    ),
+    path(
+        "polls/<int:poll_id>/start-voting/",
+        polls.poll_start_voting,
+        name="poll-start-voting",
+    ),
+    path(
+        "polls/<int:poll_id>/close-suggestions/",
+        polls.poll_close_suggestions,
+        name="poll-close-suggestions",
+    ),
+    path(
+        "polls/<int:poll_id>/close-voting/",
+        polls.poll_close_voting,
+        name="poll-close-voting",
+    ),
+    path("polls/<int:poll_id>/suggest/", polls.poll_suggest, name="poll-suggest"),
+    path("polls/<int:poll_id>/vote/", polls.poll_vote, name="poll-vote"),
+    path(
+        "polls/<int:poll_id>/moderate/",
+        polls.poll_moderate,
+        name="poll-moderate",
+    ),
+    path("polls/<int:poll_id>/results/", polls.poll_results, name="poll-results"),
 ]

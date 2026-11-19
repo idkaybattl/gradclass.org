@@ -1,0 +1,155 @@
+{% load static %}
+
+<div class="poll-detail" data-poll-detail>
+    {% include "components/_overlay_header.html" %}
+
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
+
+    {% if poll.description %}
+    <section class="card poll-detail__section">
+        <p>{{ poll.description|linebreaksbr }}</p>
+    </section>
+    {% endif %}
+
+    <p class="poll-detail__deadline">
+        {% if phase == "suggestions" %}
+        Vorschläge bis
+        <time datetime="{{ poll.suggestion_deadline|date:'c' }}">{{ poll.suggestion_deadline|date:"d.m.Y H:i" }}</time>
+        Uhr
+        {% elif phase == "voting" %}
+        Abstimmung bis
+        <time datetime="{{ poll.voting_deadline|date:'c' }}">{{ poll.voting_deadline|date:"d.m.Y H:i" }}</time>
+        Uhr
+        {% elif phase == "closed" %}
+        Beendet
+        {% elif phase == "moderation" %}
+        Vorschläge geschlossen
+        {% else %}
+        Entwurf
+        {% endif %}
+    </p>
+
+    {% if phase == "draft" %}
+    <section class="card poll-detail__section">
+        <h3>Optionen</h3>
+        <ul class="poll-options">
+            {% for option in options %}
+            <li>{{ option.label }}</li>
+            {% empty %}
+            <li>Noch keine Optionen.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <div class="poll-detail__actions">
+        {% if can_start_suggestions %}
+        <form method="post" action="{% url 'poll-start-suggestions' poll.id %}"
+            hx-post="{% url 'poll-start-suggestions' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button type="submit" class="btn" hx-disabled-elt="this">Vorschläge starten</button>
+        </form>
+        {% endif %}
+        {% if can_start_voting %}
+        {% if show_voting_deadline_form %}
+        {% include "polls/_voting_deadline_form.html" %}
+        {% else %}
+        <form method="post" action="{% url 'poll-start-voting' poll.id %}"
+            hx-post="{% url 'poll-start-voting' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button type="submit" class="btn" hx-disabled-elt="this">Abstimmung starten</button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if phase == "suggestions" or phase == "moderation" %}
+    <section class="card poll-detail__section">
+        <div class="poll-detail__section-header">
+            <h3>{% if phase == "suggestions" %}Vorschläge{% else %}Moderation{% endif %}</h3>
+            {% if can_close_suggestions %}
+            <form method="post" action="{% url 'poll-close-suggestions' poll.id %}"
+                hx-post="{% url 'poll-close-suggestions' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Vorschläge schließen</button>
+            </form>
+            {% endif %}
+            {% if can_start_voting and not show_voting_deadline_form %}
+            <form method="post" action="{% url 'poll-start-voting' poll.id %}"
+                hx-post="{% url 'poll-start-voting' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button type="submit" class="btn" hx-disabled-elt="this">Abstimmung starten</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if options %}
+        {% include "polls/_suggestion_list.html" %}
+        {% elif is_manager or poll.suggestions_public %}
+        <p>Noch keine Vorschläge.</p>
+        {% else %}
+        <p>Die Vorschläge sind noch nicht öffentlich.</p>
+        {% endif %}
+
+        {% if show_voting_deadline_form %}
+        {% include "polls/_voting_deadline_form.html" %}
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if phase == "suggestions" %}
+    <section class="card poll-detail__section">
+        <h3>Vorschlag hinzufügen</h3>
+        {% if suggestion_error %}
+        <p class="errorlist">{{ suggestion_error }}</p>
+        {% endif %}
+        <form class="poll-suggest-form" method="post" action="{% url 'poll-suggest' poll.id %}"
+            hx-post="{% url 'poll-suggest' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add" />
+            <p class="field">
+                <label for="poll-suggestion-label">Vorschlag</label>
+                <input class="input" id="poll-suggestion-label" name="label" maxlength="120" required
+                    value="{{ suggestion_value }}" autocomplete="off" />
+            </p>
+            <button type="submit" class="btn" hx-disabled-elt="this">Hinzufügen</button>
+        </form>
+    </section>
+    {% endif %}
+
+    {% if phase == "voting" %}
+    <section class="card poll-detail__section">
+        <div class="poll-detail__section-header">
+            <h3>Abstimmung</h3>
+            {% if can_close_voting %}
+            <form method="post" action="{% url 'poll-close-voting' poll.id %}"
+                hx-post="{% url 'poll-close-voting' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Abstimmung beenden</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if can_view_results %}
+        {% include "polls/_results.html" %}
+        {% elif not poll.results_public and not is_manager %}
+        <p class="poll-hint">Die Ergebnisse dieser Umfrage sind intern.</p>
+        {% endif %}
+
+        {% include "polls/_vote_form.html" %}
+    </section>
+    {% endif %}
+
+    {% if phase == "closed" %}
+    <section class="card poll-detail__section">
+        <h3>Ergebnis</h3>
+        {% if can_view_results %}
+        {% include "polls/_results.html" %}
+        {% else %}
+        <p class="poll-hint">Die Ergebnisse dieser Umfrage sind intern.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+</div>

@@ -317,7 +317,9 @@ window.addEventListener("pointercancel", endDrag);
 const PAGE_INITIALIZERS = [
   "initUserPickers",
   "initEventForms",
+  "initPollForms",
   "initEventsList",
+  "initPollsList",
   "initUsersList",
   "initIntroduction",
   "initCopyFields",

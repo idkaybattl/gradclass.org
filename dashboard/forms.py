@@ -23,7 +23,13 @@ from django.utils.http import urlsafe_base64_encode
 from phonenumber_field.formfields import PhoneNumberField
 
 from .durations import format_duration, split_duration
-from .models import Event, EventParticipation, UserProfile
+from .models import (
+    OPTION_LABEL_MAX_LENGTH,
+    Event,
+    EventParticipation,
+    Poll,
+    UserProfile,
+)
 
 User = get_user_model()
 
@@ -478,6 +484,155 @@ class SetEarningsReceivedForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = ["earnings_received"]
+
+
+class OptionListWidget(forms.Widget):
+    template_name = "widgets/option_list.html"
+
+    def value_from_datadict(self, data, files, name):
+        return "\n".join(data.getlist(name))
+
+    def format_value(self, value):
+        if isinstance(value, str):
+            values = value.splitlines()
+        elif value:
+            values = [str(item) for item in value]
+        else:
+            values = []
+
+        values = [line for line in values if line.strip()]
+        return values or ["", ""]
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["widget"]["values"] = self.format_value(value)
+        return context
+
+
+class PollForm(forms.ModelForm):
+    title = forms.CharField(label="Titel", max_length=255)
+    description = forms.CharField(
+        label="Beschreibung", required=False, widget=forms.Textarea()
+    )
+    mode = forms.ChoiceField(label="Modus", choices=Poll.Mode.choices)
+    suggestion_deadline = forms.DateTimeField(
+        label="Vorschläge bis",
+        required=False,
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={"type": "datetime-local", "lang": "de-DE"},
+        ),
+    )
+    voting_deadline = forms.DateTimeField(
+        label="Abstimmung bis",
+        required=False,
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={"type": "datetime-local", "lang": "de-DE"},
+        ),
+    )
+    options = forms.CharField(
+        label="Optionen",
+        required=False,
+        widget=OptionListWidget(),
+        help_text="Mindestens zwei, nur bei festen Optionen.",
+    )
+    suggestions_public = forms.BooleanField(
+        label="Vorschläge öffentlich",
+        required=False,
+    )
+    results_public = forms.BooleanField(
+        label="Ergebnisse öffentlich",
+        required=False,
+    )
+
+    class Meta:
+        model = Poll
+        fields = [
+            "title",
+            "description",
+            "mode",
+            "suggestions_public",
+            "results_public",
+            "suggestion_deadline",
+            "voting_deadline",
+            "options",
+        ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        mode = cleaned_data.get("mode")
+        suggestion_deadline = cleaned_data.get("suggestion_deadline")
+        voting_deadline = cleaned_data.get("voting_deadline")
+        now = timezone.now()
+
+        if mode == Poll.Mode.SUGGESTIONS:
+            if not suggestion_deadline:
+                self.add_error(
+                    "suggestion_deadline", "Bitte eine Vorschlagsfrist angeben."
+                )
+            elif suggestion_deadline <= now:
+                self.add_error(
+                    "suggestion_deadline",
+                    "Die Vorschlagsfrist muss in der Zukunft liegen.",
+                )
+        else:
+            # Fixed polls skip the suggestion phase entirely.
+            cleaned_data["suggestion_deadline"] = None
+
+        if voting_deadline and voting_deadline <= now:
+            self.add_error(
+                "voting_deadline",
+                "Die Abstimmungsfrist muss in der Zukunft liegen.",
+            )
+        elif (
+            voting_deadline
+            and mode == Poll.Mode.SUGGESTIONS
+            and suggestion_deadline
+            and voting_deadline <= suggestion_deadline
+        ):
+            self.add_error(
+                "voting_deadline",
+                "Die Abstimmung muss nach den Vorschlägen enden.",
+            )
+        elif mode == Poll.Mode.FIXED and not voting_deadline:
+            self.add_error(
+                "voting_deadline",
+                "Bitte eine Abstimmungsfrist angeben.",
+            )
+
+        labels = [line.strip() for line in cleaned_data.get("options", "").splitlines()]
+        labels = [label for label in labels if label]
+        if mode == Poll.Mode.FIXED:
+            if len(labels) < 2:
+                self.add_error("options", "Bitte mindestens zwei Optionen angeben.")
+            if any(len(label) > OPTION_LABEL_MAX_LENGTH for label in labels):
+                self.add_error(
+                    "options",
+                    f"Eine Option darf höchstens {OPTION_LABEL_MAX_LENGTH} Zeichen haben.",
+                )
+        else:
+            labels = []
+
+        cleaned_data["option_labels"] = labels
+        return cleaned_data
+
+
+class StartVotingForm(forms.Form):
+    voting_deadline = forms.DateTimeField(
+        label="Abstimmung bis",
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={"type": "datetime-local", "lang": "de-DE"},
+        ),
+        help_text="Die Abstimmung endet zu diesem Zeitpunkt automatisch.",
+    )
+
+    def clean_voting_deadline(self):
+        value = self.cleaned_data["voting_deadline"]
+        if value <= timezone.now():
+            raise ValidationError("Die Abstimmungsfrist muss in der Zukunft liegen.")
+        return value
 
 
 class UserProfileForm(forms.ModelForm):

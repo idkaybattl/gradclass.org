@@ -28,7 +28,7 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 
 - `gradclassorg/` — settings and root URLs.
 - `dashboard/views/` — function-based views split by feature: `core.py`,
-  `auth.py`, `events.py`, `users.py`, `notifications.py`.
+  `auth.py`, `events.py`, `polls.py`, `users.py`, `notifications.py`.
 - `dashboard/permissions.py` — permission checks shared by views; see
   `docs/permissions.md` for the role matrix and adding capabilities.
 - `docs/environment.md` — every environment variable, its default and whether it

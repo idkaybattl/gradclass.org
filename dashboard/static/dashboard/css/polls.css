@@ -1,0 +1,392 @@
+.polls-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    width: 100%;
+    max-width: 1100px;
+    height: 100%;
+    min-height: 0;
+    margin-inline: auto;
+}
+
+.polls-page__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.polls-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    align-content: start;
+}
+
+.poll-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    padding: 14px;
+
+    color: inherit;
+    text-decoration: none;
+}
+
+.poll-card[hidden] {
+    display: none;
+}
+
+.poll-card:hover {
+    opacity: 0.8;
+}
+
+.poll-card:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+.poll-card__status {
+    align-self: flex-start;
+    padding: 2px 8px;
+
+    border-style: solid;
+
+    font-size: var(--font-size-sm);
+}
+
+.poll-card__status[data-phase="voting"] {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+}
+
+.poll-card__title {
+    font-size: var(--font-size-base);
+    color: var(--primary);
+    overflow-wrap: anywhere;
+}
+
+.poll-card__description {
+    font-size: var(--font-size-sm);
+    overflow-wrap: anywhere;
+}
+
+.poll-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+
+    font-size: var(--font-size-sm);
+}
+
+.polls-empty {
+    grid-column: 1 / -1;
+    padding: 14px;
+
+    border-style: dashed;
+
+    font-size: var(--font-size-sm);
+}
+
+/* poll detail overlay */
+.poll-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.poll-detail__section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+}
+
+.poll-detail__section h3 {
+    font-size: var(--font-size-lg);
+}
+
+.poll-detail__section-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.poll-detail__deadline {
+    font-size: var(--font-size-sm);
+}
+
+.poll-detail__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.poll-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    list-style: none;
+}
+
+.poll-form__help {
+    font-size: var(--font-size-sm);
+    opacity: 0.7;
+}
+
+/* option editor */
+.option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.option-list__items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.option-list__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.option-list__item--dragging {
+    opacity: 0.5;
+}
+
+.option-list__input {
+    flex: 1 1 auto;
+}
+
+.option-list__drag,
+.option-list__remove {
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+    flex: 0 0 auto;
+
+    width: 34px;
+    padding: 0;
+
+    border-style: solid;
+    border-radius: 0;
+
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.option-list__drag {
+    cursor: grab;
+    touch-action: none;
+    letter-spacing: -2px;
+}
+
+.option-list__remove {
+    font-size: var(--font-size-lg);
+    line-height: 1;
+}
+
+.option-list__drag:focus-visible,
+.option-list__remove:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+/* mode-dependent fields; works without JS via :has(), JS only repeats it */
+[data-poll-form] [data-poll-suggestion-field] {
+    display: none;
+}
+
+[data-poll-form]:has(select[name="mode"] option[value="suggestions"]:checked) [data-poll-suggestion-field] {
+    display: grid;
+}
+
+[data-poll-form]:has(select[name="mode"] option[value="suggestions"]:checked) [data-poll-option-field] {
+    display: none;
+}
+
+/* deadline prompt before voting starts */
+.poll-voting-deadline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-basis: 100%;
+}
+
+.poll-voting-deadline form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+/* suggestion form */
+.poll-suggest-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* suggestions */
+.poll-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.poll-suggestions__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 10px;
+
+    border-width: 0 0 var(--border-width);
+    border-bottom-style: solid;
+}
+
+.poll-suggestions__item:last-child {
+    padding-bottom: 0;
+    border-bottom-style: none;
+}
+
+.poll-suggestions__label {
+    font-size: var(--font-size-base);
+    overflow-wrap: anywhere;
+}
+
+.poll-suggestions__author {
+    font-size: var(--font-size-sm);
+    opacity: 0.7;
+}
+
+.poll-suggestions__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.poll-suggestions__edit {
+    font-size: var(--font-size-sm);
+}
+
+.poll-suggestions__edit summary {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.poll-suggestions__edit .field {
+    margin-top: 8px;
+}
+
+/* voting */
+.poll-vote {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    margin: 0 0 10px;
+    padding: 10px;
+
+    border-style: solid;
+}
+
+.poll-vote__legend {
+    padding-inline: 4px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.poll-vote__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+
+    border-style: solid;
+
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.poll-vote__option:has(input:checked) {
+    background: var(--text);
+    color: var(--bg);
+}
+
+/* results */
+.poll-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.poll-results__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.poll-result__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 8px;
+
+    font-size: var(--font-size-sm);
+}
+
+.poll-result__label {
+    overflow-wrap: anywhere;
+}
+
+.poll-result__bar {
+    height: 10px;
+
+    border-style: solid;
+}
+
+.poll-result__bar span {
+    display: block;
+    height: 100%;
+    background: var(--text);
+}
+
+.poll-results__tie {
+    font-weight: 600;
+}
+
+.poll-results__turnout {
+    font-size: var(--font-size-sm);
+}
+
+.poll-hint {
+    font-size: var(--font-size-sm);
+    opacity: 0.8;
+}

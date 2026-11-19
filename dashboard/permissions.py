@@ -92,3 +92,9 @@ def can_create_poll(user):
 
 def can_manage_poll(user, poll):
     return poll.creator_id == user.pk or _can(user, MANAGE_POLLS)
+
+
+def can_view_poll_results(user, poll):
+    if poll.phase not in {poll.Phase.VOTING, poll.Phase.CLOSED}:
+        return False
+    return poll.results_public or can_manage_poll(user, poll)

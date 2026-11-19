@@ -3,6 +3,7 @@
 from .abikasse import Abikasse
 from .events import Event, EventParticipation, JoinRequest
 from .polls import (
+    OPTION_LABEL_MAX_LENGTH,
     Ballot,
     BallotVote,
     Option,
@@ -20,6 +21,7 @@ __all__ = [
     "EventParticipation",
     "JoinRequest",
     "Option",
+    "OPTION_LABEL_MAX_LENGTH",
     "Poll",
     "Question",
     "QuestionParticipation",

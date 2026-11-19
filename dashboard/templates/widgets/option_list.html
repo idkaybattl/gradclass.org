@@ -1,0 +1,27 @@
+<div class="option-list" data-option-list>
+    <ul class="option-list__items">
+        {% for value in widget.values %}
+        <li class="option-list__item" data-option-row>
+            <button type="button" class="option-list__drag" data-option-drag aria-label="Option verschieben"
+                title="Ziehen zum Sortieren" aria-keyshortcuts="ArrowUp ArrowDown">⋮⋮</button>
+            <input class="input option-list__input" type="text" name="{{ widget.name }}" value="{{ value }}"
+                maxlength="120" autocomplete="off" data-option-input />
+            <button type="button" class="option-list__remove" data-option-remove
+                aria-label="Option entfernen">×</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <template data-option-template>
+        <li class="option-list__item" data-option-row>
+            <button type="button" class="option-list__drag" data-option-drag aria-label="Option verschieben"
+                title="Ziehen zum Sortieren" aria-keyshortcuts="ArrowUp ArrowDown">⋮⋮</button>
+            <input class="input option-list__input" type="text" name="{{ widget.name }}" maxlength="120"
+                autocomplete="off" data-option-input />
+            <button type="button" class="option-list__remove" data-option-remove
+                aria-label="Option entfernen">×</button>
+        </li>
+    </template>
+
+    <button type="button" class="btn btn--secondary" data-option-add>Option hinzufügen</button>
+</div>

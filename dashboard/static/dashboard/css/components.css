@@ -70,6 +70,10 @@
     outline-offset: 2px;
 }
 
+.field textarea {
+    resize: vertical;
+}
+
 /* number inputs: no native spinners; duration inputs have their own units */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -124,6 +128,62 @@ textarea::placeholder {
 .checkbox>input:focus-visible {
     outline: var(--border-width) solid var(--text);
     outline-offset: 2px;
+}
+
+/* segmented switcher: mutually exclusive views */
+.switcher {
+    display: flex;
+    align-self: flex-start;
+    width: fit-content;
+
+    border-style: solid;
+}
+
+.switcher__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+
+    border-style: none;
+    border-radius: 0;
+
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.switcher__button+.switcher__button {
+    border-left-style: solid;
+}
+
+.switcher__button[aria-pressed="true"],
+.switcher__button[aria-current="page"] {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.switcher__button:not([aria-pressed="true"]):not([aria-current="page"]):hover {
+    opacity: 0.6;
+}
+
+.switcher__button:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: -2px;
+}
+
+@media (max-width: 600px) {
+    .switcher {
+        width: 100%;
+    }
+
+    .switcher__button {
+        flex: 1;
+        padding: 4px 6px;
+    }
 }
 
 /* errors */

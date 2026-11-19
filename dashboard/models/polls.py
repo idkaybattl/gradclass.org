@@ -4,6 +4,8 @@ from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
+OPTION_LABEL_MAX_LENGTH = 120
+
 
 class Poll(models.Model):
     class Mode(models.TextChoices):
@@ -94,7 +96,7 @@ class Option(models.Model):
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="options"
     )
-    label = models.CharField(max_length=120)
+    label = models.CharField(max_length=OPTION_LABEL_MAX_LENGTH)
     order = models.PositiveIntegerField(default=0)
     created_by = models.ForeignKey(
         User,

@@ -1,0 +1,22 @@
+<a class="card poll-card" href="{% url 'poll-details' poll.id %}" data-overlay-open="overlay" data-poll-card
+    data-phase="{{ phase }}" hx-get="{% url 'poll-details' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+    <span class="poll-card__status" data-phase="{{ phase }}">{{ phase.label }}</span>
+    <h2 class="poll-card__title">{{ poll.title }}</h2>
+    {% if poll.description %}
+    <p class="poll-card__description">{{ poll.description|truncatewords:18 }}</p>
+    {% endif %}
+    <p class="poll-card__meta">
+        {% if phase == "suggestions" or phase == "moderation" %}
+        {% if poll.suggestion_deadline %}
+        Vorschläge bis {{ poll.suggestion_deadline|date:"d.m.Y H:i" }} Uhr
+        {% endif %}
+        {% elif phase == "voting" %}
+        {% if poll.voting_deadline %}
+        Abstimmung bis {{ poll.voting_deadline|date:"d.m.Y H:i" }} Uhr
+        {% endif %}
+        {% endif %}
+        {% if phase == "voting" or phase == "closed" %}
+        <span class="poll-card__turnout">{{ turnout }} Stimme{{ turnout|pluralize:"n" }}</span>
+        {% endif %}
+    </p>
+</a>

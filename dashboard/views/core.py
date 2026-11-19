@@ -67,10 +67,3 @@ def datenschutz(request):
         "legal/privacy.html",
         {"contact_user": contact_user, "contact_profile": contact_profile},
     )
-
-
-@login_required
-@require_GET
-@introduction_required
-def polls(request):
-    return render(request, "polls.html")
