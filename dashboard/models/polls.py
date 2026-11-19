@@ -33,8 +33,10 @@ class Poll(models.Model):
 
     published_at = models.DateTimeField(null=True, blank=True)
     suggestion_deadline = models.DateTimeField(null=True, blank=True)
+    suggestions_closed_at = models.DateTimeField(null=True, blank=True)
     voting_started_at = models.DateTimeField(null=True, blank=True)
     voting_deadline = models.DateTimeField(null=True, blank=True)
+    voting_closed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         permissions = [
@@ -50,8 +52,14 @@ class Poll(models.Model):
         now = timezone.now()
         if self.published_at is None:
             return self.Phase.DRAFT
-        if self.mode == self.Mode.SUGGESTIONS and now < self.suggestion_deadline:  # pyright: ignore[reportOperatorIssue]
+        if (
+            self.mode == self.Mode.SUGGESTIONS
+            and self.suggestions_closed_at is None
+            and now < self.suggestion_deadline  # pyright: ignore[reportOperatorIssue]
+        ):
             return self.Phase.SUGGESTIONS
+        if self.voting_closed_at is not None:
+            return self.Phase.CLOSED
         if self.voting_started_at is None:
             return self.Phase.MODERATION
         if now < self.voting_deadline:  # pyright: ignore[reportOperatorIssue]

@@ -1105,7 +1105,8 @@ suggested option list. Single-choice only for now, but modelled around
   students never see results, while managers do, live and after close.
 - Turnout (votes cast) is shown live and on the closed card; there is no
   turnout during the suggestion phase.
-- The poll closes automatically at the voting deadline.
+- The poll closes at the voting deadline, or early when a manager ends it;
+  results become final either way.
 - Ties show “Gleichstand” and leave the outcome open. An automatic tiebreaker
   poll is a later option, not v1.
 - Creators and moderators can vote.
@@ -1129,8 +1130,9 @@ suggested option list. Single-choice only for now, but modelled around
 - Phases: Entwurf, Vorschläge, Moderation, Abstimmung, Beendet, derived from
   timestamps. Drafts are visible only to the creator and `manage_polls` holders.
 - Phase changes are manager actions: “Vorschläge starten” sets `published_at`,
-  “Abstimmung starten” sets `voting_started_at`. There is no scheduled start;
-  deadlines only close phases.
+  “Abstimmung starten” sets `voting_started_at`. Managers can also end a phase
+  early: “Vorschläge schließen” sets `suggestions_closed_at`, “Abstimmung
+  beenden” sets `voting_closed_at`. Deadlines close the phases otherwise.
 - Never delete a poll that has votes; close it instead.
 
 ## Layout
@@ -1150,14 +1152,15 @@ Poll overlay (bottom sheet, full detail):
   - Entwurf: question and option summary, “Bearbeiten”, and the start action
     (“Vorschläge starten”, or “Abstimmung starten” for fixed options).
   - Vorschläge: plain list in random order; each entry shows the option text.
-    Managers also see the author and moderation actions. Own entries get
-    edit/withdraw, and the “Vorschlag hinzufügen” form sits below.
+    Managers also see the author and moderation actions, plus “Vorschläge
+    schließen”. Own entries get edit/withdraw, and the “Vorschlag hinzufügen”
+    form sits below.
   - Moderation: the same list with approve/reject/edit/merge and “Abstimmung
     starten”.
   - Abstimmung: options as selectable cards, an “Abstimmen” button and, when
     results are public, the live bar per option with turnout. After voting, the
     current choice is marked and “Stimme ändern” stays available until the
-    deadline.
+    deadline. Managers get “Abstimmung beenden”.
   - Beendet: results as bars with “12 % · 6/50”, total votes, and “Gleichstand”
     when tied. Internal polls show no results to students.
 
@@ -1186,8 +1189,9 @@ Tiebreaker (later):
 
 - [x] `Poll`: title, description, creator FK, `created_at`, `mode`,
   `suggestions_public`, `results_public`, `published_at`, `suggestion_deadline`,
-  `voting_started_at`, `voting_deadline`. Derive the phase from these fields; do
-  not store a status column that can go stale.
+  `suggestions_closed_at`, `voting_started_at`, `voting_deadline`,
+  `voting_closed_at`. Derive the phase from these fields; do not store a status
+  column that can go stale.
 - [x] `Question`: poll FK, prompt, order, `kind` (only `single_choice` now).
 - [x] `Option`: question FK, label, order, `created_by` (nullable for fixed
   options; never rendered to non-managers), state (`suggested`, `approved`,
@@ -1215,8 +1219,9 @@ Tiebreaker (later):
   `permissions.py`: creator or global capability.
 - [x] Add `can_create_poll(user)` = `manage_polls` for now.
 - [x] Put phase transitions in `dashboard/services.py`: start suggestions
-  (`published_at`) and start voting (`voting_started_at`). Closing is
-  deadline-derived, not an action. All deadline checks are server-side only.
+  (`published_at`), start voting (`voting_started_at`), early close
+  (`suggestions_closed_at`, `voting_closed_at`). Deadlines close the phases
+  otherwise. All deadline checks are server-side only.
 - [x] Update `docs/permissions.md` and the capability table.
 
 **Views and URLs**
@@ -1258,6 +1263,8 @@ Tiebreaker (later):
   not duplicated.
 - [ ] A change with a missing or foreign ballot cookie is rejected.
 - [ ] A vote after the deadline is rejected.
+- [ ] Ending suggestions early moves the poll to moderation; ending voting early
+  closes it and reveals results.
 - [ ] Suggestions are visible immediately, removed suggestions disappear
   entirely, merging works before voting, and no option edits are possible
   afterwards.

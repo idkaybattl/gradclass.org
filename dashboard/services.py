@@ -149,6 +149,16 @@ def start_poll_suggestions(poll):
     return poll
 
 
+def close_poll_suggestions(poll):
+    """End the suggestion phase early; moderation starts immediately."""
+    if poll.phase != Poll.Phase.SUGGESTIONS:
+        raise ValidationError("Die Vorschlagsphase läuft nicht.")
+
+    poll.suggestions_closed_at = timezone.now()
+    poll.save(update_fields=["suggestions_closed_at"])
+    return poll
+
+
 def start_poll_voting(poll):
     """Draft (fixed) or moderation (suggestions) -> voting."""
     if poll.mode == Poll.Mode.SUGGESTIONS:
@@ -173,4 +183,14 @@ def start_poll_voting(poll):
         update_fields.append("published_at")
     poll.voting_started_at = now
     poll.save(update_fields=update_fields)
+    return poll
+
+
+def close_poll_voting(poll):
+    """End voting early; results become final."""
+    if poll.phase != Poll.Phase.VOTING:
+        raise ValidationError("Die Abstimmung läuft nicht.")
+
+    poll.voting_closed_at = timezone.now()
+    poll.save(update_fields=["voting_closed_at"])
     return poll
