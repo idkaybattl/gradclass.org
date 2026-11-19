@@ -16,6 +16,7 @@ BYPASS_EVENT_CREATION_LIMIT = "dashboard.bypass_event_creation_limit"
 VIEW_ALL_USERS = "dashboard.view_all_users"
 MANAGE_USERS = "dashboard.manage_users"
 ACCESS_ADMIN = "dashboard.access_admin"
+MANAGE_POLLS = "dashboard.manage_polls"
 
 
 def _can(user, permission):
@@ -83,3 +84,11 @@ def can_change_password(request, user_id):
 def can_access_admin(user):
     # Django still requires is_staff to open /admin/ itself.
     return _can(user, ACCESS_ADMIN)
+
+
+def can_create_poll(user):
+    return _can(user, MANAGE_POLLS)
+
+
+def can_manage_poll(user, poll):
+    return poll.creator_id == user.pk or _can(user, MANAGE_POLLS)

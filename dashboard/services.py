@@ -1,10 +1,12 @@
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .models import Event, EventParticipation
+from .models import Event, EventParticipation, Option, Poll
 from .notifications import notify_participants, notify_time_frame_changed
 
 
@@ -131,3 +133,44 @@ def build_password_reset_url(user, request):
             },
         )
     )
+
+
+def start_poll_suggestions(poll):
+    """Draft -> suggestions. Only suggestion polls can enter this phase."""
+    if poll.phase != Poll.Phase.DRAFT or poll.mode != Poll.Mode.SUGGESTIONS:
+        raise ValidationError("Für diese Umfrage können keine Vorschläge starten.")
+
+    now = timezone.now()
+    if not poll.suggestion_deadline or poll.suggestion_deadline <= now:
+        raise ValidationError("Die Vorschlagsfrist liegt nicht in der Zukunft.")
+
+    poll.published_at = now
+    poll.save(update_fields=["published_at"])
+    return poll
+
+
+def start_poll_voting(poll):
+    """Draft (fixed) or moderation (suggestions) -> voting."""
+    if poll.mode == Poll.Mode.SUGGESTIONS:
+        if poll.phase != Poll.Phase.MODERATION:
+            raise ValidationError("Die Vorschlagsphase ist noch nicht beendet.")
+    elif poll.phase != Poll.Phase.DRAFT:
+        raise ValidationError("Die Abstimmung läuft bereits.")
+
+    now = timezone.now()
+    if not poll.voting_deadline or poll.voting_deadline <= now:
+        raise ValidationError("Die Abstimmungsfrist liegt nicht in der Zukunft.")
+
+    approved = Option.objects.filter(
+        question__poll=poll, state=Option.State.APPROVED
+    ).count()
+    if approved < 2:
+        raise ValidationError("Es braucht mindestens zwei Optionen.")
+
+    update_fields = ["voting_started_at"]
+    if poll.published_at is None:
+        poll.published_at = now
+        update_fields.append("published_at")
+    poll.voting_started_at = now
+    poll.save(update_fields=update_fields)
+    return poll

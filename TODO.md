@@ -1211,13 +1211,13 @@ Tiebreaker (later):
 
 **Permissions and services**
 
-- [ ] Add `MANAGE_POLLS` and `can_manage_poll(user, poll)` to
+- [x] Add `MANAGE_POLLS` and `can_manage_poll(user, poll)` to
   `permissions.py`: creator or global capability.
-- [ ] Add `can_create_poll(user)` = `manage_polls` for now.
-- [ ] Put phase transitions in `dashboard/services.py`: start suggestions
+- [x] Add `can_create_poll(user)` = `manage_polls` for now.
+- [x] Put phase transitions in `dashboard/services.py`: start suggestions
   (`published_at`) and start voting (`voting_started_at`). Closing is
   deadline-derived, not an action. All deadline checks are server-side only.
-- [ ] Update `docs/permissions.md` and the capability table.
+- [x] Update `docs/permissions.md` and the capability table.
 
 **Views and URLs**
 

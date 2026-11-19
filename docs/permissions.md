@@ -41,6 +41,7 @@ new group with the old name).
 | `view_all_users` | ✓ | ✓ | ✓ |
 | `manage_users` | – | – | ✓ |
 | `access_admin` | – | – | ✓ |
+| `manage_polls` | – | ✓ | ✓ |
 
 `approve_event` is defined for the future approval flow; it is not consumed yet.
 
@@ -54,6 +55,8 @@ These are independent of groups and live in `permissions.py`:
   amount for their event.
 - Any user may join/leave an event they are not managing, view their own
   profile, and change their own password.
+- The poll creator or `manage_polls` holders may edit, moderate and start their
+  own poll. Any logged-in user may view polls, suggest options and vote.
 - Only `manage_earnings` holders (reps/superuser) may mark earnings as received
   and finalise the event.
 - Final events are read-only for everyone.
