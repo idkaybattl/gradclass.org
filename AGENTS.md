@@ -39,7 +39,9 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - `dashboard/feedback.py` — status-flag feedback messages and rendering.
 - `dashboard/context_processors.py` — template-wide unread notification count.
 - `dashboard/forms.py` — forms and widgets.
-- `dashboard/models.py` — models.
+- `dashboard/models/` — models split by domain (`events.py`, `users.py`,
+  `abikasse.py`, `polls.py`); `__init__.py` re-exports them, so import from
+  `dashboard.models`.
 - `dashboard/services.py` — multi-step domain logic (e.g. `save_event`).
 - `dashboard/notifications.py` — notification model and creation.
 - `dashboard/signals.py` — signal handlers.

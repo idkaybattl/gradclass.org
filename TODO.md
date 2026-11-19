@@ -1998,11 +1998,11 @@ Event detail:
   subdirectories exist and are writable by web and worker, with read access
   for Caddy; document ownership. Keep `FILE_UPLOAD_MAX_MEMORY_SIZE` small
   enough that uploads land in temp files.
-- [ ] `GalleryItem`, `GalleryConsent`, `GalleryReport` in `models.py` with the
-  fields above; `Meta.ordering = ["-taken_at", "-created_at"]` and
-  `Meta.permissions` on `GalleryItem` for `manage_gallery` and
-  `bypass_gallery_limits`; add indexes for `(status, taken_at)` and
-  `(event, status, taken_at)`.
+- [ ] `GalleryItem`, `GalleryConsent`, `GalleryReport` in
+  `dashboard/models/gallery.py` with the fields above;
+  `Meta.ordering = ["-taken_at", "-created_at"]` and `Meta.permissions` on
+  `GalleryItem` for `manage_gallery` and `bypass_gallery_limits`; add indexes
+  for `(status, taken_at)` and `(event, status, taken_at)`.
 - [ ] Add `publish_photos_opt_out` to `UserProfile` and to the profile form.
 - [ ] `makemigrations` + `migrate`; data migration grants both capabilities to
   `Stufensprecher`; update `docs/permissions.md`.

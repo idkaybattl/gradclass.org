@@ -67,8 +67,8 @@ same capability, so `is_staff` alone does not expose it.
 
 ## Adding a capability
 
-1. Add the codename and German label to `Meta.permissions` in
-   `dashboard/models.py`; run `makemigrations`.
+1. Add the codename and German label to `Meta.permissions` in the model's module
+   under `dashboard/models/`; run `makemigrations`.
 2. Add a constant and a `can_*` helper in `dashboard/permissions.py`.
 3. Grant it to a group in Django admin (or in a data migration for defaults).
 4. Use the helper in the view and pass a boolean to the template.

@@ -1,0 +1,45 @@
+from datetime import timedelta
+
+from django.conf import settings
+from django.db import models
+from django.db.models import Sum
+from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
+
+User = settings.AUTH_USER_MODEL
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    has_had_introduction = models.BooleanField(default=False)  # pyright: ignore[reportArgumentType]
+    external_mail = models.EmailField(blank=True, null=True)
+    phone_number = PhoneNumberField(blank=True, null=True)
+    birthday = models.DateField(blank=True, null=True)
+
+    bio = models.TextField(blank=True, null=True)
+
+    def total_earnings(self):
+        # TODO: currently total bullshit, need to accumulate individual earnings per event:
+        # individual earnings being computed like:
+        # fraction of total hours the individual worked on event times event earnings
+        result = self.user.participating_events.aggregate(total=Sum("earnings"))  # pyright: ignore[reportAttributeAccessIssue]
+        return result["total"] or 0
+
+    def total_hours(self):
+        # Build the queryset of relevant EventParticipation objects
+        past_participations = self.user.event_participations.filter(  # pyright: ignore[reportAttributeAccessIssue]
+            event__ending_date__lt=timezone.now(),  # only past events
+            # event__final=True,  # only final events
+        )
+
+        # Aggregate the duration
+        result = past_participations.aggregate(total=Sum("participation_time"))
+        # If there are no matching rows, return a zero timedelta
+        return result["total"] or timedelta(0)
+
+    class Meta:
+        permissions = [
+            ("view_all_users", "Alle Nutzer:innen einsehen"),
+            ("manage_users", "Nutzer:innen verwalten"),
+            ("access_admin", "Adminbereich betreten"),
+        ]
