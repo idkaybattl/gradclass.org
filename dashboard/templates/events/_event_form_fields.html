@@ -30,6 +30,12 @@
     {{ form.ending_date }}
 </p>
 
+<p class="field">
+    {{ form.work_kind.errors }}
+    {{ form.work_kind.label_tag }}
+    {{ form.work_kind }}
+</p>
+
 <div class="field participants-field">
     {{ form.participants.errors }}
     {{ form.participants.label_tag }}

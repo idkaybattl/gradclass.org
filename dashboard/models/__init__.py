@@ -1,6 +1,6 @@
 """Models are split by domain; imports stay ``from dashboard.models import X``."""
 
-from .abikasse import Abikasse
+from .abikasse import AbiballConfig, Abikasse, AbikasseEntry
 from .events import Event, EventParticipation, JoinRequest
 from .polls import (
     OPTION_LABEL_MAX_LENGTH,
@@ -14,7 +14,9 @@ from .polls import (
 from .users import UserProfile
 
 __all__ = [
+    "AbiballConfig",
     "Abikasse",
+    "AbikasseEntry",
     "Ballot",
     "BallotVote",
     "Event",

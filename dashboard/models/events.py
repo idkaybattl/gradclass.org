@@ -5,6 +5,10 @@ User = settings.AUTH_USER_MODEL
 
 
 class Event(models.Model):
+    class WorkKind(models.TextChoices):
+        SCHOOL = "school", "Schulzeit (1×)"
+        FREETIME = "freetime", "Freizeit (2×)"
+
     # set to true when approved by staff
     # makes model instance unchangable
     final = models.BooleanField(default=False)  # pyright: ignore[reportArgumentType]
@@ -13,6 +17,12 @@ class Event(models.Model):
     description = models.TextField()
     starting_date = models.DateTimeField()
     ending_date = models.DateTimeField()
+    work_kind = models.CharField(
+        max_length=20,
+        choices=WorkKind,
+        default=WorkKind.SCHOOL,
+        verbose_name="Art der Arbeit",
+    )
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     creator = models.ForeignKey(

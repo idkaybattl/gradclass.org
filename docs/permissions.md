@@ -22,7 +22,7 @@ new group with the old name).
 
 | Group | Purpose |
 |---|---|
-| `Schüler` | Baseline role; every non-superuser is added on creation |
+| `Schüler` | Baseline role; every user is added on creation, including superusers |
 | `Stufensprecher` | Student representatives |
 | superuser | Server admin; passes every check implicitly |
 
@@ -42,6 +42,9 @@ new group with the old name).
 | `manage_users` | – | – | ✓ |
 | `access_admin` | – | – | ✓ |
 | `manage_polls` | – | ✓ | ✓ |
+| `view_abikasse` | ✓ | ✓ | ✓ |
+| `manage_abikasse` | – | ✓ | ✓ |
+| `view_any_points` | – | ✓ | ✓ |
 
 `approve_event` is defined for the future approval flow; it is not consumed yet.
 
@@ -76,3 +79,6 @@ same capability, so `is_staff` alone does not expose it.
 3. Grant it to a group in Django admin (or in a data migration for defaults).
 4. Use the helper in the view and pass a boolean to the template.
 5. Add a positive and a negative test.
+
+`view_abikasse` is Django's built-in view permission; it is not declared in
+`Meta.permissions` because that codename already exists.

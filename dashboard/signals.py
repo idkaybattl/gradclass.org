@@ -18,7 +18,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def add_default_group(sender, instance, created, **kwargs):
-    if not created or instance.is_superuser:
+    if not created:
         return
     group, _ = Group.objects.get_or_create(name=DEFAULT_GROUP_NAME)
     instance.groups.add(group)

@@ -1210,14 +1210,14 @@ Tiebreaker (later):
 - [x] `Ballot`: question FK, random unique `token`. No user FK, by design.
 - [x] `BallotVote`: ballot FK, option FK. One row per ballot for single-choice;
   results are grouped counts.
-- [ ] On first vote, create participation + ballot + vote in one transaction,
+- [x] On first vote, create participation + ballot + vote in one transaction,
   store HMAC(`SECRET_KEY`, user id + token) in participation, and set the ballot
   token in a signed, HttpOnly cookie scoped to the question, expiring at the
   voting deadline.
-- [ ] On a vote change, read the cookie, verify the HMAC against the current
+- [x] On a vote change, read the cookie, verify the HMAC against the current
   user's participation row, then replace that ballot's vote. Never store the
   token in a way that links it to the user.
-- [ ] Validate that the chosen option belongs to the question.
+- [x] Validate that the chosen option belongs to the question.
 - [x] Add `manage_polls` to `Poll.Meta.permissions`. Data migration creates the
   ContentType and Permission rows explicitly (as in §10) and grants it to
   `Stufensprecher`.
@@ -1343,8 +1343,9 @@ price is an estimate only.
   (`income`/`expense`), `amount` (positive `Decimal`), `description`, `date`,
   optional `event`, `source` (`manual`/`event`), `created_by`, `created_at`,
   `updated_at`.
-- Balance = Σ income − Σ expenses. The existing `goal` stays a whole-euro target;
-  the page shows balance, goal and progress. The home `.fund` card links to it.
+- Balance = Σ income − Σ expenses. `goal` is a `Decimal` and editable by
+  managers; the page shows balance, goal and progress. The home `.fund` card
+  links to it.
 - Event earnings enter the ledger automatically: when an event is `final` with
   `earnings` set, create/update its linked income entry; changing `earnings`
   updates it; never create a second entry. Do not also aggregate `Event.earnings`
@@ -1391,7 +1392,7 @@ price is an estimate only.
 - `UserProfile.ticket_count` is the number of tickets the user expects for
   themselves and their family, **default 5**, owner-editable, validated 0–20. It
   includes the user’s own seat; 0 means they do not attend.
-- `N_est = Σ ticket_count` over active users.
+- `N_est = Σ ticket_count` over active students (the `Schüler` group).
 - `AbiballConfig` is a singleton edited by `manage_abikasse`: `fixed_costs`,
   `per_head_costs`, `point_value` (default 2), `default_ticket_count` (default 5).
   Costs are nullable so the estimate can be hidden until configured.
@@ -1431,6 +1432,7 @@ price is an estimate only.
   | `view_any_points` | – | ✓ | ✓ |
 
 - Data migration creates the permissions and grants them, following §10.
+  Everyone, including superusers, is added to `Schüler` on creation.
 
 ## Layout
 
@@ -1462,19 +1464,19 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 
 **Models and migrations**
 
-- [ ] Add `Event.work_kind` (`school`/`freetime`, default `school`) and show it in
+- [x] Add `Event.work_kind` (`school`/`freetime`, default `school`) and show it in
   `EventForm` and `events/_event_form_fields.html`.
-- [ ] Add `AbikasseEntry` with the fields above, `event` as a nullable
+- [x] Add `AbikasseEntry` with the fields above, `event` as a nullable
   `OneToOneField` (`SET_NULL`) and a `source` choice.
-- [ ] Add `AbiballConfig` singleton (pk = 1) with `fixed_costs`,
+- [x] Add `AbiballConfig` singleton (pk = 1) with `fixed_costs`,
   `per_head_costs`, `point_value`, `default_ticket_count`.
-- [ ] Add `UserProfile.ticket_count` (default 5, validators 0–20).
-- [ ] Add `view_abikasse`/`manage_abikasse` to `Abikasse.Meta.permissions` and
+- [x] Add `UserProfile.ticket_count` (default 5, validators 0–20).
+- [x] Add `view_abikasse`/`manage_abikasse` to `Abikasse.Meta.permissions` and
   `view_any_points` to `UserProfile.Meta.permissions`.
-- [ ] Data migration: create content types/permissions explicitly, grant
+- [x] Data migration: create content types/permissions explicitly, grant
   `view_abikasse` to both groups, `manage_abikasse` and `view_any_points` to
   `Stufensprecher`.
-- [ ] Decide on `goal`: keep whole euros, or make it `Decimal` to match the
+- [x] Decide on `goal`: keep whole euros, or make it `Decimal` to match the
   ledger.
 
 **Services**

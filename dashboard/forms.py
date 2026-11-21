@@ -327,6 +327,7 @@ class EventForm(forms.ModelForm):
             "description",
             "starting_date",
             "ending_date",
+            "work_kind",
             "participants",
         ]
 
