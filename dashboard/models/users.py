@@ -9,6 +9,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 User = settings.AUTH_USER_MODEL
 
+STUDENT_GROUP_NAME = "Schüler"
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
@@ -23,13 +25,6 @@ class UserProfile(models.Model):
         default=5,
         validators=[MinValueValidator(0), MaxValueValidator(20)],
     )
-
-    def total_earnings(self):
-        # TODO: currently total bullshit, need to accumulate individual earnings per event:
-        # individual earnings being computed like:
-        # fraction of total hours the individual worked on event times event earnings
-        result = self.user.participating_events.aggregate(total=Sum("earnings"))  # pyright: ignore[reportAttributeAccessIssue]
-        return result["total"] or 0
 
     def total_hours(self):
         # Build the queryset of relevant EventParticipation objects

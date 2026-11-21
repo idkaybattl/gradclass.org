@@ -4,24 +4,38 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import JoinRequest, UserProfile
+from .models import (
+    STUDENT_GROUP_NAME,
+    AbiballConfig,
+    Event,
+    JoinRequest,
+    UserProfile,
+)
 from .notifications import Notification, NotificationVerbChoices
-
-DEFAULT_GROUP_NAME = "Schüler"
+from .services import sync_event_earnings_entry
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.get_or_create(user=instance)  # pyright: ignore[reportAttributeAccessIssue]
+        config = AbiballConfig.objects.filter(pk=1).first()
+        defaults = {}
+        if config is not None:
+            defaults["ticket_count"] = config.default_ticket_count
+        UserProfile.objects.get_or_create(user=instance, defaults=defaults)  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def add_default_group(sender, instance, created, **kwargs):
     if not created:
         return
-    group, _ = Group.objects.get_or_create(name=DEFAULT_GROUP_NAME)
+    group, _ = Group.objects.get_or_create(name=STUDENT_GROUP_NAME)
     instance.groups.add(group)
+
+
+@receiver(post_save, sender=Event)
+def sync_event_ledger(sender, instance, **kwargs):
+    sync_event_earnings_entry(instance)
 
 
 @receiver(post_save, sender=JoinRequest)

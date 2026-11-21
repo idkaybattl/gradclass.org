@@ -1,17 +1,25 @@
 import hashlib
 import hmac
 import secrets
+from dataclasses import dataclass
+from datetime import date
+from decimal import ROUND_FLOOR, ROUND_HALF_UP, Decimal
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
 from .models import (
+    STUDENT_GROUP_NAME,
+    AbiballConfig,
+    AbikasseEntry,
     Ballot,
     BallotVote,
     Event,
@@ -22,6 +30,12 @@ from .models import (
     QuestionParticipation,
 )
 from .notifications import notify_participants, notify_time_frame_changed
+
+User = get_user_model()
+
+CENT = Decimal("0.01")
+DEFAULT_POINT_VALUE = Decimal("2.00")
+SECONDS_PER_HOUR = Decimal(3600)
 
 
 def update_participants(event, selected_users):
@@ -316,3 +330,232 @@ def cast_poll_vote(question, option, user, token=None):
             token_hash=_hash_ballot_token(user, new_token),
         )
     return "voted", new_token
+
+
+# Abikasse
+
+
+def abikasse_balance():
+    totals = AbikasseEntry.objects.aggregate(
+        income=Sum("amount", filter=Q(kind=AbikasseEntry.Kind.INCOME)),
+        expenses=Sum("amount", filter=Q(kind=AbikasseEntry.Kind.EXPENSE)),
+    )
+    return (totals["income"] or Decimal("0")) - (totals["expenses"] or Decimal("0"))
+
+
+def sync_event_earnings_entry(event):
+    """Keep the automatic income entry in sync with an event's earnings."""
+    if not event.final or event.earnings is None or event.earnings <= 0:
+        AbikasseEntry.objects.filter(
+            event=event, source=AbikasseEntry.Source.EVENT
+        ).delete()
+        return None
+
+    entry, _ = AbikasseEntry.objects.update_or_create(
+        event=event,
+        defaults={
+            "kind": AbikasseEntry.Kind.INCOME,
+            "amount": event.earnings,
+            "description": event.title,
+            "date": timezone.localdate(event.ending_date),
+            "source": AbikasseEntry.Source.EVENT,
+        },
+    )
+    return entry
+
+
+def _duration_hours(value):
+    if value is None:
+        return Decimal("0")
+    seconds = value.days * 86400 + value.seconds
+    return (
+        Decimal(seconds) + Decimal(value.microseconds) / Decimal(1_000_000)
+    ) / SECONDS_PER_HOUR
+
+
+def work_points(user):
+    total = Decimal("0")
+    participations = EventParticipation.objects.filter(
+        user=user,
+        event__final=True,
+        event__ending_date__lt=timezone.now(),
+    ).select_related("event")
+
+    for participation in participations:
+        hours = _duration_hours(participation.participation_time)
+        if hours <= 0:
+            continue
+        factor = (
+            Decimal("2")
+            if participation.event.work_kind == Event.WorkKind.FREETIME
+            else Decimal("1")
+        )
+        total += hours * factor
+
+    return int(total.to_integral_value(rounding=ROUND_FLOOR))
+
+
+def _event_hours(event):
+    total = Decimal("0")
+    durations = EventParticipation.objects.filter(
+        event=event, participation_time__isnull=False
+    ).values_list("participation_time", flat=True)
+    for duration in durations:
+        total += _duration_hours(duration)
+    return total
+
+
+def earnings_share(user):
+    total = Decimal("0")
+    participations = EventParticipation.objects.filter(
+        user=user,
+        event__final=True,
+        event__ending_date__lt=timezone.now(),
+        event__earnings__gt=0,
+        participation_time__isnull=False,
+    ).select_related("event")
+
+    for participation in participations:
+        user_hours = _duration_hours(participation.participation_time)
+        if user_hours <= 0:
+            continue
+        event_hours = _event_hours(participation.event)
+        if event_hours <= 0:
+            continue
+        total += user_hours / event_hours * participation.event.earnings
+
+    return total
+
+
+def get_abiball_config():
+    return AbiballConfig.objects.filter(pk=1).first()
+
+
+def current_point_value():
+    config = get_abiball_config()
+    return config.point_value if config is not None else DEFAULT_POINT_VALUE
+
+
+def total_points(user, *, point_value=None):
+    if point_value is None:
+        point_value = current_point_value()
+    points = Decimal(work_points(user)) + earnings_share(user) / point_value
+    return int(points.to_integral_value(rounding=ROUND_FLOOR))
+
+
+def active_students():
+    # "Student" is a population definition, not an authorization check.
+    return (
+        User.objects.filter(is_active=True, groups__name=STUDENT_GROUP_NAME)
+        .select_related("profile")
+        .distinct()
+    )
+
+
+def _ticket_count(user, config):
+    profile = getattr(user, "profile", None)
+    if profile is None:
+        return config.default_ticket_count
+    return profile.ticket_count
+
+
+def _money(value):
+    return value.quantize(CENT, rounding=ROUND_HALF_UP)
+
+
+@dataclass(frozen=True)
+class TicketBase:
+    base: Decimal
+    n_est: int
+    total_credit: Decimal
+    available: Decimal
+    required: Decimal
+    point_value: Decimal
+    default_ticket_count: int
+
+
+@dataclass(frozen=True)
+class TicketEstimate:
+    base: Decimal
+    n_est: int
+    available: Decimal
+    required: Decimal
+    points: int
+    credit: Decimal
+    ticket_count: int
+    price: Decimal | None
+    total: Decimal | None
+    capped: bool
+    computed_at: date
+
+
+def ticket_base():
+    config = get_abiball_config()
+    if config is None or config.fixed_costs is None or config.per_head_costs is None:
+        return None
+
+    students = list(active_students())
+    n_est = sum(_ticket_count(student, config) for student in students)
+    if n_est <= 0:
+        return None
+
+    total_credit = sum(
+        (
+            Decimal(total_points(student, point_value=config.point_value))
+            * config.point_value
+            for student in students
+        ),
+        Decimal("0"),
+    )
+    available = abikasse_balance()
+    required = config.fixed_costs + config.per_head_costs * n_est - available
+    base = (required + total_credit) / n_est
+
+    return TicketBase(
+        base=base,
+        n_est=n_est,
+        total_credit=total_credit,
+        available=available,
+        required=required,
+        point_value=config.point_value,
+        default_ticket_count=config.default_ticket_count,
+    )
+
+
+def ticket_estimate(user):
+    base = ticket_base()
+    if base is None:
+        return None
+
+    profile = getattr(user, "profile", None)
+    ticket_count = (
+        profile.ticket_count if profile is not None else base.default_ticket_count
+    )
+    points = total_points(user, point_value=base.point_value)
+    # Credit uses the displayed (floored) points, so it can be up to one
+    # point value below the exact earnings share.
+    credit = Decimal(points) * base.point_value
+
+    if ticket_count <= 0:
+        price = None
+        total = None
+        capped = False
+    else:
+        raw_price = base.base - credit / ticket_count
+        capped = raw_price < 0
+        price = _money(max(raw_price, Decimal("0")))
+        total = _money(max(ticket_count * base.base - credit, Decimal("0")))
+
+    return TicketEstimate(
+        base=_money(base.base),
+        n_est=base.n_est,
+        available=base.available,
+        required=base.required,
+        points=points,
+        credit=credit,
+        ticket_count=ticket_count,
+        price=price,
+        total=total,
+        capped=capped,
+        computed_at=timezone.localdate(),
+    )

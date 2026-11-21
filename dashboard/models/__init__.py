@@ -11,7 +11,7 @@ from .polls import (
     Question,
     QuestionParticipation,
 )
-from .users import UserProfile
+from .users import STUDENT_GROUP_NAME, UserProfile
 
 __all__ = [
     "AbiballConfig",
@@ -27,5 +27,6 @@ __all__ = [
     "Poll",
     "Question",
     "QuestionParticipation",
+    "STUDENT_GROUP_NAME",
     "UserProfile",
 ]

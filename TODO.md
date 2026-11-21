@@ -1374,8 +1374,7 @@ price is an estimate only.
 - The profile shows the total and the two components (`Arbeitspunkte`,
   `Ertragspunkte`); no per-event list. No leaderboard and no points in the users
   list.
-- Points are computed on read, not stored. Aggregates used by the ticket estimate
-  are cached; see below.
+- Points and the ticket estimate are computed on read, not stored or cached.
 
 **Points visibility**
 
@@ -1481,20 +1480,20 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 
 **Services**
 
-- [ ] `abikasse_balance()` = Σ income − Σ expenses; replace
+- [x] `abikasse_balance()` = Σ income − Σ expenses; replace
   `Abikasse.total_earnings()` and stop using `UserProfile.total_earnings()`.
-- [ ] `sync_event_earnings_entry(event)` idempotent, called from a `post_save`
+- [x] `sync_event_earnings_entry(event)` idempotent, called from a `post_save`
   signal or the event services when an event becomes final or `earnings`
   changes; skip `None`/0. `final` is treated as irreversible; if it is changed in
   admin, reconcile manually.
-- [ ] `work_points(user)`, `earnings_share(user)`, `total_points(user)` using
+- [x] `work_points(user)`, `earnings_share(user)`, `total_points(user)` using
   `Decimal`; only final, ended events; skip zero-hour events. Earnings share
   uses unweighted hours (original formula).
-- [ ] `ticket_base()` and `ticket_estimate(user)`; cache `N_est`, Σ credit and
-  `base` with a short TTL, invalidated on ledger/points/count changes.
-- [ ] Rounding: floor points for display; credit = displayed points ×
+- [x] `ticket_base()` and `ticket_estimate(user)`; compute `N_est`, Σ credit and
+  `base` on read (no cache).
+- [x] Rounding: floor points for display; credit = displayed points ×
   `point_value`; document the up-to-`point_value` difference per user.
-- [ ] Never use floats for money.
+- [x] Never use floats for money.
 
 **Views and URLs**
 

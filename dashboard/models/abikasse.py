@@ -3,7 +3,6 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import Sum
 
 from .events import Event
 
@@ -12,13 +11,6 @@ User = settings.AUTH_USER_MODEL
 
 class Abikasse(models.Model):
     goal = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def total_earnings(self):
-        return (
-            Event.objects.filter(final=True)  # pyright: ignore[reportAttributeAccessIssue]
-            .aggregate(Sum("earnings"))
-            .get("earnings__sum", 0)
-        ) or 0
 
     def save(self, *args, **kwargs):
         # so that there is only one abikasse instance in the database

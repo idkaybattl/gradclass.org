@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -6,6 +8,7 @@ from django.views.decorators.http import require_GET
 
 from ..intro import introduction_required
 from ..models import Abikasse
+from ..services import abikasse_balance
 
 User = get_user_model()
 
@@ -17,7 +20,7 @@ def main_page(request):
     abikasse, _ = Abikasse.objects.get_or_create(
         pk=1,
         defaults={
-            "goal": 30000,
+            "goal": Decimal("30000.00"),
         },
     )
 
@@ -25,7 +28,7 @@ def main_page(request):
         request,
         "index.html",
         {
-            "abikasse_current": abikasse.total_earnings(),
+            "abikasse_current": abikasse_balance(),
             "abikasse_goal": abikasse.goal,
         },
     )
