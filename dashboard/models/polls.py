@@ -27,6 +27,7 @@ class Poll(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     mode = models.CharField(max_length=20, choices=Mode, default=Mode.FIXED)
+    max_suggestions_per_user = models.PositiveIntegerField(default=3)
     # Suggestions are visible to everyone from the start unless this is off.
     suggestions_public = models.BooleanField(default=True)  # pyright: ignore[reportArgumentType]
     # Results are visible to everyone, live and after close, unless this is off;

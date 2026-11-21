@@ -1063,15 +1063,18 @@ suggested option list. Single-choice only for now, but modelled around
 
 **Suggestions**
 
-- All logged-in users can suggest; max 3 per user, editable and withdrawable
-  until the suggestion deadline.
+- All logged-in users can suggest; the limit is per poll
+  (`max_suggestions_per_user`, default 3), editable and withdrawable until the
+  suggestion deadline.
 - Suggestion text is visible to everyone from the moment it is submitted. The
   author is stored (`Option.created_by`) but visible only to the poll’s managers
   (creator or `manage_polls` holders); voters never see who suggested an option.
 - Suggestions are therefore pseudonymous to voters, not anonymous in the
   database.
 - Managers can approve, reject, edit wording and merge duplicates at any time
-  before voting opens; options are frozen afterwards.
+  before voting opens; options are frozen afterwards. Merging marks the source
+  as `merged` with `merged_into`, so managers still see the merged wording and
+  its author under the target.
 - New suggestions are approved immediately. Moderation is optional: managers
   reject, edit or merge as needed.
 - Rejected or removed suggestions disappear entirely; no tombstones.
@@ -1171,8 +1174,8 @@ Create/edit (full page):
 
 - Title (the question in v1) and description.
 - Mode: fixed options or suggestions.
-- Suggestion deadline and the suggestions-public toggle (only in suggestion
-  mode); results-public toggle.
+- Suggestion deadline, suggestions-public toggle and “Vorschläge pro Person”
+  (only in suggestion mode); results-public toggle.
 - Option editor for fixed options: add/remove rows, reorder by dragging or with
   the arrow keys; hidden in suggestion mode.
 - The voting deadline is optional here. If it is missing when voting starts, a
@@ -1194,10 +1197,10 @@ Tiebreaker (later):
 **Models**
 
 - [x] `Poll`: title, description, creator FK, `created_at`, `mode`,
-  `suggestions_public`, `results_public`, `published_at`, `suggestion_deadline`,
-  `suggestions_closed_at`, `voting_started_at`, `voting_deadline`,
-  `voting_closed_at`. Derive the phase from these fields; do not store a status
-  column that can go stale.
+  `max_suggestions_per_user`, `suggestions_public`, `results_public`,
+  `published_at`, `suggestion_deadline`, `suggestions_closed_at`,
+  `voting_started_at`, `voting_deadline`, `voting_closed_at`. Derive the phase
+  from these fields; do not store a status column that can go stale.
 - [x] `Question`: poll FK, prompt, order, `kind` (only `single_choice` now).
 - [x] `Option`: question FK, label, order, `created_by` (nullable for fixed
   options; never rendered to non-managers), state (`suggested`, `approved`,
@@ -1270,6 +1273,8 @@ Tiebreaker (later):
   students get the denied feedback.
 - [x] Students can suggest and vote.
 - [x] New suggestions are approved by default.
+- [x] The suggestion limit is read from the poll.
+- [x] Merging keeps the merged wording and author visible to managers.
 - [x] Suggestion authors are visible to the poll creator and `manage_polls`
   holders and absent from the HTML for everyone else.
 - [x] One vote per user per question; a second first-vote POST adds no vote.

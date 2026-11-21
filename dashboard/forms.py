@@ -535,7 +535,7 @@ class PollForm(forms.ModelForm):
         label="Optionen",
         required=False,
         widget=OptionListWidget(),
-        help_text="Mindestens zwei, nur bei festen Optionen.",
+        help_text="Mindestens zwei.",
     )
     suggestions_public = forms.BooleanField(
         label="Vorschläge öffentlich",
@@ -544,6 +544,13 @@ class PollForm(forms.ModelForm):
     results_public = forms.BooleanField(
         label="Ergebnisse öffentlich",
         required=False,
+    )
+    max_suggestions_per_user = forms.IntegerField(
+        label="Vorschläge pro Person",
+        required=False,
+        min_value=1,
+        max_value=50,
+        initial=3,
     )
 
     class Meta:
@@ -557,6 +564,7 @@ class PollForm(forms.ModelForm):
             "suggestion_deadline",
             "voting_deadline",
             "options",
+            "max_suggestions_per_user",
         ]
 
     def clean(self):
@@ -615,6 +623,10 @@ class PollForm(forms.ModelForm):
             labels = []
 
         cleaned_data["option_labels"] = labels
+
+        if cleaned_data.get("max_suggestions_per_user") is None:
+            cleaned_data["max_suggestions_per_user"] = 3
+
         return cleaned_data
 
 

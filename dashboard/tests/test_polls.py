@@ -401,9 +401,34 @@ class PollSuggestionTests(PollTestCase):
             reverse("poll-suggest", args=[poll.pk]),
             {"action": "add", "label": "Idee 4"},
         )
-        self.assertContains(response, "höchstens drei Vorschläge", status_code=200)
+        self.assertContains(response, "höchstens 3 Vorschläge", status_code=200)
         self.assertEqual(
             poll.questions.first().options.filter(created_by=self.student).count(), 3
+        )
+
+    def test_suggestion_limit_comes_from_the_poll(self):
+        poll = self.make_poll(
+            phase=Poll.Phase.SUGGESTIONS,
+            mode=Poll.Mode.SUGGESTIONS,
+            approved=(),
+        )
+        poll.max_suggestions_per_user = 1
+        poll.save(update_fields=["max_suggestions_per_user"])
+        self.client.force_login(self.student)
+
+        self.client.post(
+            reverse("poll-suggest", args=[poll.pk]),
+            {"action": "add", "label": "Eins"},
+        )
+        response = self.client.post(
+            reverse("poll-suggest", args=[poll.pk]),
+            {"action": "add", "label": "Zwei"},
+        )
+
+        self.assertContains(response, "höchstens 1 Vorschläge", status_code=200)
+        self.assertEqual(
+            poll.questions.first().options.filter(created_by=self.student).count(),
+            1,
         )
 
     def test_new_suggestions_are_approved_by_default(self):
@@ -493,6 +518,10 @@ class PollSuggestionTests(PollTestCase):
         second.refresh_from_db()
         self.assertEqual(second.state, Option.State.MERGED)
         self.assertEqual(second.merged_into_id, first.pk)
+
+        detail = self.client.get(reverse("poll-details", args=[poll.pk]))
+        self.assertContains(detail, "Zusammengeführt: Zwei")
+        self.assertContains(detail, "von student")
 
         self.client.post(
             reverse("poll-moderate", args=[poll.pk]),

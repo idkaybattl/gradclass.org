@@ -264,10 +264,13 @@ textarea::placeholder {
 /* feedback panel: success / error / info */
 .feedback {
     display: grid;
-    gap: 10px;
-    padding: 12px;
+    gap: 6px;
+    padding: 10px;
 
     border-style: solid;
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--on-primary);
 }
 
 .feedback--error {
@@ -277,7 +280,7 @@ textarea::placeholder {
 }
 
 .feedback__title {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
 }
 
 .feedback__message {

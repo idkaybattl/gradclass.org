@@ -111,11 +111,14 @@ def poll_details_context(
     if phase in {Poll.Phase.SUGGESTIONS, Poll.Phase.MODERATION}:
         options = []
         if is_manager or poll.suggestions_public:
-            options = list(
-                question.options.filter(
-                    state__in=[Option.State.SUGGESTED, Option.State.APPROVED]
-                )
+            options_queryset = question.options.filter(
+                state__in=[Option.State.SUGGESTED, Option.State.APPROVED]
             )
+            if is_manager:
+                options_queryset = options_queryset.select_related(
+                    "created_by"
+                ).prefetch_related("merged_options__created_by")
+            options = list(options_queryset)
             random.shuffle(options)
     else:
         options = list(question.options.filter(state=Option.State.APPROVED))

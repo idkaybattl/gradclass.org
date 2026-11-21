@@ -232,16 +232,14 @@ def save_poll(form, user):
     return poll
 
 
-MAX_SUGGESTIONS_PER_USER = 3
-
-
 def add_poll_suggestion(question, user, label):
     existing = question.options.filter(
         created_by=user,
         state__in=[Option.State.SUGGESTED, Option.State.APPROVED],
     ).count()
-    if existing >= MAX_SUGGESTIONS_PER_USER:
-        raise ValidationError("Du kannst höchstens drei Vorschläge machen.")
+    limit = question.poll.max_suggestions_per_user
+    if existing >= limit:
+        raise ValidationError(f"Du kannst höchstens {limit} Vorschläge machen.")
 
     return Option.objects.create(
         question=question,

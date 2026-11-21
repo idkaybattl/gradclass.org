@@ -57,6 +57,12 @@
         </label>
     </p>
 
+    <p class="field" data-poll-suggestion-field {% if not suggestion_mode %}hidden{% endif %}>
+        {{ form.max_suggestions_per_user.errors }}
+        {{ form.max_suggestions_per_user.label_tag }}
+        {{ form.max_suggestions_per_user }}
+    </p>
+
     <p class="field">
         {{ form.results_public.errors }}
         <label class="checkbox">

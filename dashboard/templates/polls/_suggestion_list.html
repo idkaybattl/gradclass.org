@@ -10,6 +10,17 @@
         </p>
         {% endif %}
 
+        {% if option.merged_options.all %}
+        <ul class="poll-suggestions__merged">
+            {% for merged in option.merged_options.all %}
+            <li>
+                Zusammengeführt: {{ merged.label }}{% if merged.created_by %}
+                (von {{ merged.created_by.get_full_name|default:merged.created_by.username }}){% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
         {% if can_moderate %}
         <div class="poll-suggestions__actions">
             {% if option.state == "suggested" %}
