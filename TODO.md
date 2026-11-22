@@ -1691,23 +1691,23 @@ Dialogue card:
 
 **Models and permissions**
 
-- [ ] `Quote`: `uploader` FK, `spoken_on` DateField (default
+- [x] `Quote`: `uploader` FK, `spoken_on` DateField (default
   `timezone.localdate`), `extra_info` CharField (blank), `created_at`.
   `Meta.ordering = ["-spoken_on", "-created_at"]`; `Meta.permissions =
   [("manage_quotes", "Zitate verwalten")]`; `__str__` returns a short
   first-line preview.
-- [ ] `QuoteLine`: `quote` FK related_name `lines`, `speaker` CharField
+- [x] `QuoteLine`: `quote` FK related_name `lines`, `speaker` CharField
   (max_length=200), `text` TextField, `position` PositiveSmallIntegerField.
   `Meta.ordering = ["position", "id"]`.
-- [ ] `QuoteReport`: `quote` FK related_name `reports` (CASCADE), `reporter` FK
+- [x] `QuoteReport`: `quote` FK related_name `reports` (CASCADE), `reporter` FK
   related_name `quote_reports`, `reason` TextField (blank), `created_at`.
   `unique_together = ("quote", "reporter")`.
-- [ ] Add `manage_quotes` constant and helpers in `permissions.py`:
+- [x] Add `manage_quotes` constant and helpers in `permissions.py`:
   `can_manage_quotes(user)`, `can_delete_quote(user, quote)` (uploader or
   `manage_quotes`), `can_report_quote(user, quote)` (not the uploader).
-- [ ] Data migration grants `manage_quotes` to `Stufensprecher`; update
+- [x] Data migration grants `manage_quotes` to `Stufensprecher`; update
   `docs/permissions.md`.
-- [ ] `makemigrations` + `migrate`.
+- [x] `makemigrations` + `migrate`.
 
 **Forms and services**
 

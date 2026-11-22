@@ -11,6 +11,7 @@ from .polls import (
     Question,
     QuestionParticipation,
 )
+from .quotes import Quote, QuoteLine, QuoteReport
 from .users import STUDENT_GROUP_NAME, UserProfile
 
 __all__ = [
@@ -27,6 +28,9 @@ __all__ = [
     "Poll",
     "Question",
     "QuestionParticipation",
+    "Quote",
+    "QuoteLine",
+    "QuoteReport",
     "STUDENT_GROUP_NAME",
     "UserProfile",
 ]

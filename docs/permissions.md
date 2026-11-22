@@ -45,6 +45,7 @@ new group with the old name).
 | `view_abikasse` | ✓ | ✓ | ✓ |
 | `manage_abikasse` | – | ✓ | ✓ |
 | `view_any_points` | – | ✓ | ✓ |
+| `manage_quotes` | – | ✓ | ✓ |
 
 `approve_event` is defined for the future approval flow; it is not consumed yet.
 
@@ -62,6 +63,8 @@ These are independent of groups and live in `permissions.py`:
   own poll. Any logged-in user may view polls, suggest options and vote.
 - Only `manage_earnings` holders (reps/superuser) may mark earnings as received
   and finalise the event.
+- The quote uploader or a `manage_quotes` holder may delete a quote. Any
+  logged-in user except the uploader may report a quote.
 - Final events are read-only for everyone.
 
 ## Admin access

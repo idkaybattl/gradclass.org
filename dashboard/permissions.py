@@ -20,6 +20,7 @@ MANAGE_POLLS = "dashboard.manage_polls"
 VIEW_ABIKASSE = "dashboard.view_abikasse"
 MANAGE_ABIKASSE = "dashboard.manage_abikasse"
 VIEW_ANY_POINTS = "dashboard.view_any_points"
+MANAGE_QUOTES = "dashboard.manage_quotes"
 
 
 def _can(user, permission):
@@ -113,3 +114,15 @@ def can_manage_abikasse(user):
 
 def can_view_any_points(user):
     return _can(user, VIEW_ANY_POINTS)
+
+
+def can_manage_quotes(user):
+    return _can(user, MANAGE_QUOTES)
+
+
+def can_delete_quote(user, quote):
+    return quote.uploader_id == user.pk or can_manage_quotes(user)
+
+
+def can_report_quote(user, quote):
+    return quote.uploader_id != user.pk
