@@ -134,9 +134,12 @@
                         <span class="logo" style="--icon: url('{% static 'dashboard/icons/instagram.svg' %}')"></span>
                     </a>
                     {% endcomment %}
-                    <a class="footer-item" aria-label="TikTok">
-                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/tiktok.svg' %}')"></span>
+                    {% if tiktok_url %}
+                    <a class="footer-item" aria-label="TikTok" href="{{ tiktok_url }}" target="_blank"
+                        rel="noopener noreferrer">
+                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/tiktok.svg' %}');"></span>
                     </a>
+                    {% endif %}
                 </div>
             </footer>
             {% endif %}

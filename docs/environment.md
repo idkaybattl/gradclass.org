@@ -42,6 +42,12 @@ built as `http://`.
 |---|:--:|---|---|
 | `CONTACT_USER_ID` | optional | empty | ID of the user whose profile supplies the contact page details. Empty uses the first active superuser. |
 
+## Social links
+
+| Variable | Required | Default | What it does |
+|---|:--:|---|---|
+| `TIKTOK_URL` | optional | empty | Full TikTok profile URL. Empty hides the footer icon. |
+
 ## Email
 
 All mail keys are optional. With `EMAIL_HOST` empty, dev uses Django's console

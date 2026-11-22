@@ -77,6 +77,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "dashboard.context_processors.admin_access",
+                "dashboard.context_processors.social_links",
                 "dashboard.context_processors.unread_notifications",
             ],
         },
@@ -158,6 +159,9 @@ LOGIN_URL = "/login"
 # Contact page: user whose profile supplies the shown contact details.
 # Empty means "first active superuser".
 CONTACT_USER_ID = os.environ.get("CONTACT_USER_ID")
+
+# Footer social links. Empty hides the icon.
+TIKTOK_URL = os.environ.get("TIKTOK_URL", "")
 
 
 # Email

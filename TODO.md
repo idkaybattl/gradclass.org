@@ -2254,7 +2254,7 @@ Event detail:
 
 # 19. Tiktok and Insta Links 
 
-- just linking to them ( no embedding for now :( )
+- [ ] just linking to them ( no embedding for now :( )
 
 - Datenschutz: no change while these stay plain links; embedding would add a
   third party.
@@ -2521,6 +2521,44 @@ tuning and the visual checks.
   audiences are added.
 
 # 23. Android Back Button Handling
+
+Goal: system back (Android button and swipe gesture, desktop back, iOS swipe) does
+what the overlay’s “Zurück” does — step one panel back inside the sheet, and close
+the sheet when it is already on the first panel. They all fire the same `popstate`,
+so there is one implementation.
+
+## Decided
+
+- **One history entry per overlay panel (option B).** Opening the sheet and every
+  in-sheet `hx-get` panel navigation push an entry. Back restores the previous
+  panel; back from the first panel closes the sheet.
+- **The URL does not change.** `history.pushState(state, "", location.href)` keeps
+  the list URL; the panel URL lives only in the state object. No `hx-push-url`, no
+  address-bar or deep-link change, and refresh still returns to the list page.
+- **System back and “Zurück” share one path.** The panel back control triggers
+  `history.back()` instead of its own `hx-get`; `back_url` still decides whether the
+  control renders.
+- **UI close removes the pushed entries.** X, backdrop, drag and Escape dismiss the
+  sheet and drop all entries with `history.go(-depth)`, guarded so the resulting
+  `popstate` neither refetches nor closes twice.
+
+## Implementation checklist
+
+- [ ] In `base.js`, add a small overlay-history helper: base `replaceState` on load,
+      a depth counter, `pushOverlayEntry(url)` and `closeViaHistory()`.
+- [ ] Push when the sheet opens and on `htmx:afterSwap` into `.overlay-content`;
+      take the panel URL from the triggering `hx-get` (`htmx:beforeRequest`), since
+      the response is a fragment. Skip pushes for the same URL.
+- [ ] `popstate`: if the state carries a panel URL, `hx-get` it into
+      `#overlay-content` (re-opening the sheet if needed) without pushing again;
+      otherwise close the sheet and leave history alone.
+- [ ] Reset the depth counter on `pageshow` so bfcache restores do not leak entries.
+- [ ] Replace the panel back control’s `hx-get` with `history.back()`; keep
+      `back_url` as the render condition.
+- [ ] Update `AGENTS.md` §Overlays: replace “no history entries / browser back is
+      not used” with this state-only decision (URL unchanged).
+- [ ] Validate on Android, iOS and desktop back, plus X/backdrop/drag/Escape, using
+      DevTools MCP; there is no JS test runner to cover this automatically.
 
 # 24. Introduction update
 

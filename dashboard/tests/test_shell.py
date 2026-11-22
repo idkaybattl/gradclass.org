@@ -217,3 +217,24 @@ class UrlSmokeTests(TestCase):
 
                 self.assertEqual(response.status_code, 200)
                 self.assertNotContains(response, "<html")
+
+
+class FooterSocialLinkTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="student", password="password")
+        self.user.profile.has_had_introduction = True
+        self.user.profile.save(update_fields=["has_had_introduction"])
+        self.client.force_login(self.user)
+
+    def test_tiktok_link_renders_from_settings(self):
+        with self.settings(TIKTOK_URL="https://www.tiktok.com/@example"):
+            response = self.client.get(reverse("main-page"))
+
+        self.assertContains(response, 'aria-label="TikTok"')
+        self.assertContains(response, 'href="https://www.tiktok.com/@example"')
+
+    def test_tiktok_link_is_hidden_when_unset(self):
+        with self.settings(TIKTOK_URL=""):
+            response = self.client.get(reverse("main-page"))
+
+        self.assertNotContains(response, 'aria-label="TikTok"')

@@ -1,0 +1,15 @@
+<ul class="index-list">
+    {% for event in events %}
+    <li>
+        <a class="index-item" href="{% url 'event-details' event.id %}" data-overlay-open="overlay"
+            hx-get="{% url 'event-details' event.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            <span class="index-item__title">{{ event.title }}</span>
+            <time class="index-item__meta" datetime="{{ event.starting_date|date:'c' }}">
+                {{ event.starting_date|date:"d.m.Y, H:i" }} Uhr
+            </time>
+        </a>
+    </li>
+    {% empty %}
+    <li class="index-empty">Keine anstehenden Aktionen.</li>
+    {% endfor %}
+</ul>

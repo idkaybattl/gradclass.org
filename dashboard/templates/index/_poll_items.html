@@ -1,0 +1,18 @@
+<ul class="index-list">
+    {% for poll in polls %}
+    <li>
+        <a class="index-item" href="{% url 'poll-details' poll.id %}" data-overlay-open="overlay"
+            hx-get="{% url 'poll-details' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            <span class="index-item__title">{{ poll.title }}</span>
+            <span class="index-item__meta">
+                {{ poll.phase.label }}{% if poll.phase == "voting" and poll.voting_deadline %} · bis
+                {{ poll.voting_deadline|date:"d.m.Y, H:i" }} Uhr{% elif poll.phase == "suggestions" and
+                poll.suggestion_deadline %} · bis
+                {{ poll.suggestion_deadline|date:"d.m.Y, H:i" }} Uhr{% endif %}
+            </span>
+        </a>
+    </li>
+    {% empty %}
+    <li class="index-empty">Keine offenen Abstimmungen.</li>
+    {% endfor %}
+</ul>

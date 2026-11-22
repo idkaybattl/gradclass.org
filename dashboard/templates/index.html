@@ -17,15 +17,39 @@
     </section>
 
     <div class="main-panels">
-        <a class="card todos" href="{% url 'events-upcoming' %}">
-            <h2>Anstehendes</h2>
-        </a>
+        <section class="card index-card index-card--mobile">
+            <div class="index-card__body">
+                <h2 class="index-card__heading">
+                    <a class="index-card__heading-link" href="{% url 'events-upcoming' %}">Anstehendes</a>
+                </h2>
+                {% include "index/_event_items.html" with events=upcoming_events %}
+
+                <h2 class="index-card__heading">
+                    <a class="index-card__heading-link" href="{% url 'polls' %}">Abstimmungen</a>
+                </h2>
+                {% include "index/_poll_items.html" with polls=open_polls %}
+            </div>
+        </section>
+
+        <section class="card index-card todos">
+            <h2 class="index-card__heading">
+                <a class="index-card__heading-link" href="{% url 'events-upcoming' %}">Anstehendes</a>
+            </h2>
+            <div class="index-card__body">
+                {% include "index/_event_items.html" with events=upcoming_events %}
+            </div>
+        </section>
         <section class="card news">
             <h2>Neuigkeiten</h2>
         </section>
-        <a class="card polls" href="{% url 'polls' %}">
-            <h2>Abstimmungen</h2>
-        </a>
+        <section class="card index-card polls">
+            <h2 class="index-card__heading">
+                <a class="index-card__heading-link" href="{% url 'polls' %}">Abstimmungen</a>
+            </h2>
+            <div class="index-card__body">
+                {% include "index/_poll_items.html" with polls=open_polls %}
+            </div>
+        </section>
         <a class="card fund" href="{% url 'abikasse' %}">
             <h2>Abikasse</h2>
             <p class="fund__amount">{{ abikasse_current|floatformat:2 }} €</p>

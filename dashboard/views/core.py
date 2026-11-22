@@ -3,14 +3,32 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from ..feedback import get_feedback
 from ..intro import introduction_required
+from ..models import Event, Poll
 from ..services import abikasse_balance, get_abikasse
 from .abikasse import ticket_context
 
 User = get_user_model()
+
+
+def _upcoming_events():
+    return Event.objects.filter(ending_date__gt=timezone.now()).order_by(
+        "starting_date"
+    )
+
+
+def _open_polls():
+    return [
+        poll
+        for poll in Poll.objects.filter(published_at__isnull=False).order_by(
+            "-created_at"
+        )
+        if poll.phase not in {Poll.Phase.DRAFT, Poll.Phase.CLOSED}
+    ]
 
 
 @login_required
@@ -25,6 +43,8 @@ def main_page(request):
         {
             "abikasse_current": abikasse_balance(),
             "abikasse_goal": abikasse.goal,
+            "upcoming_events": _upcoming_events(),
+            "open_polls": _open_polls(),
             "feedback": get_feedback(request.GET.get("status")),
             **ticket_context(request, default_next=reverse("main-page")),
         },

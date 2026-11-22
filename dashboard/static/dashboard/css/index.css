@@ -1,6 +1,7 @@
 /*
  * Mobile: two columns, three rows.
- * The gallery and polls cards are desktop-only.
+ * The gallery, events and polls cards are desktop-only; on mobile one card
+ * lists both upcoming events and open polls.
  */
 .main-grid {
     height: 100%;
@@ -18,7 +19,8 @@
     display: contents;
 }
 
-.card>h2 {
+.card>h2,
+.index-card__heading {
     padding-top: 20px;
 
     font-size: var(--font-size-base);
@@ -26,17 +28,93 @@
     color: var(--primary);
 }
 
-.todos {
-    grid-column: 1 / 3;
-    grid-row: 1 / 2;
+/* Home list cards: upcoming events and open polls. */
+.index-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.index-card__heading-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.index-card__heading-link:hover {
+    text-decoration: underline;
+}
+
+.index-card__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    padding: 0 10px 10px;
+}
+
+.index-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.index-list>li {
+    border-width: 0 0 var(--border-width);
+    border-bottom-style: dashed;
+}
+
+.index-list>li:last-child {
+    border-bottom-style: none;
+}
+
+.index-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    padding: 8px 0;
 
     color: inherit;
     text-decoration: none;
 }
 
-.news {
+.index-item:hover .index-item__title {
+    text-decoration: underline;
+}
+
+.index-item:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+.index-item__title {
+    font-size: var(--font-size-base);
+    color: var(--primary);
+    overflow-wrap: anywhere;
+}
+
+.index-item__meta {
+    font-size: var(--font-size-sm);
+    opacity: 0.7;
+}
+
+.index-empty {
+    padding: 8px 0;
+
+    font-size: var(--font-size-sm);
+    opacity: 0.7;
+}
+
+/* Mobile merges the event and poll lists into one card. It takes the space of
+ * the empty Neuigkeiten card, so both lists are visible without scrolling. */
+.index-card--mobile {
     grid-column: 1 / 3;
-    grid-row: 2 / 3;
+    grid-row: 1 / 3;
+}
+
+.news {
+    display: none;
 }
 
 .fund {
@@ -116,13 +194,9 @@
 }
 
 .gallery,
+.todos,
 .polls {
     display: none;
-}
-
-.polls {
-    color: inherit;
-    text-decoration: none;
 }
 
 /*
@@ -170,17 +244,19 @@
     }
 
     .todos {
+        display: flex;
         grid-column: 1;
         grid-row: 1;
     }
 
     .news {
+        display: block;
         grid-column: 1;
         grid-row: 2 / 4;
     }
 
     .polls {
-        display: block;
+        display: flex;
         grid-column: 2;
         grid-row: 1;
     }
@@ -193,6 +269,10 @@
     .profile {
         grid-column: 2;
         grid-row: 3;
+    }
+
+    .index-card--mobile {
+        display: none;
     }
 
     /* Match the Abikasse card's amount sizing on desktop. */
