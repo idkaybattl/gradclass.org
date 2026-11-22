@@ -2283,9 +2283,11 @@ placeholder art.
 
 **When it shows**
 
-- Render the splash markup only in `index.html`. Deep links and other pages
-  never interrupt. `main_page` is login-protected, so anonymous visitors see
-  the login page first and the splash on their first authenticated home visit.
+- Render the splash markup in `base.html`, so it shows on the first page load of
+  a tab whatever the URL (opening `/events/` directly shows it too). Gate it on
+  `user.is_authenticated`, so the login page never shows it and the flag is not
+  consumed before login. `introduction.html` overrides `{% block splash %}` to
+  keep the forced first-run flow clean.
 - Show it at most once per browser tab session: a `sessionStorage` key (e.g.
   `gc-splash-seen`). Absent → show and set it; present → skip. A new tab or a
   reopened browser counts as opening the site anew; reloads and navigation in
@@ -2294,8 +2296,8 @@ placeholder art.
   timestamp (e.g. show again after 30–60 min). Do not do this by default.
 - Do not use a Django session or cookie for the flag: this is purely
   presentational, needs no server state and must not vary the cache.
-- No-JS fallback: the splash shows on each index load and is hidden by CSS after
-  the same duration. That is acceptable; JS only suppresses repeats.
+- No-JS fallback: the splash shows on every page load and is hidden by CSS
+  after the same duration. That is acceptable; JS only suppresses repeats.
 - Decide before first paint whether to skip, otherwise the splash flashes on
   repeat visits. A tiny inline check that sets a class on `<html>` is enough; do
   not wait for `base.js`.
@@ -2358,9 +2360,11 @@ placeholder art.
 - Navbar: the fox walks along the bottom border with its feet on the line,
   behind the nav items. It walks until fully past the viewport edge, flips while
   offscreen and immediately walks back in from the same side, mirrored; repeat.
-  There is no fade and no pause: the disappearance is purely the exit, and the
-  flip happens in one frame while nothing is visible. Defer the “look to
-  camera” turn while the fox is offscreen; only trigger it during a visible pass.
+  A mask fades it out shortly before the nav items and keeps it invisible behind
+  them, so it never walks through the icons, and it fades back in when it
+  emerges on the return pass. The flip happens in one frame while nothing is
+  visible. Defer the “look to camera” turn while the fox is offscreen; only
+  trigger it during a visible pass.
 - The walk loop is the default state. The turn is an embellishment: play it once
   every ~8–20 s (random), then return to the walk. Do not randomly choose
   between “walk forever” and “turn forever”.
@@ -2384,9 +2388,9 @@ placeholder art.
   the only stateful part. If it needs JS, expose `window.initFox(root)` in
   `dashboard/static/dashboard/js/fox.js` and call it from `base.js` on
   `DOMContentLoaded` and `htmx:afterSwap`, like the other initialisers.
-- Title-card styles go in `index.css`; the shared fox component goes in
-  `components.css`. The sprite sheet is only requested where the element
-  exists.
+- Title-card styles live in `components.css` next to the fox, because the card
+  is no longer index-only; `index.css` stays the home grid. The sprite sheet is
+  only requested where the element exists.
 - Splash logic (dismissal, DOM removal) goes in `js/splash.js` as
   `window.initSplash(root)` and is called from `base.js`; the before-paint skip
   check stays a tiny inline script.
@@ -2435,7 +2439,7 @@ placeholder art.
 
 - [x] Add the `sessionStorage` guard (wrapped in try/catch) and the before-paint
       skip check; verify the splash does not flash on repeat visits.
-- [ ] Verify: first index load in a tab shows it, reloads and navigation do not,
+- [ ] Verify: first page load in a tab shows it, reloads and navigation do not,
       a new tab does. (Needs a real browser session; the environment here only
       has a single-shot headless screenshot.)
 - [ ] Key or clear the flag on logout/user switch; see Open.
@@ -2445,13 +2449,13 @@ placeholder art.
 
 **Navbar**
 
-- [ ] Make `nav` the positioning context and add `.fox--nav` on the bottom
+- [x] Make `nav` the positioning context and add `.fox--nav` on the bottom
       border, feet on the line, behind the nav items, `pointer-events: none`,
       without changing the nav height.
-- [ ] Implement the full-exit / mirrored-reentry travel loop; flip only while
+- [x] Implement the full-exit / mirrored-reentry travel loop; flip only while
       fully offscreen, with no fade or pause.
-- [ ] Defer the turn timer while the fox is offscreen.
-- [ ] Check it does not collide with the logo, notifications or menu button on
+- [x] Defer the turn timer while the fox is offscreen.
+- [x] Check it does not collide with the logo, notifications or menu button on
       narrow screens and stays painted behind them.
 
 **Verification**

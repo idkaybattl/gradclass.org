@@ -4,43 +4,9 @@
 
 {% block base_head %}
 <link rel="stylesheet" href="{% static 'dashboard/css/index.css' %}" />
-<script>
-    // Decide before first paint whether the title card has already been shown in
-    // this tab, so it cannot flash on repeat views.
-    try {
-        if (sessionStorage.getItem("gc-splash-seen")) {
-            document.documentElement.classList.add("splash-seen");
-        } else {
-            sessionStorage.setItem("gc-splash-seen", "1");
-        }
-    } catch {
-        // sessionStorage throws when cookies are blocked; showing the card every
-        // time is the acceptable fallback, like the no-JS path.
-    }
-</script>
 {% endblock %}
 
 {% block content %}
-{% comment %} One-off title card. Decorative: index.html only, skipped under
-prefers-reduced-motion, hidden by its exit animation and removed from the DOM by
-splash.js. {% endcomment %}
-<div class="splash" aria-hidden="true">
-    <div class="splash__card">
-        <div class="splash__bar">
-            <div class="fox fox--title" aria-hidden="true"
-                style="--fox-sheet: url('{% static 'dashboard/sprites/fox/walk.webp' %}')">
-                <div class="fox__travel">
-                    <div class="fox__flip">
-                        <div class="fox__sprite"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <p class="splash__title"><span class="splash__hi">Hi</span><span class="splash__aside">oder so</span></p>
-        <div class="splash__bar"></div>
-    </div>
-</div>
-
 {% if feedback %}
 {% include "components/_feedback.html" %}
 {% endif %}

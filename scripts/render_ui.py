@@ -95,6 +95,11 @@ def rewrite_static(html: str) -> str:
 
 ICON_URL_RE = re.compile(r"--icon:\s*url\('file://([^']+)'\)")
 
+# The title card covers whatever page was opened for the whole intro, which
+# makes a preview useless. Renders are treated as a repeat view in the tab
+# unless --splash asks for the first-load experience.
+SPLASH_HIDE = "<style>.splash { display: none; }</style>"
+
 
 def inline_icon_masks(html: str) -> str:
     """Turn file:// --icon values into data URIs.
@@ -114,7 +119,7 @@ def inline_icon_masks(html: str) -> str:
     return ICON_URL_RE.sub(replace, html)
 
 
-def render_html(client, path: str, overlay: bool) -> str:
+def render_html(client, path: str, overlay: bool, show_splash: bool = False) -> str:
     kwargs = {"follow": not overlay}
     if overlay:
         kwargs["HTTP_HX_REQUEST"] = "true"
@@ -122,6 +127,8 @@ def render_html(client, path: str, overlay: bool) -> str:
     response = client.get(path, **kwargs)
     html = response.content.decode(response.charset or "utf-8")
     html = inline_icon_masks(rewrite_static(html))
+    if not show_splash:
+        html = html.replace("</head>", SPLASH_HIDE + "</head>", 1)
 
     if response.status_code != 200:
         print(f"warning: {path} returned HTTP {response.status_code}", file=sys.stderr)
@@ -131,6 +138,8 @@ def render_html(client, path: str, overlay: bool) -> str:
 
     shell = client.get("/", follow=True).content.decode(response.charset or "utf-8")
     shell = inline_icon_masks(rewrite_static(shell))
+    if not show_splash:
+        shell = shell.replace("</head>", SPLASH_HIDE + "</head>", 1)
     shell, opened = re.subn(
         r'class="overlay overlay--sheet"',
         'class="overlay overlay--sheet open"',
@@ -206,6 +215,11 @@ def main() -> None:
         help="render the response inside the open bottom sheet",
     )
     parser.add_argument(
+        "--splash",
+        action="store_true",
+        help="keep the title card, which is hidden in renders by default",
+    )
+    parser.add_argument(
         "--size",
         type=parse_size,
         default=(390, 844),
@@ -222,7 +236,7 @@ def main() -> None:
     work_dir = Path(tempfile.mkdtemp(prefix="gc-render-db-"))
     prepare(work_dir)
     client = build_client(args.user)
-    html = render_html(client, args.path, args.overlay)
+    html = render_html(client, args.path, args.overlay, args.splash)
 
     out_dir = args.out.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)

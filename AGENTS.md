@@ -24,6 +24,9 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
   `dashboard/static/vendor/`)
 - Do not run `import_student_accounts` or `send_account_mails` unless asked;
   they modify users and send email.
+- Never pipe a build, test or collectstatic run through `tail`, `head`, `grep`
+  or similar. These runs take a minute or more and the live progress has to stay
+  visible in the terminal; filter the output in the tool call instead.
 
 ## Structure
 
@@ -192,7 +195,8 @@ be rendered and looked at before reporting. Do not rely on the diff alone.
 - Preferred: Chrome DevTools MCP in Zed, when configured. Use it to open the
   page, click through overlays, and inspect console/network errors.
 - Fallback: `scripts/render_ui.py` renders an authenticated page or overlay
-  fragment with headless Firefox and writes `.ui-preview/<name>.png`:
+  fragment with headless Firefox and writes `.ui-preview/<name>.png`. The title
+  card is hidden in renders; add `--splash` to include it:
   - full page: `--path /events/ --name events`
   - overlay fragment: `--path /events/8/ --overlay --name event-detail`
   - edit overlay: `--path "/events/8/edit/?back=/events/8/" --overlay --name event-edit`

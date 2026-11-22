@@ -37,12 +37,59 @@
     {% block base_head %}
     {% endblock %}
 
+    {% if user.is_authenticated %}
+    <script>
+        // Decide before first paint whether the title card has already been shown
+        // in this tab, so it cannot flash on repeat views.
+        try {
+            if (sessionStorage.getItem("gc-splash-seen")) {
+                document.documentElement.classList.add("splash-seen");
+            } else {
+                sessionStorage.setItem("gc-splash-seen", "1");
+            }
+        } catch {
+            // sessionStorage throws when cookies are blocked; showing the card
+            // every time is the acceptable fallback, like the no-JS path.
+        }
+    </script>
+    {% endif %}
+
 </head>
 
 <body hx-indicator="#overlay-loading">
 
+    {% block splash %}
+    {% if user.is_authenticated %}
+    {% comment %} One-off title card on the first page load of a tab. Decorative:
+    skipped under prefers-reduced-motion, hidden by its exit animation and removed
+    from the DOM by splash.js. {% endcomment %}
+    <div class="splash" aria-hidden="true">
+        <div class="splash__card">
+            <div class="splash__bar">
+                <div class="fox fox--title" aria-hidden="true">
+                    <div class="fox__travel">
+                        <div class="fox__flip">
+                            <div class="fox__sprite"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="splash__title"><span class="splash__hi">Hi</span><span class="splash__aside">oder so</span></p>
+            <div class="splash__bar"></div>
+        </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+
     {% block nav %}
     <nav>
+        <div class="fox fox--nav" aria-hidden="true">
+            <div class="fox__travel">
+                <div class="fox__flip">
+                    <div class="fox__sprite"></div>
+                </div>
+            </div>
+        </div>
         <a href="/" class="nav-item" aria-label="Abi 28">
             <span class="logo" style="--icon: url('{% static 'dashboard/icons/hanging-square.svg' %}')"></span>
         </a>
@@ -159,6 +206,7 @@
     <script src="{% static 'dashboard/js/poll-form.js' %}" defer></script>
     <script src="{% static 'dashboard/js/quote-form.js' %}" defer></script>
     <script src="{% static 'dashboard/js/copy-link.js' %}" defer></script>
+    <script src="{% static 'dashboard/js/fox.js' %}" defer></script>
     <script src="{% static 'dashboard/js/splash.js' %}" defer></script>
     <script src="{% static 'dashboard/js/base.js' %}" defer></script>
     {% block scripts %}{% endblock %}

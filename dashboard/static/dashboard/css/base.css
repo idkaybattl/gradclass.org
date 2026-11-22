@@ -82,6 +82,7 @@ h3 {
 /* navbar */
 nav {
     flex: 0 0 auto;
+    position: relative;
 
     height: 50px;
     width: 100%;
@@ -94,6 +95,112 @@ nav {
     align-items: center;
 
     border-bottom-style: solid;
+}
+
+/*
+ * Fox walking on the nav's bottom border. Absolute, so it adds nothing to the
+ * nav height; bottom: 0 is the padding box, which is the top edge of the
+ * border, so the feet stand on the line. It is the first child in the markup,
+ * so the positioned nav items paint over it.
+ *
+ * The mask fades it in and out at both ends of the free stretch, so it never
+ * walks through the logo or the nav items. Both clearances are fixed widths:
+ * the logo and the item group do not scale with the viewport, so they hold at
+ * every width.
+ */
+.fox--nav {
+    --fox-travel-duration: 16s;
+    --fox-nav-clear-left: 80px;
+    /* nav padding + logo + air */
+    --fox-nav-clear-right: 120px;
+    /* nav padding + item group + air */
+    --fox-nav-fade: 40px;
+
+    inset: auto 0 0 0;
+
+    -webkit-mask-image: linear-gradient(to right,
+            transparent calc(var(--fox-nav-clear-left) - var(--fox-nav-fade)),
+            #000 var(--fox-nav-clear-left),
+            #000 calc(100% - var(--fox-nav-clear-right) - var(--fox-nav-fade)),
+            transparent calc(100% - var(--fox-nav-clear-right)));
+    mask-image: linear-gradient(to right,
+            transparent calc(var(--fox-nav-clear-left) - var(--fox-nav-fade)),
+            #000 var(--fox-nav-clear-left),
+            #000 calc(100% - var(--fox-nav-clear-right) - var(--fox-nav-fade)),
+            transparent calc(100% - var(--fox-nav-clear-right)));
+}
+
+/* The traverse grows with the viewport, so the duration has to grow with it to
+   keep the ground speed constant. */
+@media (min-width: 700px) {
+    .fox--nav {
+        --fox-travel-duration: 27s;
+    }
+}
+
+@media (min-width: 1200px) {
+    .fox--nav {
+        --fox-travel-duration: 36s;
+    }
+}
+
+@media (min-width: 1600px) {
+    .fox--nav {
+        --fox-travel-duration: 48s;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .fox--nav .fox__travel {
+        animation: fox-nav-travel var(--fox-travel-duration) linear infinite;
+    }
+
+    .fox--nav .fox__flip {
+        animation: fox-nav-flip var(--fox-travel-duration) linear infinite;
+    }
+}
+
+/* In from the left, out past the right edge, then back the same way mirrored.
+   Both halves cover the same distance, so linear keeps one speed. */
+@keyframes fox-nav-travel {
+    from {
+        transform: translateX(calc(-1 * var(--fox-width)));
+    }
+
+    50% {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(calc(-1 * var(--fox-width)));
+    }
+}
+
+/* Both flips happen while the fox is fully offscreen: mid-point on the right,
+   loop boundary on the left. */
+@keyframes fox-nav-flip {
+    from {
+        transform: scaleX(1);
+    }
+
+    49.99% {
+        transform: scaleX(1);
+    }
+
+    50% {
+        transform: scaleX(-1);
+    }
+
+    to {
+        transform: scaleX(-1);
+    }
+}
+
+/* Reduced motion: one frame, parked mid-nav instead of behind the logo. */
+@media (prefers-reduced-motion: reduce) {
+    .fox--nav .fox__travel {
+        transform: translateX(calc(50% - var(--fox-width) / 2));
+    }
 }
 
 .nav-items {
