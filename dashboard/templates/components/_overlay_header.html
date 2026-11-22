@@ -5,7 +5,7 @@
         {% if back_url %}
         <button type="button" class="overlay-panel-back" data-overlay-open="overlay" hx-get="{{ back_url }}"
             hx-target="#overlay-content" hx-swap="innerHTML" aria-label="Zurück">
-            <span class="logo" style="--icon: url('{% static 'dashboard/icons/arrow-left.svg' %}')"></span>
+            <span class="logo" style="--icon: url('{% static 'dashboard/icons/back.svg' %}')"></span>
         </button>
         {% endif %}
     </div>
@@ -15,7 +15,9 @@
     <div class="overlay-panel-header__actions">
         {% if action_url %}
         <a class="btn" href="{{ action_url }}" {% if action_overlay %}data-overlay-open="overlay"
-            hx-get="{{ action_url }}" hx-target="#overlay-content" hx-swap="innerHTML" {% endif %}>{{ action_label }}</a>
+            hx-get="{{ action_url }}" hx-target="#overlay-content" hx-swap="innerHTML" {% endif %}>
+            {{ action_label }}
+        </a>
         {% endif %}
     </div>
 </header>

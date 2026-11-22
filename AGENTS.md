@@ -19,6 +19,7 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Check: `.venv/bin/python manage.py check`
 - Tests: `.venv/bin/python manage.py test`
 - Static: `.venv/bin/python manage.py collectstatic --noinput`
+- Render UI: `.venv/bin/python scripts/render_ui.py --path /events/ --name events`
 - Vendor JS: `npm install` (postinstall copies htmx/cropper into
   `dashboard/static/vendor/`)
 - Do not run `import_student_accounts` or `send_account_mails` unless asked;
@@ -49,6 +50,7 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - `dashboard/management/commands/` — account import/mail commands.
 - `dashboard/templates/` — active templates.
 - `dashboard/static/dashboard/` — active CSS, JS, fonts, icons.
+- `scripts/render_ui.py` — headless UI preview renderer; see **Rendering UI**.
 
 ## Backend rules
 
@@ -180,11 +182,31 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
   abstraction, remove the unused parameter or setting, merge the extra file.
   Then validate.
 
+## Rendering UI
+
+Every major UI change — layout, responsive behaviour, overlay, form, icon — must
+be rendered and looked at before reporting. Do not rely on the diff alone.
+
+- Preferred: Chrome DevTools MCP in Zed, when configured. Use it to open the
+  page, click through overlays, and inspect console/network errors.
+- Fallback: `scripts/render_ui.py` renders an authenticated page or overlay
+  fragment with headless Firefox and writes `.ui-preview/<name>.png`:
+  - full page: `--path /events/ --name events`
+  - overlay fragment: `--path /events/8/ --overlay --name event-detail`
+  - edit overlay: `--path "/events/8/edit/?back=/events/8/" --overlay --name event-edit`
+  - permission variant: add `--user <username>`
+  - viewport: `--size WxH` (default `390x844`)
+- Read the resulting PNG with the image tool. The renderer captures the initial
+  HTML document only, not HTMX interactions; check interactive flows with tests
+  or DevTools MCP.
+- The script copies `db.sqlite3` to a temp file, so it never writes the real dev
+  database.
+
 ## Validation
 
 - Run `manage.py check` after backend changes.
-- Render the affected pages (test client or `runserver`) after template/view
-  changes.
+- Render the affected pages after template/view changes, using the **Rendering
+  UI** workflow and viewing the screenshot.
 - Run `collectstatic` after static changes, and **before running the full test
   suite**. Tests use the static manifest and fail with `Missing staticfiles
   manifest entry` for any new or changed asset that has not been collected.
