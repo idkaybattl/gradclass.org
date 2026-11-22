@@ -1773,21 +1773,21 @@ Dialogue card:
 
 **Tests and validation**
 
-- [ ] Create with one line sets uploader, date and position.
-- [ ] Create with several lines preserves row order; blank extra rows are
+- [x] Create with one line sets uploader, date and position.
+- [x] Create with several lines preserves row order; blank extra rows are
   ignored.
-- [ ] Missing or empty line is rejected, including `min_num`.
-- [ ] Single-line and dialogue cards render correctly.
-- [ ] List order is `-spoken_on`, `-created_at`.
-- [ ] Uploader can delete own; unrelated student cannot; `manage_quotes`
+- [x] Missing or empty line is rejected, including `min_num`.
+- [x] Single-line and dialogue cards render correctly.
+- [x] List order is `-spoken_on`, `-created_at`.
+- [x] Uploader can delete own; unrelated student cannot; `manage_quotes`
   holder can delete any.
-- [ ] Report creates one row and notifies reps; duplicate report is rejected;
+- [x] Report creates one row and notifies reps; duplicate report is rejected;
   uploader cannot report own quote.
-- [ ] Rep can dismiss a report; non-rep cannot.
-- [ ] Anonymous access redirects to login.
-- [ ] Invalid HTMX create/report re-renders the partial with 200; direct GET
+- [x] Rep can dismiss a report; non-rep cannot.
+- [x] Anonymous access redirects to login.
+- [x] Invalid HTMX create/report re-renders the partial with 200; direct GET
   redirects to `/quotes/`.
-- [ ] `manage.py check`, `collectstatic`, `manage.py test`; render `/quotes/`,
+- [x] `manage.py check`, `collectstatic`, `manage.py test`; render `/quotes/`,
   the create overlay and the report overlay.
 
 ## Datenschutz
