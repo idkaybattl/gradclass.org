@@ -34,6 +34,11 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="*").split(",")
 
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="*").split(",")
 
+# TLS terminates at the reverse proxy, so trust its scheme header. Without this,
+# request.is_secure() is always False and absolute links (password reset) are
+# built as http://. The proxy must set/overwrite X-Forwarded-Proto.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Application definition
 

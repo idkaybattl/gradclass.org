@@ -12,9 +12,10 @@ environment variable; `docs/environment.md` lists them with defaults.
   reset mails, so replies reach a monitored inbox.
 - `PASSWORD_RESET_TIMEOUT` is one day.
 
-Production needs SPF/DKIM/DMARC for the sending domain, and behind a TLS proxy an
-accurate `ALLOWED_HOSTS` plus `SECURE_PROXY_SSL_HEADER`, otherwise reset links go
-out as `http://` or with the wrong host.
+Production needs SPF/DKIM/DMARC for the sending domain, an accurate
+`ALLOWED_HOSTS`, and a proxy that sends `X-Forwarded-Proto: https` (the setting
+is already on in `settings.py`), otherwise reset links go out as `http://` or
+with the wrong host.
 
 ## Which address receives mail
 

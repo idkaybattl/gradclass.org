@@ -31,8 +31,10 @@ works for dev; the production rows below say what must be set there.
 | `ALLOWED_HOSTS` | optional | `*` | Comma-separated hosts Django serves. Set the real domain in production. |
 | `CSRF_TRUSTED_ORIGINS` | optional | `*` | Comma-separated origins **with scheme**, e.g. `https://gradclass.org`. Set the real site in production. |
 
-Behind a TLS-terminating proxy, `SECURE_PROXY_SSL_HEADER` must also be set in
-settings so reset links are built as `https://`; it is not env-driven yet.
+`SECURE_PROXY_SSL_HEADER` is set in `settings.py` so Django trusts
+`X-Forwarded-Proto: https` from the TLS-terminating proxy. The proxy must send
+that header; otherwise `request.is_secure()` stays false and reset links are
+built as `http://`.
 
 ## Contact page
 

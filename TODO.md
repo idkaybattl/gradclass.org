@@ -780,11 +780,11 @@ Order matters: settings first, then the reset flow, then the admin fallback.
 - [ ] Ops, not code: SPF, DKIM and DMARC for the sending domain, and the
   `DEFAULT_FROM_EMAIL` address must be authorized by the SMTP account.
   Otherwise reset mails land in spam.
-- [ ] Production: replace `ALLOWED_HOSTS = "*"` with the real host and set
-  `SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")` if a proxy
-  terminates TLS. Reset links are built from `request.is_secure()` and
-  `request.get_host()`, so otherwise they go out as `http://` or with the wrong
-  host. (Env/deployment only; `ALLOWED_HOSTS` already reads from env.)
+- [x] Set `SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")` so
+  reset links are built as `https://` behind the TLS proxy.
+- [ ] Ops: the proxy must send/overwrite `X-Forwarded-Proto: https`, and
+  production must set `ALLOWED_HOSTS` to the real host. Reset links also use
+  `request.get_host()`, so a rewritten `Host` produces wrong links.
 
 ### 2. Password reset flow
 
