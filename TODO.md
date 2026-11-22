@@ -1801,7 +1801,7 @@ Dialogue card:
   button and the contact/reps path are the takedown route.
 - Deleting a quote removes its lines and reports. Retention after Abi 2028 is
   deferred.
-- Add the quotes category to §13 when this ships. No third-party processors are
+- The quotes category is included in §13. No third-party processors are
   involved.
 
 ## Open
