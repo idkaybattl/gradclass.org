@@ -450,7 +450,7 @@ textarea::placeholder {
  * of it, so tuning the length never desynchronises the steps.
  */
 .splash {
-    --splash-duration: 2s;
+    --splash-duration: 3s;
 
     position: fixed;
     inset: 0;
@@ -520,7 +520,7 @@ textarea::placeholder {
     overflow: hidden;
     white-space: nowrap;
 
-    animation: splash-aside-in calc(var(--splash-duration) * 0.15) calc(var(--splash-duration) * 0.25) ease-out both;
+    animation: splash-aside-in calc(var(--splash-duration) * 0.3) calc(var(--splash-duration) * 0.25) ease-out both;
 }
 
 @keyframes splash-hi-in {
