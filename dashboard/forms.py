@@ -750,13 +750,24 @@ class StartVotingForm(forms.Form):
         return value
 
 
-class UserProfileForm(forms.ModelForm):
+class ExternalMailForm(forms.ModelForm):
+    external_mail = forms.EmailField(
+        label="Externe E‑Mail",
+        required=False,
+        widget=forms.EmailInput(attrs={"autocomplete": "email", "inputmode": "email"}),
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = ["external_mail"]
+
+
+class ProfileDetailsForm(forms.ModelForm):
     birthday = forms.DateField(
         label="Geburtsdatum",
         required=False,
         widget=forms.DateInput(attrs={"type": "date"}),
     )
-    external_mail = forms.EmailField(label="Externe E‑Mail", required=False)
     phone_number = PhoneNumberField(
         label="Telefonnummer",
         region="DE",
@@ -764,6 +775,12 @@ class UserProfileForm(forms.ModelForm):
     )
     bio = forms.Textarea()
 
+    class Meta:
+        model = UserProfile
+        fields = ["phone_number", "birthday", "bio"]
+
+
+class UserProfileForm(ExternalMailForm, ProfileDetailsForm):
     class Meta:
         model = UserProfile
         fields = ["external_mail", "phone_number", "birthday", "bio"]

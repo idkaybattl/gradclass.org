@@ -44,4 +44,5 @@ class UserProfile(models.Model):
             ("manage_users", "Nutzer:innen verwalten"),
             ("access_admin", "Adminbereich betreten"),
             ("view_any_points", "Punkte anderer einsehen"),
+            ("view_user_mail", "E-Mail-Adressen aller Nutzer:innen einsehen"),
         ]

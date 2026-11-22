@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
 from ..feedback import get_feedback, render_feedback
-from ..forms import UserProfileForm
+from ..forms import ExternalMailForm, ProfileDetailsForm
 from ..http_helpers import (
     get_safe_back_url,
     get_safe_next_url,
@@ -19,16 +19,20 @@ from .users import user_details_url
 
 User = get_user_model()
 
-VALID_INITIAL_STEPS = {
-    "step-1",
-    "step-2",
-    "step-3",
-    "step-4",
-    "step-5",
-    "step-6",
-    "password",
-    "profile",
+INTRO_STEP_ALIASES = {
+    "welcome": "intro-welcome",
+    "features": "intro-features",
+    "closing": "intro-closing",
+    "password": "intro-password",
+    "email": "intro-email",
+    "profile": "intro-profile",
 }
+INTRO_STEPS = set(INTRO_STEP_ALIASES.values())
+
+
+def normalize_intro_step(value):
+    step = INTRO_STEP_ALIASES.get(value or "", value)
+    return step if step in INTRO_STEPS else "intro-welcome"
 
 
 def introduction_context(
@@ -36,17 +40,21 @@ def introduction_context(
     *,
     profile_form=None,
     password_form=None,
-    initial_step="step-1",
+    email_form=None,
+    initial_step="intro-welcome",
 ):
     profile = request.user.profile
     if profile_form is None:
-        profile_form = UserProfileForm(instance=profile)
+        profile_form = ProfileDetailsForm(instance=profile)
     if password_form is None:
         password_form = SetPasswordForm(request.user)
+    if email_form is None:
+        email_form = ExternalMailForm(instance=profile)
 
     return {
         "profile_form": profile_form,
         "password_form": password_form,
+        "email_form": email_form,
         "user": request.user,
         "next_url": get_safe_next_url(request),
         "initial_step": initial_step,
@@ -66,7 +74,7 @@ def password_set(request):
             response["HX-Trigger"] = "intro:password-set"
             return response
 
-        return redirect("introduction")
+        return redirect(f"{reverse('introduction')}?step=email")
 
     if is_htmx_request(request):
         return render(
@@ -78,7 +86,38 @@ def password_set(request):
     return render(
         request,
         "introduction.html",
-        introduction_context(request, password_form=form, initial_step="password"),
+        introduction_context(
+            request, password_form=form, initial_step="intro-password"
+        ),
+    )
+
+
+@login_required
+@require_POST
+def email_set(request):
+    profile = request.user.profile
+    form = ExternalMailForm(request.POST, instance=profile)
+    if form.is_valid():
+        form.save()
+
+        if is_htmx_request(request):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "intro:email-set"
+            return response
+
+        return redirect(f"{reverse('introduction')}?step=profile")
+
+    if is_htmx_request(request):
+        return render(
+            request,
+            "introduction/_email_form.html",
+            {"email_form": form},
+        )
+
+    return render(
+        request,
+        "introduction.html",
+        introduction_context(request, email_form=form, initial_step="intro-email"),
     )
 
 
@@ -153,7 +192,7 @@ def introduction(request):
     profile = request.user.profile
 
     if request.method == "POST":
-        profile_form = UserProfileForm(request.POST, instance=profile)
+        profile_form = ProfileDetailsForm(request.POST, instance=profile)
         if profile_form.is_valid():
             profile_form.save()
             # Mark the introduction as completed
@@ -190,13 +229,11 @@ def introduction(request):
             introduction_context(
                 request,
                 profile_form=profile_form,
-                initial_step="profile",
+                initial_step="intro-profile",
             ),
         )
 
-    initial_step = request.GET.get("step") or "step-1"
-    if initial_step not in VALID_INITIAL_STEPS:
-        initial_step = "step-1"
+    initial_step = normalize_intro_step(request.GET.get("step"))
 
     return render(
         request,

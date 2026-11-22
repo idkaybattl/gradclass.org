@@ -46,6 +46,7 @@ urlpatterns = [
         name="password-reset-complete",
     ),
     path("set_password/", auth.password_set, name="set-password"),
+    path("set_email/", auth.email_set, name="set-email"),
     path("", core.main_page, name="main-page"),
     path("introduction/", auth.introduction, name="introduction"),
     # abikasse

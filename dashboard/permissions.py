@@ -20,6 +20,7 @@ MANAGE_POLLS = "dashboard.manage_polls"
 VIEW_ABIKASSE = "dashboard.view_abikasse"
 MANAGE_ABIKASSE = "dashboard.manage_abikasse"
 VIEW_ANY_POINTS = "dashboard.view_any_points"
+VIEW_USER_MAIL = "dashboard.view_user_mail"
 MANAGE_QUOTES = "dashboard.manage_quotes"
 
 
@@ -114,6 +115,10 @@ def can_manage_abikasse(user):
 
 def can_view_any_points(user):
     return _can(user, VIEW_ANY_POINTS)
+
+
+def can_view_user_mail(user):
+    return _can(user, VIEW_USER_MAIL) or can_manage_users(user)
 
 
 def can_manage_quotes(user):

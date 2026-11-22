@@ -35,17 +35,28 @@ class IntroductionViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "data-introduction")
-        self.assertContains(response, 'data-initial-step="step-1"')
-        self.assertContains(response, 'id="step-1"')
-        self.assertContains(response, 'id="step-6"')
+        self.assertContains(response, 'data-initial-step="intro-welcome"')
+        self.assertContains(response, 'id="intro-welcome"')
+        self.assertContains(response, 'id="intro-email"')
+        self.assertContains(response, 'id="intro-profile"')
         self.assertContains(response, "<p>Hi Nora,</p>")
         self.assertContains(
             response,
-            '<button type="button" class="btn" data-from="step-1" '
-            'data-to="step-2">Weiter</button>',
+            '<button type="button" class="btn" data-from="intro-welcome" '
+            'data-to="intro-features">Weiter</button>',
         )
-        self.assertContains(response, "<li>Ankündigungen</li>")
+        self.assertContains(response, "<li>Neuigkeiten und Ankündigungen</li>")
         self.assertContains(response, "Telefonnummer:")
+
+    def test_introduction_step_parameter_selects_the_step(self):
+        response = self.client.get(reverse("introduction"), {"step": "email"})
+
+        self.assertContains(response, 'data-initial-step="intro-email"')
+
+    def test_introduction_ignores_unknown_step_parameter(self):
+        response = self.client.get(reverse("introduction"), {"step": "nope"})
+
+        self.assertContains(response, 'data-initial-step="intro-welcome"')
 
     def test_password_step_success_returns_trigger_and_updates_password(self):
         response = self.client.post(
@@ -83,7 +94,52 @@ class IntroductionViewTests(TestCase):
             },
         )
 
-        self.assertRedirects(response, reverse("introduction"))
+        self.assertRedirects(response, f"{reverse('introduction')}?step=email")
+
+    def test_email_step_success_returns_trigger_and_saves_mail(self):
+        response = self.client.post(
+            reverse("set-email"),
+            {"external_mail": "nora@example.org"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response["HX-Trigger"], "intro:email-set")
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.external_mail, "nora@example.org")
+
+    def test_email_step_is_optional(self):
+        response = self.client.post(
+            reverse("set-email"),
+            {"external_mail": ""},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.user.profile.refresh_from_db()
+        self.assertFalse(self.user.profile.external_mail)
+
+    def test_email_step_invalid_rerenders_partial_with_errors(self):
+        response = self.client.post(
+            reverse("set-email"),
+            {"external_mail": "not-an-address"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<html")
+        self.assertContains(response, "errorlist")
+        self.assertTrue(response.context["email_form"].errors)
+
+    def test_email_step_without_htmx_redirects_to_profile_step(self):
+        response = self.client.post(
+            reverse("set-email"),
+            {"external_mail": "nora@example.org"},
+        )
+
+        self.assertRedirects(response, f"{reverse('introduction')}?step=profile")
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.external_mail, "nora@example.org")
 
     def test_profile_completion_htmx_returns_feedback_step(self):
         response = self.client.post(
@@ -115,7 +171,7 @@ class IntroductionViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<html")
-        self.assertContains(response, 'data-initial-step="profile"')
+        self.assertContains(response, 'data-initial-step="intro-profile"')
         self.assertContains(response, "errorlist")
         self.user.profile.refresh_from_db()
         self.assertFalse(self.user.profile.has_had_introduction)

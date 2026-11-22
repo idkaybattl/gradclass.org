@@ -22,60 +22,57 @@
 
 {% block content %}
 <div class="introduction" data-introduction data-initial-step="{{ initial_step }}">
-    <section id="step-1" class="card intro-step" data-intro-step>
+    <section id="intro-welcome" class="card intro-step" data-intro-step>
         <div class="intro-step__text">
             <p>Hi {{ user.first_name|default:user.username }},</p>
             <p>Aktionen wie Waffelverkauf, Giro, etc. hier eintragen.</p>
             <p>Arbeitsstunden und verdientes Geld werden damit aufgezeichnet.</p>
+            <p>Das Punktesystem beeinflusst die Preise der Abiball-Tickets. Wie genau
+                das Punktesystem funktioniert, steht noch nicht fest.</p>
         </div>
         <div class="intro-step__actions">
-            <button type="button" class="btn" data-from="step-1" data-to="step-2">Weiter</button>
+            <button type="button" class="btn" data-from="intro-welcome" data-to="intro-features">Weiter</button>
         </div>
     </section>
 
-    <section id="step-2" class="card intro-step" data-intro-step>
-        <div class="intro-step__text">
-            <h2 class="intro-step__title">Bitte benutzen:</h2>
-            <p>Das Punktesystem beeinflusst die Preise der Abiball-Tickets.</p>
-            <p>Wie genau das Punktesystem funktioniert, steht noch nicht fest.</p>
-        </div>
-        <div class="intro-step__actions">
-            <button type="button" class="btn" data-from="step-2" data-to="step-3">Weiter</button>
-        </div>
-    </section>
-
-    <section id="step-3" class="card intro-step" data-intro-step>
+    <section id="intro-features" class="card intro-step" data-intro-step>
         <div class="intro-step__text">
             <h2 class="intro-step__title">Kommende Features:</h2>
             <ul class="intro-step__list">
-                <li>Abstimmungen (für Abimotto z. B.)</li>
-                <li>Galerie (zum Hochladen von Fotos und Videos für Abibuch und Abifilm)</li>
-                <li>Ankündigungen</li>
-                <li>Kommentare/Forum</li>
-                <li>Kalenderansicht für Anstehendes</li>
-                <li>etc.</li>
+                <li>Galerie (Fotos und Videos für Abibuch und Abifilm)</li>
+                <li>Neuigkeiten und Ankündigungen</li>
+                <li>Forum und Kommentare zu Aktionen</li>
+                <li>Kalender</li>
+                <li>Profilbilder</li>
+                <li>Push-Benachrichtigungen</li>
             </ul>
         </div>
         <div class="intro-step__actions">
-            <button type="button" class="btn" data-from="step-3" data-to="step-4">Weiter</button>
+            <button type="button" class="btn" data-from="intro-features" data-to="intro-closing">Weiter</button>
+            <button type="button" class="btn" data-from="intro-features" data-to="intro-welcome">Zurück</button>
         </div>
     </section>
 
-    <section id="step-4" class="card intro-step" data-intro-step>
+    <section id="intro-closing" class="card intro-step" data-intro-step>
         <div class="intro-step__text">
             <p>Bei Problemen oder Ideen, damit die Website nicht so langweilig bleibt, gerne melden.</p>
             <p>Moritz</p>
         </div>
         <div class="intro-step__actions">
-            <button type="button" class="btn" data-from="step-4" data-to="step-5">Weiter</button>
+            <button type="button" class="btn" data-from="intro-closing" data-to="intro-password">Weiter</button>
+            <button type="button" class="btn" data-from="intro-closing" data-to="intro-features">Zurück</button>
         </div>
     </section>
 
-    <section id="step-5" class="card intro-step" data-intro-step>
+    <section id="intro-password" class="card intro-step" data-intro-step>
         {% include "introduction/_password_form.html" %}
     </section>
 
-    <section id="step-6" class="card intro-step" data-intro-step>
+    <section id="intro-email" class="card intro-step" data-intro-step>
+        {% include "introduction/_email_form.html" %}
+    </section>
+
+    <section id="intro-profile" class="card intro-step" data-intro-step>
         {% include "introduction/_profile_form.html" %}
     </section>
 </div>

@@ -45,6 +45,7 @@ new group with the old name).
 | `view_abikasse` | ✓ | ✓ | ✓ |
 | `manage_abikasse` | – | ✓ | ✓ |
 | `view_any_points` | – | ✓ | ✓ |
+| `view_user_mail` | – | ✓ | ✓ |
 | `manage_quotes` | – | ✓ | ✓ |
 
 `approve_event` is defined for the future approval flow; it is not consumed yet.
@@ -59,6 +60,8 @@ These are independent of groups and live in `permissions.py`:
   amount for their event.
 - Any user may join/leave an event they are not managing, view their own
   profile, and change their own password.
+- Mail addresses are only shown to the profile owner, `view_user_mail` holders
+  and `manage_users` holders.
 - The poll creator or `manage_polls` holders may edit, moderate and start their
   own poll. Any logged-in user may view polls, suggest options and vote.
 - Only `manage_earnings` holders (reps/superuser) may mark earnings as received

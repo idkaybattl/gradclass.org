@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from ..models import Event, EventParticipation
-from .helpers import User
+from .helpers import User, make_rep
 
 
 class UserViewTests(TestCase):
@@ -100,6 +100,58 @@ class UserViewTests(TestCase):
         )
 
         self.assertContains(response, "Profil erfolgreich bearbeitet")
+
+    def test_user_details_hides_mail_from_other_students(self):
+        self.other.profile.external_mail = "ben@external.example"
+        self.other.profile.save()
+
+        response = self.client.get(
+            reverse("user-details", args=[self.other.pk]),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertNotContains(response, "IServ Mail")
+        self.assertNotContains(response, "Externe Mail")
+        self.assertNotContains(response, "ben@example.org")
+
+    def test_user_details_shows_own_mail_to_self(self):
+        self.user.profile.external_mail = "anna@external.example"
+        self.user.profile.save()
+
+        response = self.client.get(
+            reverse("user-details", args=[self.user.pk]),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertContains(response, "IServ Mail")
+        self.assertContains(response, "anna@example.org")
+        self.assertContains(response, "Externe Mail")
+        self.assertContains(response, "anna@external.example")
+
+    def test_user_details_shows_mail_to_reps(self):
+        rep = make_rep("rep")
+        rep.profile.has_had_introduction = True
+        rep.profile.save()
+        self.client.force_login(rep)
+
+        response = self.client.get(
+            reverse("user-details", args=[self.other.pk]),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertContains(response, "IServ Mail")
+        self.assertContains(response, "ben@example.org")
+
+    def test_user_details_shows_mail_to_admins(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(
+            reverse("user-details", args=[self.other.pk]),
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertContains(response, "IServ Mail")
+        self.assertContains(response, "ben@example.org")
 
     def test_edit_user_get_renders_form(self):
         response = self.client.get(

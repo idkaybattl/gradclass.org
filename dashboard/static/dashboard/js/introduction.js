@@ -1,12 +1,16 @@
 const INTRO_STEP_ALIASES = {
-  password: "step-5",
-  profile: "step-6",
+  welcome: "intro-welcome",
+  features: "intro-features",
+  closing: "intro-closing",
+  password: "intro-password",
+  email: "intro-email",
+  profile: "intro-profile",
 };
 
 function normalizeStepId(value) {
   if (!value) return null;
   if (INTRO_STEP_ALIASES[value]) return INTRO_STEP_ALIASES[value];
-  return value.startsWith("step-") ? value : `step-${value}`;
+  return value.startsWith("intro-") ? value : `intro-${value}`;
 }
 
 function showStep(showId, hideId) {
@@ -59,12 +63,17 @@ function initIntroduction(root = document) {
   container.dataset.introInitialized = "true";
   container.addEventListener("click", handleIntroClick);
 
-  showStep(normalizeStepId(container.dataset.initialStep) ?? "step-1");
+  showStep(normalizeStepId(container.dataset.initialStep) ?? "intro-welcome");
 }
 
 window.initIntroduction = initIntroduction;
 
 document.addEventListener("intro:password-set", () => {
-  showStep("step-6", "step-5");
-  focusStep("step-6");
+  showStep("intro-email", "intro-password");
+  focusStep("intro-email");
+});
+
+document.addEventListener("intro:email-set", () => {
+  showStep("intro-profile", "intro-email");
+  focusStep("intro-profile");
 });

@@ -23,6 +23,7 @@ from ..permissions import (
     can_edit_user,
     can_manage_users,
     can_view_any_points,
+    can_view_user_mail,
     can_view_users,
 )
 from ..services import (
@@ -54,6 +55,7 @@ def user_details_context(request, user, *, back_url=None, status=None, feedback=
     can_edit = can_edit_user(request, user.pk)
     may_change_password = can_change_password(request, user.pk)
     can_reset_link = can_manage_users(request.user) and user.pk != request.user.pk
+    can_view_mail = request.user.pk == user.pk or can_view_user_mail(request.user)
     display_name = user.get_full_name() or user.username
 
     can_view_points = request.user.pk == user.pk or can_view_any_points(request.user)
@@ -108,6 +110,7 @@ def user_details_context(request, user, *, back_url=None, status=None, feedback=
         "can_edit": can_edit,
         "can_change_password": may_change_password,
         "can_reset_link": can_reset_link,
+        "can_view_mail": can_view_mail,
         "can_view_points": can_view_points,
         **points,
         "reset_link_url": reverse("user-reset-link", kwargs={"user_id": user.pk}),
