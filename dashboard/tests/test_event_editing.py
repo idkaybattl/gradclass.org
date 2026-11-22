@@ -30,6 +30,7 @@ class EventCreateViewTests(TestCase):
             "new-description": "Gemeinsam anpacken.",
             "new-starting_date": start.strftime("%Y-%m-%dT%H:%M"),
             "new-ending_date": end.strftime("%Y-%m-%dT%H:%M"),
+            "new-work_kind": Event.WorkKind.SCHOOL,
             "new-manager": str(self.user.pk),
             "new-participants": [str(self.other.pk)],
         }
@@ -243,6 +244,7 @@ class EventEditViewTests(TestCase):
             f"{self.event.pk}-ending_date": timezone.localtime(self.end).strftime(
                 "%Y-%m-%dT%H:%M"
             ),
+            f"{self.event.pk}-work_kind": self.event.work_kind,
             f"{self.event.pk}-manager": str(self.manager.pk),
         }
         data.update(overrides)

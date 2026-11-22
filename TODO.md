@@ -1523,25 +1523,25 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 
 **Tests**
 
-- [ ] Points: school vs freetime weighting, final-only, ended-only, earnings
+- [x] Points: school vs freetime weighting, final-only, ended-only, earnings
   share proportional to hours, zero-hour events skipped, floor, no events.
-- [ ] Visibility: self sees points and the estimate; rep and superuser see
+- [x] Visibility: self sees points and the estimate; rep and superuser see
   another user’s points and estimate; an unrelated student sees neither; the
   users list never shows points.
-- [ ] Ledger: balance, income/expense, auto entry on final, idempotent update,
+- [x] Ledger: balance, income/expense, auto entry on final, idempotent update,
   no entry for missing earnings, edit/delete permissions, CSV; a student gets
   the summary but no entry rows.
-- [ ] Estimate: default 5 tickets, base formula from `goal − balance`, own
+- [x] Estimate: default 5 tickets, base formula from `goal − balance`, own
   price, total, cap at 0, count update changes the price, and a student cannot
   see another user’s estimate.
-- [ ] Index profile card links to the profile and renders points and the
+- [x] Index profile card links to the profile and renders points and the
   compact estimate; profile overlay renders points and the estimate.
-- [ ] Overlay partials contain no `<html>`; invalid forms re-render with 200.
+- [x] Overlay partials contain no `<html>`; invalid forms re-render with 200.
 
 **Validation**
 
-- [ ] `manage.py check`, `manage.py test`, `collectstatic`.
-- [ ] Render `/`, `/abikasse/`, profile detail, add/edit entry, estimate update.
+- [x] `manage.py check`, `manage.py test`, `collectstatic`.
+- [x] Render `/`, `/abikasse/`, profile detail, add/edit entry, estimate update.
 
 ## Datenschutz
 
