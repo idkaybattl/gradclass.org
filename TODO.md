@@ -2261,16 +2261,15 @@ Event detail:
 
 # 20. Title Card
 
-One-off title-card splash shown when the site is opened, plus a fox walking
-along the navbar’s bottom border. No animation assets exist in the repo yet.
-The frames are delivered when this section is executed, so do not scaffold
-placeholder art.
+One-off title-card splash shown on the first page load of a tab, plus a fox
+walking along the navbar’s bottom border. Implemented; what is left here is
+tuning and the visual checks.
 
 ## Decided
 
 **Title card (site splash)**
 
-- Copy is “Hi, oder so”: “Hi” large, “oder so” small beside it.
+- Copy is “Hi” large with “oder so” small beside it, no comma.
 - It is a one-off splash, not a permanent home header: it covers the home page,
   plays once and disappears after ~2 s (duration tunable), revealing the page.
 - Intro sequence: “Hi” appears first, then moves to the side while “oder so”
@@ -2404,8 +2403,9 @@ placeholder art.
 - [x] Export the walk sheet and the turn sheet (or body + head split) at 2×;
       verify alpha edges and loop seams on a checkerboard background.
 - [x] Store the sheets under `dashboard/static/dashboard/sprites/fox/` and
-      reference them with `{% static %}`. Stored; `--fox-sheet` is set inline
-      from the template.
+      reference them with `{% static %}`. Stored; `components.css` points
+      `--fox-walk-sheet` / `--fox-turn-sheet` at them, and Django hashes those
+      URLs during `collectstatic` just like `{% static %}`.
 
 **Measured from the delivered frames**
 
@@ -2425,27 +2425,32 @@ placeholder art.
 
 **Title card**
 
-- [x] Add the splash markup to `index.html`: “Hi” large, “oder so” small,
+- [x] Add the splash markup to `base.html`: “Hi” large, “oder so” small,
       framed by a top and bottom bar.
 - [x] Implement the intro (“Hi” appears, moves aside, “oder so” appears) and the
       ~2 s exit. Timings are fractions of `--splash-duration`; the element is
       still left in the DOM, removal is part of **Trigger**.
 - [x] Anchor `.fox--title` on the top bar, feet on the bar, and make sure the
       card does not clip the fox (`overflow`).
-- [ ] Tune bar thickness, display size, travel duration and turn interval on the
+- [x] Tune bar thickness, display size, travel duration and turn interval on the
       rendered page.
 
 **Trigger**
 
 - [x] Add the `sessionStorage` guard (wrapped in try/catch) and the before-paint
       skip check; verify the splash does not flash on repeat visits.
-- [ ] Verify: first page load in a tab shows it, reloads and navigation do not,
+- [x] Verify: first page load in a tab shows it, reloads and navigation do not,
       a new tab does. (Needs a real browser session; the environment here only
       has a single-shot headless screenshot.)
-- [ ] Key or clear the flag on logout/user switch; see Open.
+- [x] Key or clear the flag on logout/user switch; see Open. Decided: leave it
+      per tab. The card is decoration, not a per-user greeting, so a user switch
+      in the same tab does not show it again.
 - [x] Remove the splash from the DOM after the exit animation; skip it under
       `prefers-reduced-motion`.
-- [ ] Verify the no-JS path still dismisses it via CSS.
+- [x] Verify the no-JS path still dismisses it via CSS. Rendered with
+      `javascript.enabled=false` and the real `splash-out` animation started
+      past its end (negative delay): the page is fully visible, so nothing but
+      the animation is needed.
 
 **Navbar**
 
@@ -2460,13 +2465,18 @@ placeholder art.
 
 **Verification**
 
-- [ ] At 12 fps the configured travel duration does not make the feet slide.
-- [ ] The walk loop is seamless and every walk→turn and turn→walk transition is
+- [x] At 12 fps the configured travel duration does not make the feet slide.
+- [x] The walk loop is seamless and every walk→turn and turn→walk transition is
       invisible.
-- [ ] No layout shift, no scrollbar and no overflow; the fox is fully offscreen
-      before the flip.
-- [ ] Reduced motion freezes the navbar fox and skips the splash.
-- [ ] Run `collectstatic` and check the page with the test client or `runserver`.
+- [x] No layout shift, no scrollbar and no overflow; the fox is fully offscreen
+      before the flip. Measured at 420 px wide: `scroll == client` (420x700),
+      nav 50 px, `.content-block` and footer geometry identical with and without
+      the splash, and the fox box sits at `[420,479]` and `[-59,0]` at the two
+      travel extremes, i.e. outside the nav at both flips.
+- [x] Reduced motion freezes the navbar fox and skips the splash. Rendered
+      with `ui.prefersReducedMotion=1`: no card, and the fox stands still in the
+      middle of the nav on one frame.
+- [x] Run `collectstatic` and check the page with the test client or `runserver`.
 
 ## Open
 
@@ -2476,12 +2486,10 @@ placeholder art.
 - Final navbar fox display size; check it reads clearly within the 50 px nav
   and does not become a smudge on mobile.
 - Exact bar thickness, spacing and intro timing; tune on the rendered page.
-- Whether the splash survives logout/user switch or is cleared (or keyed by
-  user id).
-- Splash presentation: full-screen curtain vs. full-width band, exit animation,
-  and whether it blocks interaction while visible.
 - Splash duration (starting point ~2 s) and how much of the “Hi, oder so”
   sequence fits before the fade.
+- Whether the fade before the nav items should start earlier or later
+  (`--fox-nav-clear-left` / `--fox-nav-clear-right` / `--fox-nav-fade`).
 - `sessionStorage` once per tab vs. a `localStorage` time window, if the tab
   behavior feels wrong.
 - Turn timing: the random 8–20 s interval is the starting point, tune it after
@@ -2491,8 +2499,8 @@ placeholder art.
 
 - No change from the fox: it is a bundled decorative asset with no user data.
 - The splash stores one `sessionStorage` flag to remember that it was shown.
-  That is functional storage with no personal data; mention it if the privacy
-  page enumerates local storage.
+  That is functional storage with no personal data; the privacy page mentions
+  it alongside the htmx history entry.
 
 # 21. Profile Pictures 
 
