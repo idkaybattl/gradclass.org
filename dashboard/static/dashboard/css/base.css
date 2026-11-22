@@ -26,9 +26,14 @@ html {
     /* iOS Safari < 15.4: height of the visible viewport */
     height: -webkit-fill-available;
 
+    /*
+     * iOS home-screen apps latch scroll gestures to the document unless it is
+     * explicitly non-scrollable; then nested scrollers freeze. position: fixed
+     * plus overflow: hidden is the known workaround (WebKit bug 222654).
+     */
+    position: fixed;
+    inset: 0;
     overflow: hidden;
-    /* clip: like hidden, but does not create a scroll container */
-    overflow: clip;
     overscroll-behavior: none;
 
     /* Safari on iPad/landscape must not inflate text */
@@ -54,8 +59,10 @@ body {
     height: 100dvh;
 
     width: 100%;
+    /* keep the shell anchored to the viewport, not the scrollable document */
+    position: fixed;
+    inset: 0;
     overflow: hidden;
-    overflow: clip;
     overscroll-behavior: none;
 
     /* keep the shell clear of the notch and home indicator (viewport-fit=cover) */
@@ -521,8 +528,9 @@ footer {
     min-height: 0;
     padding: var(--base-padding);
     overflow-y: auto;
-    /* do not chain scroll gestures to the (non-scrollable) page */
-    overscroll-behavior: contain;
+    /* do not chain or bounce scroll gestures on iOS */
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 

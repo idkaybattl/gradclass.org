@@ -2254,7 +2254,7 @@ Event detail:
 
 # 19. Tiktok and Insta Links 
 
-- [ ] just linking to them ( no embedding for now :( )
+- [x] just linking to them ( no embedding for now :( )
 
 - Datenschutz: no change while these stay plain links; embedding would add a
   third party.

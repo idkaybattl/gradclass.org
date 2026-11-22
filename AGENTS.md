@@ -131,6 +131,10 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
   `border-radius`.
 - Font: self-hosted BioRhyme. Do not add a Google Fonts CDN link.
 - Mobile-first and responsive. Preserve the overlay/menu drag behaviour in `base.css` and `base.js`.
+- The shell never scrolls: use `overflow: hidden` (not `clip`) on `html`/`body`
+  and `overscroll-behavior-y: none` on nested scroll areas. iOS home-screen apps
+  latch gestures to clipped documents, which freezes inner scrollers. See
+  `base.css`.
 - Use `{% static %}` for assets. Run `collectstatic` after static changes.
 - Component initialisers expose `window.initX(root)`, are idempotent and scoped to
   `root`. `base.js` is the only place that calls them, on `DOMContentLoaded` and

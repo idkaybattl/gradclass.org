@@ -10,7 +10,8 @@
     margin-inline: auto;
 
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 .abikasse__header {

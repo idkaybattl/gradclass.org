@@ -314,7 +314,8 @@ textarea::placeholder {
     flex: 0 1 auto;
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
 
     display: flex;
     flex-direction: column;

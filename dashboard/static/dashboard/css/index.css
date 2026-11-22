@@ -35,22 +35,39 @@
     min-height: 0;
 }
 
-.index-card__heading-link {
-    color: inherit;
-    text-decoration: none;
+/* Cover the card or section so clicking anywhere opens its page; item links
+ * sit above. */
+.index-card__hit {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
 }
 
-.index-card__heading-link:hover {
-    text-decoration: underline;
+.index-card__hit:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+.index-section {
+    position: relative;
+
+    /* Keep the full-card hit and its tap highlight inside the card's padding. */
+    padding: 0 10px 10px;
+}
+
+/* A single section fills the card, so the whole visible area is clickable. */
+.index-card__body>.index-section:only-child {
+    min-height: 100%;
 }
 
 .index-card__body {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
 
-    padding: 0 10px 10px;
+    padding: 0;
 }
 
 .index-list {
@@ -69,6 +86,9 @@
 }
 
 .index-item {
+    position: relative;
+    z-index: 1;
+
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -159,7 +179,8 @@
     padding: 0 10px 10px;
 
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
 
     color: inherit;
 }

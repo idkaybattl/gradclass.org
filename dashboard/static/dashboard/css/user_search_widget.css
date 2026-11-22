@@ -77,7 +77,8 @@
 .user-search__results {
     max-height: 12rem;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
 
     padding: 0;
 
