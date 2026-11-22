@@ -2399,9 +2399,9 @@ placeholder art.
 - [x] Measure the stride in pixels at the chosen display size and record it.
 - [x] Export the walk sheet and the turn sheet (or body + head split) at 2×;
       verify alpha edges and loop seams on a checkerboard background.
-- [ ] Store the sheets under `dashboard/static/dashboard/sprites/fox/` and
-      reference them with `{% static %}`. Stored; the reference lands with the
-      component.
+- [x] Store the sheets under `dashboard/static/dashboard/sprites/fox/` and
+      reference them with `{% static %}`. Stored; `--fox-sheet` is set inline
+      from the template.
 
 **Measured from the delivered frames**
 
@@ -2426,19 +2426,20 @@ placeholder art.
 - [x] Implement the intro (“Hi” appears, moves aside, “oder so” appears) and the
       ~2 s exit. Timings are fractions of `--splash-duration`; the element is
       still left in the DOM, removal is part of **Trigger**.
-- [ ] Anchor `.fox--title` on the top bar, feet on the bar, and make sure the
+- [x] Anchor `.fox--title` on the top bar, feet on the bar, and make sure the
       card does not clip the fox (`overflow`).
 - [ ] Tune bar thickness, display size, travel duration and turn interval on the
       rendered page.
 
 **Trigger**
 
-- [ ] Add the `sessionStorage` guard (wrapped in try/catch) and the before-paint
+- [x] Add the `sessionStorage` guard (wrapped in try/catch) and the before-paint
       skip check; verify the splash does not flash on repeat visits.
 - [ ] Verify: first index load in a tab shows it, reloads and navigation do not,
-      a new tab does.
+      a new tab does. (Needs a real browser session; the environment here only
+      has a single-shot headless screenshot.)
 - [ ] Key or clear the flag on logout/user switch; see Open.
-- [ ] Remove the splash from the DOM after the exit animation; skip it under
+- [x] Remove the splash from the DOM after the exit animation; skip it under
       `prefers-reduced-motion`.
 - [ ] Verify the no-JS path still dismisses it via CSS.
 

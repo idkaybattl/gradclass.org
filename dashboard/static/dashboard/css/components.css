@@ -336,3 +336,63 @@ textarea::placeholder {
     gap: 4px;
     list-style: none;
 }
+
+/*
+ * Fox: decorative walking sprite. The modifiers place it and set the travel;
+ * size it with --fox-height and point --fox-sheet at the walk sheet.
+ *
+ * Three transforms on three elements, so none of them overwrite each other:
+ * the travel on .fox__travel, the flip on .fox__flip, the frame step on
+ * .fox__sprite.
+ */
+.fox {
+    --fox-height: 30px;
+    --fox-width: calc(var(--fox-height) * 1.975);
+
+    /* fixed at 12 fps; the ground speed is --fox-travel-duration per instance */
+    --fox-frame-duration: 83.33ms;
+
+    position: absolute;
+    height: var(--fox-height);
+
+    pointer-events: none;
+}
+
+/* The modifier animates this across its own width, so it has to be the
+   container-width box rather than the fox. */
+.fox__travel {
+    height: 100%;
+}
+
+.fox__flip {
+    width: var(--fox-width);
+    height: 100%;
+    overflow: hidden;
+}
+
+.fox__sprite {
+    width: calc(var(--fox-width) * 10);
+    height: 100%;
+
+    background-image: var(--fox-sheet);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+/* Only the frame step is animated here; the modifiers animate the travel. Both
+   are gated on no-preference so reduced motion gets frame 0, standing still. */
+@media (prefers-reduced-motion: no-preference) {
+    .fox__sprite {
+        animation: fox-walk calc(var(--fox-frame-duration) * 10) steps(10) infinite;
+    }
+}
+
+@keyframes fox-walk {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(calc(var(--fox-width) * -10));
+    }
+}

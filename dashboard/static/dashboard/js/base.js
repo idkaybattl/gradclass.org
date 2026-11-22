@@ -324,6 +324,7 @@ const PAGE_INITIALIZERS = [
   "initQuotesList",
   "initUsersList",
   "initIntroduction",
+  "initSplash",
   "initCopyFields",
 ];
 

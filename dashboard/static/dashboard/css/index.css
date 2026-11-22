@@ -234,11 +234,19 @@
 .splash__card {
     flex: 0 0 auto;
 
+    /* bounds the bar, which keeps the fox's travel (and so its speed) close to
+       the same on every screen */
+    width: 100%;
+    max-width: 360px;
+    margin-inline: auto;
+
     display: flex;
     flex-direction: column;
 }
 
 .splash__bar {
+    position: relative;
+
     flex: 0 0 auto;
     height: 24px;
 
@@ -312,8 +320,44 @@
     }
 }
 
+/* Set before first paint when the card has already been shown in this tab. */
+html.splash-seen .splash {
+    display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .splash {
         display: none;
+    }
+}
+
+/*
+ * The title fox walks along the top bar, feet on it. The card and the splash
+ * above it must not clip it, so neither gets `overflow`.
+ */
+.fox--title {
+    --fox-height: 52px;
+    --fox-travel-duration: 3.2s;
+
+    /* full bar width, bottom edge on the top edge of the bar */
+    inset: auto 0 100% 0;
+}
+
+
+/* Gated like the frame step, so reduced motion leaves the fox standing at the
+   start of the bar. */
+@media (prefers-reduced-motion: no-preference) {
+    .fox--title .fox__travel {
+        animation: fox-title-travel var(--fox-travel-duration) linear forwards;
+    }
+}
+
+@keyframes fox-title-travel {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(calc(100% - var(--fox-width)));
     }
 }
