@@ -1711,39 +1711,39 @@ Dialogue card:
 
 **Forms and services**
 
-- [ ] `QuoteForm` for `extra_info` and `spoken_on`; date input uses
+- [x] `QuoteForm` for `extra_info` and `spoken_on`; date input uses
   `type="date"`.
-- [ ] `QuoteLineForm` for `speaker` and `text`; speaker input uses
+- [x] `QuoteLineForm` for `speaker` and `text`; speaker input uses
   `list="quote-speaker-options"`.
-- [ ] `QuoteLineFormSet = inlineformset_factory(Quote, QuoteLine, extra=1,
+- [x] `QuoteLineFormSet = inlineformset_factory(Quote, QuoteLine, extra=0,
   min_num=1, validate_min=True, can_delete=True)`.
-- [ ] `QuoteReportForm` for the optional reason.
-- [ ] `save_quote(form, formset, user)` in `services.py`: transaction, set the
+- [x] `QuoteReportForm` for the optional reason.
+- [x] `save_quote(form, formset, user)` in `services.py`: transaction, set the
   uploader, save the quote, save lines in form order with `position=0..n-1`,
   honor deleted forms.
-- [ ] Never accept a client-supplied position; derive it from row order.
+- [x] Never accept a client-supplied position; derive it from row order.
 
 **Views and URLs**
 
-- [ ] `views/quotes.py` with `quotes`, `quote_create`, `quote_delete`,
+- [x] `views/quotes.py` with `quotes`, `quote_create`, `quote_delete`,
   `quote_report`, `quote_report_dismiss`.
-- [ ] `quotes`: login and introduction required; prefetch `lines` and
+- [x] `quotes`: login and introduction required; prefetch `lines` and
   `reports__reporter`; compute per-quote `can_delete` and `can_report`
   (`can_report` is false for the uploader or when this user already reported);
   pass open reports and `can_manage_quotes`.
-- [ ] `quote_create`: GET/POST, HTMX partial plus full-page fallback; validate
+- [x] `quote_create`: GET/POST, HTMX partial plus full-page fallback; validate
   form and formset; success feedback with actions; non-HTMX redirect to
   `?status=quote-created`.
-- [ ] `quote_delete`: POST only; permission check; delete; redirect to
+- [x] `quote_delete`: POST only; permission check; delete; redirect to
   `?status=quote-deleted` (support HTMX feedback for robustness).
-- [ ] `quote_report`: GET/POST overlay; reject the uploader and duplicate
+- [x] `quote_report`: GET/POST overlay; reject the uploader and duplicate
   reports; create the report and notify reps; redirect or feedback with
   `quote-reported` / `quote-already-reported`.
-- [ ] `quote_report_dismiss`: POST only; `manage_quotes` required; delete the
+- [x] `quote_report_dismiss`: POST only; `manage_quotes` required; delete the
   report; redirect to `?status=report-dismissed`.
-- [ ] URLs: `quotes`, `quote-create`, `quote-delete`, `quote-report`,
+- [x] URLs: `quotes`, `quote-create`, `quote-delete`, `quote-report`,
   `quote-report-dismiss`.
-- [ ] Add `QUOTE_REPORTED` to `NotificationVerbChoices`; `__str__` and
+- [x] Add `QUOTE_REPORTED` to `NotificationVerbChoices`; `__str__` and
   `get_url` point at `/quotes/#reports`; notify all users with
   `manage_quotes` (including superusers) without duplicates.
 

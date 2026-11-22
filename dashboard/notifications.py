@@ -1,12 +1,14 @@
 from datetime import datetime
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 
-from .models import Event, JoinRequest
+from .models import Event, JoinRequest, QuoteReport
 
 User = settings.AUTH_USER_MODEL
 
@@ -24,6 +26,7 @@ class NotificationVerbChoices(models.TextChoices):
         "event_join_request_rejected",
         "Event join request rejected",
     )
+    QUOTE_REPORTED = ("quote_reported", "Quote reported")
 
 
 class Notification(models.Model):
@@ -93,6 +96,10 @@ class Notification(models.Model):
             return f'Teilnahmeanfrage angenommen für "{self.target.title}"'
         elif self.verb == NotificationVerbChoices.EVENT_JOIN_REQUEST_REJECTED:
             return f'Teilnahmeanfrage abgelehnt für "{self.target.title}"'
+        elif self.verb == NotificationVerbChoices.QUOTE_REPORTED and isinstance(
+            self.target, QuoteReport
+        ):
+            return f"Zitat gemeldet: {self.target.quote}"
         else:
             return f"{self.verb} {self.target.__str__()}"
 
@@ -115,6 +122,11 @@ class Notification(models.Model):
             return reverse(
                 "join-request-details", kwargs={"join_request_id": self.target.pk}
             )
+
+        if self.verb == NotificationVerbChoices.QUOTE_REPORTED and isinstance(
+            self.target, QuoteReport
+        ):
+            return f"{reverse('quotes')}#reports"
 
         # fallback
         return reverse("main-page")
@@ -190,4 +202,26 @@ def notify_time_frame_changed(
             verb=NotificationVerbChoices.TIME_FRAME_CHANGED,
             target=event,
             payload=payload,
+        ).save()
+
+
+def notify_quote_reported(report):
+    User = get_user_model()
+    managers = User.objects.filter(
+        Q(is_superuser=True)
+        | Q(
+            groups__permissions__codename="manage_quotes",
+            groups__permissions__content_type__app_label="dashboard",
+        )
+        | Q(
+            user_permissions__codename="manage_quotes",
+            user_permissions__content_type__app_label="dashboard",
+        )
+    ).distinct()
+
+    for recipient in managers:
+        Notification(
+            user=recipient,
+            verb=NotificationVerbChoices.QUOTE_REPORTED,
+            target=report,
         ).save()

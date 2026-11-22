@@ -29,6 +29,8 @@ from .models import (
     Event,
     EventParticipation,
     Poll,
+    Quote,
+    QuoteLine,
     UserProfile,
 )
 
@@ -765,3 +767,46 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ["external_mail", "phone_number", "birthday", "bio"]
+
+
+class QuoteForm(forms.ModelForm):
+    class Meta:
+        model = Quote
+        fields = ["extra_info", "spoken_on"]
+        labels = {
+            "extra_info": "Zusatzinfo (optional)",
+            "spoken_on": "Datum",
+        }
+        widgets = {
+            "spoken_on": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+        }
+
+
+class QuoteLineForm(forms.ModelForm):
+    class Meta:
+        model = QuoteLine
+        fields = ["speaker", "text"]
+        labels = {"speaker": "Sprecher", "text": "Text"}
+        widgets = {
+            "speaker": forms.TextInput(attrs={"list": "quote-speaker-options"}),
+            "text": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+QuoteLineFormSet = inlineformset_factory(
+    Quote,
+    QuoteLine,
+    form=QuoteLineForm,
+    extra=0,
+    min_num=1,
+    validate_min=True,
+    can_delete=True,
+)
+
+
+class QuoteReportForm(forms.Form):
+    reason = forms.CharField(
+        label="Grund (optional)",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )

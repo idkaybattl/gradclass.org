@@ -574,3 +574,23 @@ def ticket_estimate(user):
         capped=capped,
         computed_at=timezone.localdate(),
     )
+
+
+@transaction.atomic
+def save_quote(form, formset, user):
+    quote = form.save(commit=False)
+    if quote.pk is None:
+        quote.uploader = user
+    quote.save()
+
+    position = 0
+    for line_form in formset.forms:
+        cleaned_data = line_form.cleaned_data
+        if not cleaned_data or cleaned_data.get("DELETE"):
+            continue
+        line_form.instance.quote = quote
+        line_form.instance.position = position
+        line_form.save()
+        position += 1
+
+    return quote

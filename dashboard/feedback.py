@@ -85,6 +85,20 @@ STATUS_FEEDBACK = {
     "abikasse-entry-deleted": ("success", "Eintrag gelöscht."),
     "abikasse-settings-updated": ("success", "Einstellungen gespeichert."),
     "ticket-count-updated": ("success", "Personenzahl gespeichert."),
+    "quote-created": ("success", "Zitat hinzugefügt."),
+    "quote-deleted": ("success", "Zitat gelöscht."),
+    "quote-delete-denied": (
+        "error",
+        "Du bist nicht berechtigt, dieses Zitat zu löschen.",
+    ),
+    "quote-reported": ("success", "Zitat gemeldet."),
+    "quote-already-reported": ("info", "Du hast dieses Zitat bereits gemeldet."),
+    "quote-report-denied": ("error", "Du kannst dein eigenes Zitat nicht melden."),
+    "report-dismissed": ("success", "Meldung verworfen."),
+    "report-dismiss-denied": (
+        "error",
+        "Du bist nicht berechtigt, Meldungen zu verwalten.",
+    ),
 }
 
 

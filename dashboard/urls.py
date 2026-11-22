@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
 from . import forms
-from .views import abikasse, auth, core, events, notifications, polls, users
+from .views import abikasse, auth, core, events, notifications, polls, quotes, users
 
 urlpatterns = [
     path(
@@ -181,4 +181,22 @@ urlpatterns = [
         name="poll-moderate",
     ),
     path("polls/<int:poll_id>/results/", polls.poll_results, name="poll-results"),
+    # quotes
+    path("quotes/", quotes.quotes, name="quotes"),
+    path("quotes/create/", quotes.quote_create, name="quote-create"),
+    path(
+        "quotes/<int:quote_id>/delete/",
+        quotes.quote_delete,
+        name="quote-delete",
+    ),
+    path(
+        "quotes/<int:quote_id>/report/",
+        quotes.quote_report,
+        name="quote-report",
+    ),
+    path(
+        "quotes/reports/<int:report_id>/dismiss/",
+        quotes.quote_report_dismiss,
+        name="quote-report-dismiss",
+    ),
 ]

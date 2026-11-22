@@ -140,9 +140,11 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 
 ## Working from `TODO.md`
 
-- Work in small steps: one checklist subsection at a time. Implement, validate,
-  then stop and report so the user can review and commit before you continue.
-- Mark the items you finished as `[x]` in `TODO.md` in that same step.
+- Work in small steps: one or two checklist items at a time, never a whole
+  subsection in one go. Implement, validate, then stop and report so the user
+  can review and commit before you continue.
+- Mark only the items you finished as `[x]` in `TODO.md` in that same step; leave
+  the rest of the subsection open.
 - Do not silently reorder sections. If the section you were asked for depends on
   unfinished work or the order is unclear, say which order you plan to take and
   get it confirmed before editing.
