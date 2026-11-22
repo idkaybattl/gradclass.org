@@ -1,14 +1,14 @@
-from decimal import Decimal
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.decorators.http import require_GET
 
+from ..feedback import get_feedback
 from ..intro import introduction_required
-from ..models import Abikasse
-from ..services import abikasse_balance
+from ..services import abikasse_balance, get_abikasse
+from .abikasse import ticket_context
 
 User = get_user_model()
 
@@ -17,12 +17,7 @@ User = get_user_model()
 @require_GET
 @introduction_required
 def main_page(request):
-    abikasse, _ = Abikasse.objects.get_or_create(
-        pk=1,
-        defaults={
-            "goal": Decimal("30000.00"),
-        },
-    )
+    abikasse = get_abikasse()
 
     return render(
         request,
@@ -30,6 +25,8 @@ def main_page(request):
         {
             "abikasse_current": abikasse_balance(),
             "abikasse_goal": abikasse.goal,
+            "feedback": get_feedback(request.GET.get("status")),
+            **ticket_context(request, default_next=reverse("main-page")),
         },
     )
 

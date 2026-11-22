@@ -80,6 +80,11 @@ STATUS_FEEDBACK = {
         "error",
         "Deine Stimme kann nicht geändert werden: Der Stimmzettel fehlt in diesem Browser.",
     ),
+    "abikasse-entry-created": ("success", "Eintrag hinzugefügt."),
+    "abikasse-entry-updated": ("success", "Eintrag gespeichert."),
+    "abikasse-entry-deleted": ("success", "Eintrag gelöscht."),
+    "abikasse-settings-updated": ("success", "Einstellungen gespeichert."),
+    "ticket-count-updated": ("success", "Personenzahl gespeichert."),
 }
 
 

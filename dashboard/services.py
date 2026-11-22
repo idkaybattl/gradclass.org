@@ -19,6 +19,7 @@ from django.utils.http import urlsafe_base64_encode
 from .models import (
     STUDENT_GROUP_NAME,
     AbiballConfig,
+    Abikasse,
     AbikasseEntry,
     Ballot,
     BallotVote,
@@ -35,6 +36,7 @@ User = get_user_model()
 
 CENT = Decimal("0.01")
 DEFAULT_POINT_VALUE = Decimal("2.00")
+DEFAULT_TICKET_COUNT = 5
 SECONDS_PER_HOUR = Decimal(3600)
 
 
@@ -427,8 +429,20 @@ def earnings_share(user):
     return total
 
 
+def get_abikasse():
+    abikasse, _ = Abikasse.objects.get_or_create(
+        pk=1, defaults={"goal": Decimal("30000.00")}
+    )
+    return abikasse
+
+
 def get_abiball_config():
     return AbiballConfig.objects.filter(pk=1).first()
+
+
+def get_or_create_abiball_config():
+    config, _ = AbiballConfig.objects.get_or_create(pk=1)
+    return config
 
 
 def current_point_value():
@@ -452,10 +466,10 @@ def active_students():
     )
 
 
-def _ticket_count(user, config):
+def _ticket_count(user, default_ticket_count):
     profile = getattr(user, "profile", None)
     if profile is None:
-        return config.default_ticket_count
+        return default_ticket_count
     return profile.ticket_count
 
 
@@ -491,24 +505,25 @@ class TicketEstimate:
 
 def ticket_base():
     config = get_abiball_config()
-    if config is None or config.fixed_costs is None or config.per_head_costs is None:
-        return None
+    point_value = config.point_value if config is not None else DEFAULT_POINT_VALUE
+    default_ticket_count = (
+        config.default_ticket_count if config is not None else DEFAULT_TICKET_COUNT
+    )
 
     students = list(active_students())
-    n_est = sum(_ticket_count(student, config) for student in students)
+    n_est = sum(_ticket_count(student, default_ticket_count) for student in students)
     if n_est <= 0:
         return None
 
     total_credit = sum(
         (
-            Decimal(total_points(student, point_value=config.point_value))
-            * config.point_value
+            Decimal(total_points(student, point_value=point_value)) * point_value
             for student in students
         ),
         Decimal("0"),
     )
     available = abikasse_balance()
-    required = config.fixed_costs + config.per_head_costs * n_est - available
+    required = get_abikasse().goal - available
     base = (required + total_credit) / n_est
 
     return TicketBase(
@@ -517,8 +532,8 @@ def ticket_base():
         total_credit=total_credit,
         available=available,
         required=required,
-        point_value=config.point_value,
-        default_ticket_count=config.default_ticket_count,
+        point_value=point_value,
+        default_ticket_count=default_ticket_count,
     )
 
 

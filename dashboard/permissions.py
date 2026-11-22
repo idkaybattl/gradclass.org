@@ -17,6 +17,9 @@ VIEW_ALL_USERS = "dashboard.view_all_users"
 MANAGE_USERS = "dashboard.manage_users"
 ACCESS_ADMIN = "dashboard.access_admin"
 MANAGE_POLLS = "dashboard.manage_polls"
+VIEW_ABIKASSE = "dashboard.view_abikasse"
+MANAGE_ABIKASSE = "dashboard.manage_abikasse"
+VIEW_ANY_POINTS = "dashboard.view_any_points"
 
 
 def _can(user, permission):
@@ -98,3 +101,15 @@ def can_view_poll_results(user, poll):
     if poll.phase not in {poll.Phase.VOTING, poll.Phase.CLOSED}:
         return False
     return poll.results_public or can_manage_poll(user, poll)
+
+
+def can_view_abikasse(user):
+    return _can(user, VIEW_ABIKASSE)
+
+
+def can_manage_abikasse(user):
+    return _can(user, MANAGE_ABIKASSE)
+
+
+def can_view_any_points(user):
+    return _can(user, VIEW_ANY_POINTS)

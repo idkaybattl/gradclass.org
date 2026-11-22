@@ -1,0 +1,20 @@
+<section class="user-detail__section card">
+    <h3>Arbeitspunkte</h3>
+    <p><strong>Punkte gesamt:</strong> {{ points_total }}</p>
+    <p>Arbeitspunkte: {{ points_work }}</p>
+    <p>Ertragspunkte: {{ points_earnings }}</p>
+    <p class="user-detail__hint">Punkte zählen nur für abgeschlossene Aktionen. Ertragspunkte
+        kommen aus dem Anteil an den Einnahmen.</p>
+
+    {% if user_ticket_estimate %}
+    {% if user_ticket_estimate.ticket_count == 0 %}
+    <p>Ticketpreis: Du nimmst nicht teil.</p>
+    {% else %}
+    <p>Ticketpreis: {{ user_ticket_estimate.price|floatformat:2 }} €</p>
+    <p>Gesamt: {{ user_ticket_estimate.total|floatformat:2 }} €</p>
+    {% endif %}
+    <p>Schätzung vom {{ user_ticket_estimate.computed_at|date:"d.m.Y" }}</p>
+    {% else %}
+    <p>Noch keine Schätzung.</p>
+    {% endif %}
+</section>

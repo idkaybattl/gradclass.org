@@ -71,20 +71,6 @@ class AbikasseEntry(models.Model):
 
 
 class AbiballConfig(models.Model):
-    fixed_costs = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(Decimal("0"))],
-    )
-    per_head_costs = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(Decimal("0"))],
-    )
     point_value = models.DecimalField(
         max_digits=6,
         decimal_places=2,

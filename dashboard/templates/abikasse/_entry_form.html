@@ -1,0 +1,49 @@
+{% if mode == "edit" %}
+{% url 'abikasse-entry-edit' entry.id as form_action %}
+{% else %}
+{% url 'abikasse-entry-create' as form_action %}
+{% endif %}
+
+<form class="event-form" method="post" action="{{ form_action }}" hx-post="{{ form_action }}"
+    hx-target="#overlay-content" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    {% if mode == "edit" %}
+    {% include "components/_overlay_header.html" with title="Eintrag bearbeiten" back_url=back_url %}
+    {% else %}
+    {% include "components/_overlay_header.html" with title="Eintrag hinzufügen" back_url=back_url %}
+    {% endif %}
+
+    {{ form.non_field_errors }}
+
+    <p class="field">
+        {{ form.kind.errors }}
+        {{ form.kind.label_tag }}
+        {{ form.kind }}
+    </p>
+
+    <p class="field">
+        {{ form.amount.errors }}
+        {{ form.amount.label_tag }}
+        {{ form.amount }}
+    </p>
+
+    <p class="field">
+        {{ form.description.errors }}
+        {{ form.description.label_tag }}
+        {{ form.description }}
+    </p>
+
+    <p class="field">
+        {{ form.date.errors }}
+        {{ form.date.label_tag }}
+        {{ form.date }}
+    </p>
+
+    <div class="event-form__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">Speichern</button>
+    </div>
+</form>

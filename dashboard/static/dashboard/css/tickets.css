@@ -1,0 +1,91 @@
+.ticket-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+}
+
+.ticket-card>h2 {
+    font-size: var(--font-size-lg);
+}
+
+.ticket-estimate {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ticket-estimate__summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-align: center;
+}
+
+.ticket-estimate__arrow {
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+.ticket-estimate__figures {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.ticket-estimate__figure {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ticket-estimate__value {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.ticket-estimate__label,
+.ticket-estimate__date,
+.ticket-estimate__people,
+.ticket-estimate__details {
+    font-size: var(--font-size-sm);
+}
+
+.ticket-estimate__people {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.ticket-estimate__edit {
+    padding: 4px 10px;
+    font-size: var(--font-size-sm);
+}
+
+.ticket-estimate__details {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 4px 14px;
+}
+
+.ticket-estimate__notice {
+    font-size: var(--font-size-sm);
+    color: var(--primary);
+    text-align: left;
+}
+
+.ticket-estimate__date {
+    text-align: left;
+}

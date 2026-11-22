@@ -25,6 +25,7 @@ from phonenumber_field.formfields import PhoneNumberField
 from .durations import format_duration, split_duration
 from .models import (
     OPTION_LABEL_MAX_LENGTH,
+    AbikasseEntry,
     Event,
     EventParticipation,
     Poll,
@@ -485,6 +486,105 @@ class SetEarningsReceivedForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = ["earnings_received"]
+
+
+class AbikasseEntryForm(forms.ModelForm):
+    amount = EarningsField(
+        label="Betrag",
+        min_value=Decimal("0.01"),
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.TextInput(
+            attrs={
+                "aria-label": "Betrag in Euro",
+                "inputmode": "decimal",
+                "autocomplete": "off",
+                "class": "input",
+            }
+        ),
+    )
+    date = forms.DateField(
+        label="Datum",
+        widget=forms.DateInput(
+            format="%Y-%m-%d", attrs={"type": "date", "class": "input"}
+        ),
+    )
+
+    class Meta:
+        model = AbikasseEntry
+        fields = ["kind", "amount", "description", "date"]
+        labels = {
+            "kind": "Art",
+            "description": "Beschreibung",
+        }
+
+    def clean_amount(self):
+        return self.cleaned_data["amount"].quantize(Decimal("0.01"))
+
+
+class AbiballSettingsForm(forms.Form):
+    goal = EarningsField(
+        label="Ziel (Gesamtkosten)",
+        min_value=0,
+        max_digits=10,
+        decimal_places=2,
+        help_text="Erwartete Gesamtkosten des Abiballs.",
+        widget=forms.TextInput(attrs={"inputmode": "decimal", "class": "input"}),
+    )
+    point_value = EarningsField(
+        label="Punktwert",
+        min_value=Decimal("0.01"),
+        max_digits=6,
+        decimal_places=2,
+        widget=forms.TextInput(attrs={"inputmode": "decimal", "class": "input"}),
+    )
+    default_ticket_count = forms.IntegerField(
+        label="Standard-Personenzahl",
+        min_value=0,
+        max_value=20,
+        widget=forms.NumberInput(attrs={"min": 0, "max": 20, "class": "input"}),
+    )
+
+    def __init__(self, *args, abikasse, config, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.abikasse = abikasse
+        self.config = config
+        if not self.is_bound:
+            self.initial.update(
+                {
+                    "goal": abikasse.goal,
+                    "point_value": config.point_value,
+                    "default_ticket_count": config.default_ticket_count,
+                }
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        for field in ("goal", "point_value"):
+            value = cleaned_data.get(field)
+            if value is not None:
+                cleaned_data[field] = value.quantize(Decimal("0.01"))
+        return cleaned_data
+
+    def save(self):
+        self.abikasse.goal = self.cleaned_data["goal"]
+        self.abikasse.save()
+
+        self.config.point_value = self.cleaned_data["point_value"]
+        self.config.default_ticket_count = self.cleaned_data["default_ticket_count"]
+        self.config.save()
+        return self.abikasse, self.config
+
+
+class TicketCountForm(forms.Form):
+    ticket_count = forms.IntegerField(
+        label="Personen",
+        min_value=0,
+        max_value=20,
+        widget=forms.NumberInput(
+            attrs={"inputmode": "numeric", "min": 0, "max": 20, "class": "input"}
+        ),
+    )
 
 
 class OptionListWidget(forms.Widget):

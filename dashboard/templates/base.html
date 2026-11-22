@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="{% static 'dashboard/css/polls.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/users.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/user_search_widget.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/css/tickets.css' %}" />
 
     <title>{% block title %}WHG Abi 2028 Verwaltung{% endblock %}</title>
 
@@ -126,7 +127,7 @@
                     <span class="menu-link menu-link--disabled" aria-disabled="true">Zitate</span>
                     <span class="menu-link menu-link--disabled" aria-disabled="true">Gallerie</span>
                     <a class="menu-link" href="{% url 'polls' %}">Umfragen</a>
-                    <span class="menu-link menu-link--disabled" aria-disabled="true">Abikasse</span>
+                    <a class="menu-link" href="{% url 'abikasse' %}">Abikasse</a>
                     <span class="menu-link menu-link--disabled" aria-disabled="true">Forum</span>
                     <a class="menu-link" href="{% url 'users' %}">Nutzer</a>
                     <a class="menu-link" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"

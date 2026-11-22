@@ -1,0 +1,58 @@
+<div class="ticket-estimate" id="ticket-estimate" data-ticket-estimate>
+    {% if compact %}
+    <p class="ticket-estimate__summary">
+        <span>{{ points_total }}P</span>
+        <span class="ticket-estimate__arrow" aria-hidden="true">→</span>
+        <span>
+            {% if ticket_estimate and ticket_estimate.ticket_count > 0 %}
+            {{ ticket_estimate.price|floatformat:2 }} €
+            {% else %}
+            —
+            {% endif %}
+        </span>
+    </p>
+    {% else %}
+    <div class="ticket-estimate__figures">
+        <div class="ticket-estimate__figure">
+            <span class="ticket-estimate__label">Punkte</span>
+            <span class="ticket-estimate__value">{{ points_total }}</span>
+        </div>
+        <div class="ticket-estimate__figure">
+            <span class="ticket-estimate__label">Dein Ticketpreis</span>
+            {% if ticket_estimate and ticket_estimate.ticket_count > 0 %}
+            <span class="ticket-estimate__value">{{ ticket_estimate.price|floatformat:2 }} €</span>
+            {% else %}
+            <span class="ticket-estimate__value">—</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="ticket-estimate__people">
+        <span>Für {{ ticket_count }} Personen</span>
+        <a class="btn btn--secondary ticket-estimate__edit" href="{{ ticket_count_edit_url }}"
+            data-overlay-open="overlay" hx-get="{{ ticket_count_edit_url }}" hx-target="#overlay-content"
+            hx-swap="innerHTML">Ändern</a>
+    </div>
+
+    {% if ticket_estimate %}
+    {% if ticket_estimate.ticket_count == 0 %}
+    <p class="ticket-estimate__notice">Du nimmst nicht teil.</p>
+    {% endif %}
+
+    {% if not compact %}
+    {% if ticket_estimate.ticket_count > 0 %}
+    <div class="ticket-estimate__details">
+        <span><strong>Grundpreis:</strong> {{ ticket_estimate.base|floatformat:2 }} €</span>
+        <span><strong>Gesamt:</strong> {{ ticket_estimate.total|floatformat:2 }} €</span>
+    </div>
+    {% endif %}
+    {% if ticket_estimate.capped %}
+    <p class="ticket-estimate__notice">Der Rest bleibt in der Kasse.</p>
+    {% endif %}
+    <p class="ticket-estimate__date">Schätzung vom {{ ticket_estimate.computed_at|date:"d.m.Y" }}</p>
+    {% endif %}
+    {% else %}
+    <p class="ticket-estimate__notice">Noch keine Schätzung</p>
+    {% endif %}
+</div>

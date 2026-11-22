@@ -22,9 +22,15 @@ from ..permissions import (
     can_change_password,
     can_edit_user,
     can_manage_users,
+    can_view_any_points,
     can_view_users,
 )
-from ..services import build_password_reset_url
+from ..services import (
+    build_password_reset_url,
+    ticket_estimate,
+    total_points,
+    work_points,
+)
 
 User = get_user_model()
 
@@ -49,6 +55,18 @@ def user_details_context(request, user, *, back_url=None, status=None, feedback=
     may_change_password = can_change_password(request, user.pk)
     can_reset_link = can_manage_users(request.user) and user.pk != request.user.pk
     display_name = user.get_full_name() or user.username
+
+    can_view_points = request.user.pk == user.pk or can_view_any_points(request.user)
+    points = {}
+    if can_view_points:
+        points_total = total_points(user)
+        points_work = work_points(user)
+        points = {
+            "points_total": points_total,
+            "points_work": points_work,
+            "points_earnings": points_total - points_work,
+            "user_ticket_estimate": ticket_estimate(user),
+        }
 
     edit_url = ""
     if can_edit:
@@ -90,6 +108,8 @@ def user_details_context(request, user, *, back_url=None, status=None, feedback=
         "can_edit": can_edit,
         "can_change_password": may_change_password,
         "can_reset_link": can_reset_link,
+        "can_view_points": can_view_points,
+        **points,
         "reset_link_url": reverse("user-reset-link", kwargs={"user_id": user.pk}),
         "next_url": next_url,
         "back_url": back_url,

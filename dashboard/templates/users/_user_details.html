@@ -46,4 +46,8 @@
             {% endfor %}
         </div>
     </section>
+
+    {% if can_view_points %}
+    {% include "users/_points.html" %}
+    {% endif %}
 </div>

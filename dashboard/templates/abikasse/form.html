@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "edit" %}Eintrag bearbeiten{% else %}Eintrag hinzufügen{% endif %}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    {% include "abikasse/_entry_form.html" %}
+</div>
+{% endblock %}

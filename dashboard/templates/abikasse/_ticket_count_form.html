@@ -1,0 +1,24 @@
+{% url 'abikasse-ticket-count-edit' as form_action %}
+
+<form class="event-form" method="post" action="{{ form_action }}" hx-post="{{ form_action }}"
+    hx-target="#overlay-content" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    {% include "components/_overlay_header.html" with title="Personen" %}
+
+    {{ form.non_field_errors }}
+
+    <p class="field">
+        {{ form.ticket_count.errors }}
+        {{ form.ticket_count.label_tag }}
+        {{ form.ticket_count }}
+        <span class="field__help">0 = nimmt nicht teil.</span>
+    </p>
+
+    <div class="event-form__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">Speichern</button>
+    </div>
+</form>

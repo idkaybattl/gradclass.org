@@ -1392,11 +1392,11 @@ price is an estimate only.
   themselves and their family, **default 5**, owner-editable, validated 0–20. It
   includes the user’s own seat; 0 means they do not attend.
 - `N_est = Σ ticket_count` over active students (the `Schüler` group).
-- `AbiballConfig` is a singleton edited by `manage_abikasse`: `fixed_costs`,
-  `per_head_costs`, `point_value` (default 2), `default_ticket_count` (default 5).
-  Costs are nullable so the estimate can be hidden until configured.
-- `available = Abikasse.balance()`;
-  `R = fixed_costs + per_head_costs × N_est − available`.
+- `AbiballConfig` is a singleton edited by `manage_abikasse`: `point_value`
+  (default 2) and `default_ticket_count` (default 5). `Abikasse.goal` is the
+  expected total Abiball cost; “Noch keine Schätzung” only appears when
+  `N_est` is 0.
+- `available = Abikasse.balance()`; `R = goal − available`.
 - `credit(user) = total_points(user) × point_value`.
 - `point_value` is both the earnings-to-points divisor and the points-to-credit
   multiplier, so it cancels out of the earnings share apart from flooring:
@@ -1411,7 +1411,7 @@ price is an estimate only.
   reload. The Abikasse page shows the same estimate card.
 - The estimate is labelled “Schätzung” with the date it was computed. There is no
   deadline, snapshot or lock yet; it recalculates from current data.
-- Hide the card while `AbiballConfig` is incomplete (“Noch keine Schätzung”).
+- Show “Noch keine Schätzung” only when there is no config row.
 - Only the estimate is published. No ticket orders, no payments, no provider.
 - No `TicketGroup`: each user enters their own count. Shared family guests are a
   social convention for now; double counting is accepted until a real grouping
@@ -1438,16 +1438,17 @@ price is an estimate only.
 `/abikasse/` (full page):
 
 - Header “Abikasse”, with manager actions (“Eintrag hinzufügen”, “CSV”).
-- Summary: Kassenstand, Ziel, progress bar.
-- Ticket card: own points, head-count input, Grundpreis, own ticket price, total,
-  “Schätzung vom …”.
+- Summary: Kassenstand, Ziel (Gesamtkosten), progress bar.
+- Ticket card: own points and own ticket price as equal figures, “Für x
+  Personen” with an “Ändern” popup, Grundpreis, total, “Schätzung vom …”.
 - Ledger (managers only): date, description, kind, amount, optional running
   total; newest first; empty state.
 - Add/edit entry in the bottom sheet; delete through the feedback pattern.
 
 Index profile card:
 
-- Current user’s ticket price and the compact head-count input.
+- The whole card opens the profile overlay. It shows the compact
+  `12P → 45,00 €` summary plus the “Für x Personen” / “Ändern” control.
 
 Profile overlay:
 
@@ -1457,7 +1458,7 @@ Profile overlay:
 
 German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 `Arbeitspunkte`, `Ertragspunkte`, `Punkte gesamt`, `Grundpreis`,
-`Dein Ticketpreis`, `Personen`, `Schätzung`.
+`Dein Ticketpreis`, `Personen`, `Für x Personen`, `Ändern`, `Schätzung`.
 
 ## Implementation checklist
 
@@ -1467,8 +1468,8 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
   `EventForm` and `events/_event_form_fields.html`.
 - [x] Add `AbikasseEntry` with the fields above, `event` as a nullable
   `OneToOneField` (`SET_NULL`) and a `source` choice.
-- [x] Add `AbiballConfig` singleton (pk = 1) with `fixed_costs`,
-  `per_head_costs`, `point_value`, `default_ticket_count`.
+- [x] Add `AbiballConfig` singleton (pk = 1) with `point_value` (default 2)
+  and `default_ticket_count`.
 - [x] Add `UserProfile.ticket_count` (default 5, validators 0–20).
 - [x] Add `view_abikasse`/`manage_abikasse` to `Abikasse.Meta.permissions` and
   `view_any_points` to `UserProfile.Meta.permissions`.
@@ -1497,28 +1498,28 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 
 **Views and URLs**
 
-- [ ] `abikasse` full page, `view_abikasse`; pass ledger entries to the template
+- [x] `abikasse` full page, `view_abikasse`; pass ledger entries to the template
   only for `manage_abikasse`.
-- [ ] `abikasse_entry_create/edit/delete`, `manage_abikasse`, POST + HTMX
+- [x] `abikasse_entry_create/edit/delete`, `manage_abikasse`, POST + HTMX
   feedback; `@require_POST` for delete.
-- [ ] `abikasse_export` CSV, `manage_abikasse`.
-- [ ] `ticket_count_update` (POST) and the estimate partial; owner only.
-- [ ] `main_page`: add the current user’s estimate to the context and update the
+- [x] `abikasse_export` CSV, `manage_abikasse`.
+- [x] `ticket_count_update` (POST) and the estimate partial; owner only.
+- [x] `main_page`: add the current user’s estimate to the context and update the
   `.fund` card.
-- [ ] `user_details`: add points and the ticket estimate for
+- [x] `user_details`: add points and the ticket estimate for
   self/`view_any_points`.
-- [ ] Keep `next` handling in `http_helpers.py`; no inline redirects.
+- [x] Keep `next` handling in `http_helpers.py`; no inline redirects.
 
 **Templates, CSS, JS**
 
-- [ ] `abikasse.html`, `abikasse/_entry_form.html`, `abikasse/_ticket_card.html`,
+- [x] `abikasse.html`, `abikasse/_entry_form.html`, `abikasse/_ticket_card.html`,
+  `abikasse/_ticket_estimate.html`, `abikasse/_ticket_count_form.html`,
   `users/_points.html`.
-- [ ] Update `index.html` (`.profile` card), `users/_user_details.html`, and
+- [x] Update `index.html` (`.profile` card), `users/_user_details.html`, and
   `base.html` if new assets are global.
-- [ ] `abikasse.css` and `tickets.css` using tokens only; no border radius.
-- [ ] Small JS for the ticket-count input (or HTMX); idempotent
-  `initTicketEstimate(root)` called from `base.js` on `DOMContentLoaded` and
-  `htmx:afterSwap`.
+- [x] `abikasse.css` and `tickets.css` using tokens only; no border radius.
+- [x] Ticket-count editing uses an HTMX overlay form
+  (`abikasse/_ticket_count_form.html`); no custom JS.
 
 **Tests**
 
@@ -1530,11 +1531,11 @@ German labels: `Abikasse`, `Kassenstand`, `Ziel`, `Einnahme`, `Ausgabe`,
 - [ ] Ledger: balance, income/expense, auto entry on final, idempotent update,
   no entry for missing earnings, edit/delete permissions, CSV; a student gets
   the summary but no entry rows.
-- [ ] Estimate: default 5 tickets, base formula, own price, total, cap at 0,
-  hidden when config incomplete, count update changes the price, and a student
-  cannot see another user’s estimate.
-- [ ] Index profile card renders the estimate; profile overlay renders points and
-  the estimate.
+- [ ] Estimate: default 5 tickets, base formula from `goal − balance`, own
+  price, total, cap at 0, count update changes the price, and a student cannot
+  see another user’s estimate.
+- [ ] Index profile card links to the profile and renders points and the
+  compact estimate; profile overlay renders points and the estimate.
 - [ ] Overlay partials contain no `<html>`; invalid forms re-render with 200.
 
 **Validation**

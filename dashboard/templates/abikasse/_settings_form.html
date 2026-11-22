@@ -1,0 +1,36 @@
+{% url 'abikasse-settings' as form_action %}
+
+<form class="event-form" method="post" action="{{ form_action }}" hx-post="{{ form_action }}"
+    hx-target="#overlay-content" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    {% include "components/_overlay_header.html" with title="Einstellungen" back_url=back_url %}
+
+    {{ form.non_field_errors }}
+
+    <p class="field">
+        {{ form.goal.errors }}
+        {{ form.goal.label_tag }}
+        {{ form.goal }}
+        <span class="field__help">{{ form.goal.help_text }}</span>
+    </p>
+
+    <p class="field">
+        {{ form.point_value.errors }}
+        {{ form.point_value.label_tag }}
+        {{ form.point_value }}
+    </p>
+
+    <p class="field">
+        {{ form.default_ticket_count.errors }}
+        {{ form.default_ticket_count.label_tag }}
+        {{ form.default_ticket_count }}
+    </p>
+
+    <div class="event-form__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">Speichern</button>
+    </div>
+</form>

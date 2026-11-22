@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
 from . import forms
-from .views import auth, core, events, notifications, polls, users
+from .views import abikasse, auth, core, events, notifications, polls, users
 
 urlpatterns = [
     path(
@@ -48,6 +48,30 @@ urlpatterns = [
     path("set_password/", auth.password_set, name="set-password"),
     path("", core.main_page, name="main-page"),
     path("introduction/", auth.introduction, name="introduction"),
+    # abikasse
+    path("abikasse/", abikasse.abikasse, name="abikasse"),
+    path(
+        "abikasse/entries/create/",
+        abikasse.entry_create,
+        name="abikasse-entry-create",
+    ),
+    path(
+        "abikasse/entries/<int:entry_id>/edit/",
+        abikasse.entry_edit,
+        name="abikasse-entry-edit",
+    ),
+    path(
+        "abikasse/entries/<int:entry_id>/delete/",
+        abikasse.entry_delete,
+        name="abikasse-entry-delete",
+    ),
+    path("abikasse/export/", abikasse.export, name="abikasse-export"),
+    path("abikasse/settings/", abikasse.settings, name="abikasse-settings"),
+    path(
+        "abikasse/ticket-count/edit/",
+        abikasse.ticket_count_edit,
+        name="abikasse-ticket-count-edit",
+    ),
     # notifications
     path("notifications/", notifications.notifications, name="notifications"),
     path(

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Abikasse{% endblock %}
+
+{% block base_head %}
+<link rel="stylesheet" href="{% static 'dashboard/css/abikasse.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="abikasse">
+    <header class="abikasse__header">
+        <h1>Abikasse</h1>
+        {% if can_manage %}
+        <div class="abikasse__actions">
+            <a class="btn" href="{{ entry_create_url }}" data-overlay-open="overlay" hx-get="{{ entry_create_url }}"
+                hx-target="#overlay-content" hx-swap="innerHTML">Eintrag hinzufügen</a>
+            <a class="btn" href="{{ settings_url }}" data-overlay-open="overlay" hx-get="{{ settings_url }}"
+                hx-target="#overlay-content" hx-swap="innerHTML">Einstellungen</a>
+            <a class="btn" href="{{ export_url }}">CSV</a>
+        </div>
+        {% endif %}
+    </header>
+
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
+
+    <section class="card abikasse-summary">
+        <div class="abikasse-summary__row">
+            <span>Kassenstand</span>
+            <strong>{{ balance|floatformat:2 }} €</strong>
+        </div>
+        <div class="abikasse-summary__row">
+            <span>Ziel</span>
+            <strong>{{ goal|floatformat:2 }} €</strong>
+        </div>
+        <div class="abikasse-summary__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+            aria-valuenow="{{ progress }}">
+            <span class="abikasse-summary__bar" style="width: {{ progress }}%"></span>
+        </div>
+    </section>
+
+    {% include "abikasse/_ticket_card.html" %}
+
+    {% if can_manage %}
+    <section class="card abikasse-ledger">
+        <h2>Einträge</h2>
+        {% if entries %}
+        <ul class="abikasse-ledger__list">
+            {% for entry in entries %}
+            <li class="abikasse-ledger__row">
+                <span class="abikasse-ledger__date">{{ entry.date|date:"d.m.Y" }}</span>
+                <span class="abikasse-ledger__description">
+                    {{ entry.description }}
+                    {% if entry.event %}
+                    <span class="abikasse-ledger__event">{{ entry.event.title }}</span>
+                    {% endif %}
+                </span>
+                <span class="abikasse-ledger__kind">{{ entry.get_kind_display }}</span>
+                <span class="abikasse-ledger__amount">{{ entry.amount|floatformat:2 }} €</span>
+                <span class="abikasse-ledger__actions">
+                    <a class="btn" href="{% url 'abikasse-entry-edit' entry.id %}" data-overlay-open="overlay"
+                        hx-get="{% url 'abikasse-entry-edit' entry.id %}" hx-target="#overlay-content"
+                        hx-swap="innerHTML">Bearbeiten</a>
+                    <form method="post" action="{% url 'abikasse-entry-delete' entry.id %}"
+                        hx-post="{% url 'abikasse-entry-delete' entry.id %}" hx-target="#overlay-content"
+                        hx-swap="innerHTML">
+                        {% csrf_token %}
+                        {% if next_url %}
+                        <input type="hidden" name="next" value="{{ next_url }}" />
+                        {% endif %}
+                        <button type="submit" class="btn" hx-disabled-elt="this">Löschen</button>
+                    </form>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Noch keine Einträge.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

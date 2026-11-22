@@ -7,6 +7,10 @@
 {% endblock %}
 
 {% block content %}
+{% if feedback %}
+{% include "components/_feedback.html" %}
+{% endif %}
+
 <div class="main-grid">
     <section class="card gallery">
         <h2>Gallerie</h2>
@@ -22,16 +26,19 @@
         <a class="card polls" href="{% url 'polls' %}">
             <h2>Abstimmungen</h2>
         </a>
-        <section class="card fund">
+        <a class="card fund" href="{% url 'abikasse' %}">
             <h2>Abikasse</h2>
             <p class="fund__amount">{{ abikasse_current|floatformat:2 }} €</p>
             <hr class="fund__divider" />
             <p class="fund__amount">{{ abikasse_goal|floatformat:2 }} €</p>
-        </section>
-        <a class="card profile" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
-            hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
-            <h2>Profil</h2>
         </a>
+        <section class="card profile">
+            <a class="profile__hit" href="{% url 'user-details' user.id %}" data-overlay-open="overlay"
+                hx-get="{% url 'user-details' user.id %}" hx-target="#overlay-content" hx-swap="innerHTML"
+                aria-label="Profil öffnen"></a>
+            <h2>Profil</h2>
+            {% include "abikasse/_ticket_estimate.html" with compact=True %}
+        </section>
     </div>
 </div>
 {% endblock %}
