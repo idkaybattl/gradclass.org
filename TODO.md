@@ -2395,12 +2395,29 @@ placeholder art.
 
 **Assets**
 
-- [ ] Receive the 10 walk frames and 20 turn frames.
-- [ ] Measure the stride in pixels at the chosen display size and record it.
-- [ ] Export the walk sheet and the turn sheet (or body + head split) at 2×;
+- [x] Receive the 10 walk frames and 20 turn frames.
+- [x] Measure the stride in pixels at the chosen display size and record it.
+- [x] Export the walk sheet and the turn sheet (or body + head split) at 2×;
       verify alpha edges and loop seams on a checkerboard background.
 - [ ] Store the sheets under `dashboard/static/dashboard/sprites/fox/` and
-      reference them with `{% static %}`.
+      reference them with `{% static %}`. Stored; the reference lands with the
+      component.
+
+**Measured from the delivered frames**
+
+- Sprite box `1391x704+22+59` is the union alpha box of all 30 frames; its
+  bottom edge is the ground line, so `bottom: 0` puts the feet on a bar.
+- No root motion: the nose stays at x≈1400 in every frame, so the cycle is
+  walk-in-place.
+- The contact pattern repeats exactly every 10 frames in all three blocks, and
+  turn frame 11 matches walk frame 1 in pose, so the turn can start on any walk
+  loop boundary.
+- Body pixels are **not** identical between walk and turn, so the turn ships as
+  the full 20 frames, not a body + head split.
+- Sheets: `158x80` px per frame (2× a 40 px display box), walk `1580x80`, turn
+  `3160x80`, WebP q75 = 55 KB + 91 KB.
+- Stride ≈ 800 source px per cycle ≈ 1.14 × sprite box height (≈ 45 px/cycle at
+  a 40 px box, ≈ 55 px/s). Rough: only a starting value, tune it by eye.
 
 **Title card**
 
@@ -2450,8 +2467,6 @@ placeholder art.
 - Final display size and compression quality; judge from the rendered page.
 - Final ground speed and the per-instance travel durations; tune them on the
   rendered page at 12 fps.
-- Whether the turn ships as a full 20-frame sheet or as a shared walk body plus
-  a head sheet (depends on the exported frames).
 - Final navbar fox display size; check it reads clearly within the 50 px nav
   and does not become a smudge on mobile.
 - Exact bar thickness, spacing and intro timing; tune on the rendered page.
