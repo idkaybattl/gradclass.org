@@ -1,0 +1,207 @@
+.quotes-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    width: 100%;
+    max-width: 900px;
+    height: 100%;
+    min-height: 0;
+    margin-inline: auto;
+}
+
+.quotes-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.quotes-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quote-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    padding: 14px;
+}
+
+.quote-card__meta {
+    font-size: var(--font-size-sm);
+}
+
+.quote-card__quote,
+.quote-card__dialogue {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    overflow-wrap: anywhere;
+}
+
+.quote-card__quote {
+    font-size: var(--font-size-base);
+}
+
+.quote-card__attribution {
+    font-size: var(--font-size-sm);
+}
+
+.quote-card__speaker {
+    font-weight: 600;
+}
+
+.quote-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.quote-card__action {
+    padding: 0;
+
+    background: none;
+    border-style: none;
+
+    color: var(--primary);
+    font-size: var(--font-size-sm);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.quote-card__action:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+.quotes-empty {
+    padding: 14px;
+    border-style: dashed;
+
+    font-size: var(--font-size-sm);
+}
+
+.quote-reports {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 14px;
+    border-style: solid;
+}
+
+.quote-reports__title {
+    font-size: var(--font-size-lg);
+}
+
+.quote-reports__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    list-style: none;
+}
+
+.quote-report {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.quote-report+.quote-report {
+    padding-top: 12px;
+    border-top-style: dashed;
+}
+
+.quote-report__meta,
+.quote-report__reason {
+    font-size: var(--font-size-sm);
+    overflow-wrap: anywhere;
+}
+
+.quote-report__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.quote-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.quote-form__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quote-line {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 12px;
+    border-style: dashed;
+}
+
+.quote-line__delete {
+    display: none;
+}
+
+.quote-line__remove {
+    align-self: flex-end;
+    padding: 0;
+
+    background: none;
+    border-style: none;
+
+    color: var(--primary);
+    font-size: var(--font-size-sm);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.quote-line__remove:focus-visible {
+    outline: var(--border-width) solid var(--text);
+    outline-offset: 2px;
+}
+
+.quote-form__hint {
+    font-size: var(--font-size-sm);
+}
+
+.quote-report__excerpt {
+    padding: 12px;
+
+    border-left-style: solid;
+    border-left-color: var(--primary);
+
+    font-size: var(--font-size-base);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .quotes-page {
+        gap: 8px;
+    }
+
+    .quotes-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .quotes-toolbar .btn {
+        justify-self: end;
+    }
+}

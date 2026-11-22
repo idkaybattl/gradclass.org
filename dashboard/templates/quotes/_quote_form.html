@@ -1,0 +1,77 @@
+<form class="quote-form" method="post" action="{% url 'quote-create' %}" data-quote-form
+    hx-post="{% url 'quote-create' %}" hx-target="#overlay-content" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    {% include "components/_overlay_header.html" with title="Neues Zitat" back_url=back_url %}
+
+    {{ form.non_field_errors }}
+
+    {{ formset.management_form }}
+
+    <div class="quote-form__lines" data-quote-lines>
+        {% for line_form in formset %}
+        <div class="quote-line" data-quote-line>
+            {% for hidden in line_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <p class="field">
+                {{ line_form.speaker.errors }}
+                {{ line_form.speaker.label_tag }}
+                {{ line_form.speaker }}
+            </p>
+            <p class="field">
+                {{ line_form.text.errors }}
+                {{ line_form.text.label_tag }}
+                {{ line_form.text }}
+            </p>
+            <div class="quote-line__delete">{{ line_form.DELETE }}</div>
+            <button type="button" class="quote-line__remove" data-quote-remove-line>Zeile entfernen</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <datalist id="quote-speaker-options" data-quote-speaker-options></datalist>
+
+    <button type="button" class="btn btn--secondary" data-quote-add-line>Zeile hinzufügen</button>
+
+    <p class="field">
+        {{ form.extra_info.errors }}
+        {{ form.extra_info.label_tag }}
+        {{ form.extra_info }}
+    </p>
+
+    <p class="field">
+        {{ form.spoken_on.errors }}
+        {{ form.spoken_on.label_tag }}
+        {{ form.spoken_on }}
+    </p>
+
+    <p class="quote-form__hint">
+        Du bist dafür verantwortlich, dass die genannte Person mit der Veröffentlichung einverstanden ist.
+    </p>
+
+    <div class="event-form__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">Hinzufügen</button>
+    </div>
+
+    <template data-quote-line-template>
+        {% with empty=formset.empty_form %}
+        <div class="quote-line" data-quote-line>
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <p class="field">
+                {{ empty.speaker.errors }}
+                {{ empty.speaker.label_tag }}
+                {{ empty.speaker }}
+            </p>
+            <p class="field">
+                {{ empty.text.errors }}
+                {{ empty.text.label_tag }}
+                {{ empty.text }}
+            </p>
+            <div class="quote-line__delete">{{ empty.DELETE }}</div>
+            <button type="button" class="quote-line__remove" data-quote-remove-line>Zeile entfernen</button>
+        </div>
+        {% endwith %}
+    </template>
+</form>

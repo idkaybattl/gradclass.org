@@ -1,0 +1,56 @@
+{% with uploader=quote.uploader uploader_name=quote.uploader.get_full_name|default:quote.uploader.username %}
+<article class="card quote-card" data-quote-card
+    data-quote-speakers="{% for line in quote.lines.all %}{{ line.speaker }} {% endfor %}"
+    data-quote-text="{% for line in quote.lines.all %}{{ line.text }} {% endfor %}"
+    data-quote-info="{{ quote.extra_info }}" data-quote-uploader="{{ uploader_name }}">
+    <p class="quote-card__meta">
+        von:
+        {% if uploader %}
+        <a href="{% url 'user-details' uploader.id %}" data-overlay-open="overlay"
+            hx-get="{% url 'user-details' uploader.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+            {{ uploader_name }}</a>
+        {% else %}
+        Unbekannt
+        {% endif %}
+        am {{ quote.spoken_on|date:"d.m.Y" }}
+    </p>
+
+    {% with lines=quote.lines.all %}
+    {% if lines|length == 1 %}
+    {% with line=lines.0 %}
+    <blockquote class="quote-card__quote">
+        <p>„{{ line.text }}“</p>
+        <p class="quote-card__attribution">
+            — {{ line.speaker }}{% if quote.extra_info %}
+            ({{ quote.extra_info }}){% endif %}
+        </p>
+    </blockquote>
+    {% endwith %}
+    {% else %}
+    <blockquote class="quote-card__dialogue">
+        {% for line in lines %}
+        <p><span class="quote-card__speaker">{{ line.speaker }}:</span> „{{ line.text }}“</p>
+        {% endfor %}
+        {% if quote.extra_info %}
+        <p class="quote-card__attribution">({{ quote.extra_info }})</p>
+        {% endif %}
+    </blockquote>
+    {% endif %}
+    {% endwith %}
+
+    {% if quote.can_delete or quote.can_report %}
+    <div class="quote-card__actions">
+        {% if quote.can_delete %}
+        <form method="post" action="{% url 'quote-delete' quote.id %}">
+            {% csrf_token %}
+            <button type="submit" class="quote-card__action">Löschen</button>
+        </form>
+        {% endif %}
+        {% if quote.can_report %}
+        <a class="quote-card__action" href="{% url 'quote-report' quote.id %}" data-overlay-open="overlay"
+            hx-get="{% url 'quote-report' quote.id %}" hx-target="#overlay-content" hx-swap="innerHTML">Melden</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</article>
+{% endwith %}

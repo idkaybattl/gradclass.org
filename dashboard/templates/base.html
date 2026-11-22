@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="{% static 'dashboard/css/components.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/events.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/polls.css' %}" />
+    <link rel="stylesheet" href="{% static 'dashboard/css/quotes.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/users.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/user_search_widget.css' %}" />
     <link rel="stylesheet" href="{% static 'dashboard/css/tickets.css' %}" />
@@ -124,7 +125,7 @@
                 <div class="overlay-handle overlay-handle--side" aria-hidden="true"></div>
                 <div class="overlay-content">
                     <a class="menu-link" href="{% url 'events' %}">Aktionen</a>
-                    <span class="menu-link menu-link--disabled" aria-disabled="true">Zitate</span>
+                    <a class="menu-link" href="{% url 'quotes' %}">Zitate</a>
                     <span class="menu-link menu-link--disabled" aria-disabled="true">Gallerie</span>
                     <a class="menu-link" href="{% url 'polls' %}">Umfragen</a>
                     <a class="menu-link" href="{% url 'abikasse' %}">Abikasse</a>
@@ -154,6 +155,7 @@
     <script src="{% static 'dashboard/js/user-picker.js' %}" defer></script>
     <script src="{% static 'dashboard/js/event-form.js' %}" defer></script>
     <script src="{% static 'dashboard/js/poll-form.js' %}" defer></script>
+    <script src="{% static 'dashboard/js/quote-form.js' %}" defer></script>
     <script src="{% static 'dashboard/js/copy-link.js' %}" defer></script>
     <script src="{% static 'dashboard/js/base.js' %}" defer></script>
     {% block scripts %}{% endblock %}

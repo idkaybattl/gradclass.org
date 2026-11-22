@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Zitate{% endblock %}
+
+{% block content %}
+<div class="quotes-page" data-quotes-page>
+    <div class="quotes-page__header">
+        <h1>Zitate</h1>
+    </div>
+
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
+
+    {% if reports %}
+    <section class="quote-reports" id="reports">
+        <h2 class="quote-reports__title">Offene Meldungen</h2>
+        <ul class="quote-reports__list">
+            {% for report in reports %}
+            <li class="quote-report">
+                <p class="quote-report__quote">„{{ report.quote }}“</p>
+                <p class="quote-report__meta">
+                    Gemeldet von
+                    <a href="{% url 'user-details' report.reporter.id %}" data-overlay-open="overlay"
+                        hx-get="{% url 'user-details' report.reporter.id %}" hx-target="#overlay-content"
+                        hx-swap="innerHTML">{{ report.reporter.get_full_name|default:report.reporter.username }}</a>
+                    am {{ report.created_at|date:"d.m.Y H:i" }} Uhr
+                </p>
+                {% if report.reason %}
+                <p class="quote-report__reason">{{ report.reason }}</p>
+                {% endif %}
+                <div class="quote-report__actions">
+                    <form method="post" action="{% url 'quote-delete' report.quote.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="quote-card__action">Zitat löschen</button>
+                    </form>
+                    <form method="post" action="{% url 'quote-report-dismiss' report.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="quote-card__action">Meldung verwerfen</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+    <div class="quotes-toolbar">
+        <input type="search" class="input" data-quotes-search placeholder="Zitate durchsuchen …"
+            aria-label="Zitate durchsuchen" autocomplete="off" />
+        <a class="btn" href="{% url 'quote-create' %}" data-overlay-open="overlay" hx-get="{% url 'quote-create' %}"
+            hx-target="#overlay-content" hx-swap="innerHTML">Neues Zitat</a>
+    </div>
+
+    <div class="quotes-list" data-quotes-list>
+        {% for quote in quotes %}
+        {% include "quotes/_quote_card.html" %}
+        {% endfor %}
+
+        <p class="quotes-empty" data-quotes-empty {% if quotes %}hidden{% endif %}>
+            Keine Zitate gefunden.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'dashboard/js/quotes.js' %}" defer></script>
+{% endblock %}

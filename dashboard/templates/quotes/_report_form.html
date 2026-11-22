@@ -1,0 +1,23 @@
+<form class="quote-form" method="post" action="{% url 'quote-report' quote.id %}" data-quote-report-form
+    hx-post="{% url 'quote-report' quote.id %}" hx-target="#overlay-content" hx-swap="innerHTML" hx-validate="true">
+    {% csrf_token %}
+    {% if next_url %}
+    <input type="hidden" name="next" value="{{ next_url }}" />
+    {% endif %}
+
+    {% include "components/_overlay_header.html" with title="Zitat melden" back_url=back_url %}
+
+    {{ form.non_field_errors }}
+
+    <blockquote class="quote-report__excerpt">„{{ quote }}“</blockquote>
+
+    <p class="field">
+        {{ form.reason.errors }}
+        {{ form.reason.label_tag }}
+        {{ form.reason }}
+    </p>
+
+    <div class="event-form__actions">
+        <button type="submit" class="btn" hx-disabled-elt="this">Melden</button>
+    </div>
+</form>

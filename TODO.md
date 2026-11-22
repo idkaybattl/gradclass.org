@@ -1749,26 +1749,26 @@ Dialogue card:
 
 **Templates and assets**
 
-- [ ] `templates/quotes.html`; reuse the existing list page shell classes and
+- [x] `templates/quotes.html`; reuse the existing list page shell classes and
   add quote-specific classes.
-- [ ] `templates/quotes/_quote_card.html` with single-line and dialogue
+- [x] `templates/quotes/_quote_card.html` with single-line and dialogue
   rendering, delete/report actions and search data.
-- [ ] `templates/quotes/_quote_form.html` (fragment) and `quotes/form.html`
+- [x] `templates/quotes/_quote_form.html` (fragment) and `quotes/form.html`
   (full-page fallback).
-- [ ] `templates/quotes/_report_form.html` (fragment) and `quotes/report.html`
+- [x] `templates/quotes/_report_form.html` (fragment) and `quotes/report.html`
   (full-page fallback).
-- [ ] Reps-only reports section `id="reports"` with delete and dismiss forms.
-- [ ] `static/dashboard/css/quotes.css`: vertical list, card variants, line
+- [x] Reps-only reports section `id="reports"` with delete and dismiss forms.
+- [x] `static/dashboard/css/quotes.css`: vertical list, card variants, line
   editor, report section; tokens only.
-- [ ] `static/dashboard/js/quotes.js`: `initQuotesList` search; add it to
+- [x] `static/dashboard/js/quotes.js`: `initQuotesList` search; add it to
   `PAGE_INITIALIZERS`.
-- [ ] `static/dashboard/js/quote-form.js`: `initQuoteForms` add/remove rows and
+- [x] `static/dashboard/js/quote-form.js`: `initQuoteForms` add/remove rows and
   current-quote speaker datalist; add it to `PAGE_INITIALIZERS` and load it
   from `base.html`.
-- [ ] Link `quotes.css` from `base.html`; enable “Zitate” in the menu.
-- [ ] Add feedback statuses for create, delete, report, dismiss and denied
+- [x] Link `quotes.css` from `base.html`; enable “Zitate” in the menu.
+- [x] Add feedback statuses for create, delete, report, dismiss and denied
   cases.
-- [ ] Register `Quote` (with a `QuoteLineInline`) and `QuoteReport` in admin;
+- [x] Register `Quote` (with a `QuoteLineInline`) and `QuoteReport` in admin;
   add search fields for text, speakers, uploader and reporter.
 
 **Tests and validation**
