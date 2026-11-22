@@ -2421,10 +2421,11 @@ placeholder art.
 
 **Title card**
 
-- [ ] Add the splash markup to `index.html`: “Hi” large, “oder so” small,
+- [x] Add the splash markup to `index.html`: “Hi” large, “oder so” small,
       framed by a top and bottom bar.
-- [ ] Implement the intro (“Hi” appears, moves aside, “oder so” appears) and the
-      ~2 s exit.
+- [x] Implement the intro (“Hi” appears, moves aside, “oder so” appears) and the
+      ~2 s exit. Timings are fractions of `--splash-duration`; the element is
+      still left in the DOM, removal is part of **Trigger**.
 - [ ] Anchor `.fox--title` on the top bar, feet on the bar, and make sure the
       card does not clip the fox (`overflow`).
 - [ ] Tune bar thickness, display size, travel duration and turn interval on the

@@ -7,6 +7,17 @@
 {% endblock %}
 
 {% block content %}
+{% comment %} One-off title card. Decorative: index.html only, skipped under
+prefers-reduced-motion, hidden by its exit animation and removed from the DOM by
+splash.js. {% endcomment %}
+<div class="splash" aria-hidden="true">
+    <div class="splash__card">
+        <div class="splash__bar"></div>
+        <p class="splash__title"><span class="splash__hi">Hi,</span><span class="splash__aside">oder so</span></p>
+        <div class="splash__bar"></div>
+    </div>
+</div>
+
 {% if feedback %}
 {% include "components/_feedback.html" %}
 {% endif %}
