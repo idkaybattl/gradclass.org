@@ -19,6 +19,20 @@ today; bump the "Stand" date below whenever this text changes.
     kommen Mitteilungen im internen Postfach und ob sie gelesen wurden.
 </p>
 <p>
+    Bei Umfragen speichern wir pseudonym, wer teilgenommen und wofür gestimmt
+    hat. Der Stimmzettel enthält keinen dauerhaften Bezug zum Konto. Ein
+    zufälliges Merkmal im Cookie erlaubt nur, die eigene Stimme bis zum Ende der
+    Umfrage zu ändern. Vorschläge werden mit dem Konto gespeichert, sind aber
+    nur für die Umfrageverwaltung sichtbar. Angezeigt werden nur
+    Gesamtergebnisse.
+</p>
+<p>
+    Für die Abikasse speichern wir Arbeitspunkte aus Arbeitszeiten und Einnahmen
+    der Aktionen sowie die eigene Personenzahl für Tickets und den daraus
+    berechneten Ticketpreis. Die Kasseneinträge enthalten Betrag, Datum und
+    Beschreibung, aber keine einzelnen Zahlungen von Personen.
+</p>
+<p>
     Beim Aufruf der Seite fallen technisch notwendige Zugriffsdaten an
     (IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browserkennung). Sie bleiben im
     Systemjournal des Servers und werden nicht ausgewertet.
@@ -26,10 +40,12 @@ today; bump the "Stand" date below whenever this text changes.
 
 <h3>Zweck und Rechtsgrundlage</h3>
 <p>
-    Konto, Profil und Teilnahmen brauchen wir für die Organisation der
-    Jahrgangsstufe (Art. 6 Abs. 1 lit. b DSGVO). Die freiwilligen Profilangaben
-    beruhen auf Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) und können im Profil
-    jederzeit widerrufen werden. Zugriffsdaten und Mitteilungen dienen dem
+    Konto, Profil, Teilnahmen und die Abikasse brauchen wir für die Organisation
+    der Jahrgangsstufe (Art. 6 Abs. 1 lit. b DSGVO). Die freiwilligen
+    Profilangaben beruhen auf Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) und
+    können im Profil jederzeit widerrufen werden. Umfragen dienen der
+    Meinungsbildung innerhalb der Jahrgangsstufe (Art. 6 Abs. 1 lit. f DSGVO);
+    die Teilnahme ist freiwillig. Zugriffsdaten und Mitteilungen dienen dem
     sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO).
 </p>
 
@@ -43,15 +59,18 @@ today; bump the "Stand" date below whenever this text changes.
 
 <h3>Speicherdauer</h3>
 <p>
-    Konto, Profil, Teilnahmen und Einnahmen bleiben bis zur Löschung des Kontos
-    gespeichert, also bis zum Ende des Abiturjahrgangs oder auf Anfrage.
-    Mitteilungen verschwinden mit dem Konto.
+    Konto, Profil, Teilnahmen, Arbeitspunkte, Ticket-Schätzung und
+    Umfrage-Teilnahmen bleiben bis zur Löschung des Kontos gespeichert, also bis
+    zum Ende des Abiturjahrgangs oder auf Anfrage. Mitteilungen verschwinden mit
+    dem Konto. Vorschläge und Kasseneinträge bleiben ohne Bezug zur Person
+    erhalten.
 </p>
 
 <h3>Cookies</h3>
 <p>
-    Nur technisch notwendige Cookies: sessionid für die Anmeldung und csrftoken
-    für Formulare. htmx legt zusätzlich einen Verlauf im sessionStorage ab. Es
+    Nur technisch notwendige Cookies: sessionid für die Anmeldung, csrftoken für
+    Formulare und ein Cookie pro Umfrage, das die eigene Stimme bis zum Ende
+    änderbar hält. htmx legt zusätzlich einen Verlauf im sessionStorage ab. Es
     gibt kein Tracking und keine Analyse; Schriften und Skripte liegen auf dem
     Server, Einbindungen von Dritten gibt es nicht.
 </p>
@@ -65,4 +84,4 @@ today; bump the "Stand" date below whenever this text changes.
     Datenschutzaufsichtsbehörde entgegen.
 </p>
 
-<p>Stand: 18. November 2026</p>
+<p>Stand: 22. November 2026</p>
