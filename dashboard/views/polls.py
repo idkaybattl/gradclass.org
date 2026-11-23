@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from ..feedback import get_feedback, render_feedback
-from ..forms import PollForm, StartVotingForm
+from ..forms import PollForm, StartVotingForm, SuggestionDeadlineForm
 from ..http_helpers import (
     get_safe_back_url,
     get_safe_next_url,
@@ -30,6 +30,7 @@ from ..services import (
     close_poll_voting,
     read_poll_vote,
     save_poll,
+    set_poll_suggestion_deadline,
     start_poll_suggestions,
     start_poll_voting,
 )
@@ -101,6 +102,7 @@ def poll_details_context(
     suggestion_value="",
     show_voting_deadline_form=False,
     voting_deadline_form=None,
+    suggestion_deadline_form=None,
     back_url=None,
 ):
     user = request.user
@@ -137,6 +139,15 @@ def poll_details_context(
 
     results_context = _results_context(poll, user)
 
+    if (
+        suggestion_deadline_form is None
+        and phase == Poll.Phase.SUGGESTIONS
+        and is_manager
+    ):
+        suggestion_deadline_form = SuggestionDeadlineForm(
+            initial={"suggestion_deadline": poll.suggestion_deadline}
+        )
+
     return {
         "poll": poll,
         "phase": phase,
@@ -165,6 +176,7 @@ def poll_details_context(
         "suggestion_value": suggestion_value,
         "show_voting_deadline_form": show_voting_deadline_form,
         "voting_deadline_form": voting_deadline_form or StartVotingForm(),
+        "suggestion_deadline_form": suggestion_deadline_form,
         "next_url": get_safe_next_url(request),
         "back_url": back_url,
         "detail_url": detail_url,
@@ -456,6 +468,25 @@ def poll_start_voting(request, poll_id):
 def poll_close_suggestions(request, poll_id):
     poll = get_object_or_404(Poll, pk=poll_id)
     return _phase_action(request, poll, close_poll_suggestions, "suggestions-closed")
+
+
+@login_required
+@require_POST
+def poll_set_suggestion_deadline(request, poll_id):
+    poll = get_object_or_404(Poll, pk=poll_id)
+    if not can_manage_poll(request.user, poll):
+        return poll_action_response(request, poll, "moderation-denied")
+
+    form = SuggestionDeadlineForm(request.POST)
+    if form.is_valid():
+        try:
+            set_poll_suggestion_deadline(poll, form.cleaned_data["suggestion_deadline"])
+        except ValidationError as error:
+            form.add_error("suggestion_deadline", error)
+        else:
+            return poll_action_response(request, poll, "suggestion-deadline-updated")
+
+    return render_poll_details(request, poll, suggestion_deadline_form=form)
 
 
 @login_required

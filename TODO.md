@@ -2246,6 +2246,8 @@ Event detail:
   - tutorial for ios notifications by add to home screen... or just the option to turn them on for android
 - add notification settings somewhere
   - toggleble things
+- clicking on notification should mark it as read
+- doing the thing the notification is about should mark it as read
 
 - Datenschutz: email notifications stay under Brevo. iOS/Android push adds
   device tokens plus Apple/Google (APNs/FCM) as recipients, likely a
@@ -2578,6 +2580,9 @@ failed login limits
 
 - Datenschutz: new processing (who did what, when). Add it to the logs section
   and define access and retention.
+
+# 28. Other stuff
+
 
 
 # next stuff:

@@ -99,6 +99,12 @@
     </section>
     {% endif %}
 
+    {% if phase == "suggestions" and suggestion_deadline_form %}
+    <section class="card poll-detail__section">
+        {% include "polls/_suggestion_deadline_form.html" %}
+    </section>
+    {% endif %}
+
     {% if phase == "suggestions" %}
     <section class="card poll-detail__section">
         <h3>Vorschlag hinzufügen</h3>

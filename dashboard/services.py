@@ -189,6 +189,18 @@ def close_poll_suggestions(poll):
     return poll
 
 
+def set_poll_suggestion_deadline(poll, deadline):
+    """Move the suggestion deadline during the suggestion phase."""
+    if poll.phase != Poll.Phase.SUGGESTIONS:
+        raise ValidationError("Die Vorschlagsphase läuft nicht.")
+    if deadline <= timezone.now():
+        raise ValidationError("Die neue Vorschlagsfrist muss in der Zukunft liegen.")
+
+    poll.suggestion_deadline = deadline
+    poll.save(update_fields=["suggestion_deadline"])
+    return poll
+
+
 def start_poll_voting(poll):
     """Draft (fixed) or moderation (suggestions) -> voting."""
     if poll.mode == Poll.Mode.SUGGESTIONS:

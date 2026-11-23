@@ -7,6 +7,9 @@ from .models import (
     Event,
     EventParticipation,
     JoinRequest,
+    Option,
+    Poll,
+    Question,
     Quote,
     QuoteLine,
     QuoteReport,
@@ -71,3 +74,51 @@ class QuoteReportAdmin(admin.ModelAdmin):
 
 admin.site.register(Quote, QuoteAdmin)
 admin.site.register(QuoteReport, QuoteReportAdmin)
+
+
+class QuestionInline(admin.TabularInline):
+    model = Question
+    extra = 0
+
+
+class OptionInline(admin.TabularInline):
+    model = Option
+    extra = 0
+
+
+class PollAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "mode",
+        "phase_display",
+        "creator",
+        "created_at",
+        "suggestion_deadline",
+        "voting_deadline",
+    )
+    list_filter = ("mode", "results_public", "suggestions_public")
+    search_fields = ("title", "description", "creator__username")
+    readonly_fields = ("created_at", "phase_display")
+    inlines = [QuestionInline]
+
+    @admin.display(description="Phase")
+    def phase_display(self, poll):
+        return poll.phase.label
+
+
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ("prompt", "poll", "kind", "order")
+    list_filter = ("kind",)
+    search_fields = ("prompt", "poll__title")
+    inlines = [OptionInline]
+
+
+class OptionAdmin(admin.ModelAdmin):
+    list_display = ("label", "question", "state", "created_by", "order")
+    list_filter = ("state",)
+    search_fields = ("label", "question__prompt", "question__poll__title")
+
+
+admin.site.register(Poll, PollAdmin)
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(Option, OptionAdmin)

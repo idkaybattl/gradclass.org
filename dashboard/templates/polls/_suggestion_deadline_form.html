@@ -1,0 +1,15 @@
+<div class="poll-voting-deadline">
+    <h3>Vorschlagsfrist ändern</h3>
+
+    <form method="post" action="{% url 'poll-suggestion-deadline' poll.id %}"
+        hx-post="{% url 'poll-suggestion-deadline' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+        {% csrf_token %}
+        <p class="field">
+            {{ suggestion_deadline_form.suggestion_deadline.errors }}
+            {{ suggestion_deadline_form.suggestion_deadline.label_tag }}
+            {{ suggestion_deadline_form.suggestion_deadline }}
+            <span class="poll-form__help">{{ suggestion_deadline_form.suggestion_deadline.help_text }}</span>
+        </p>
+        <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Frist speichern</button>
+    </form>
+</div>

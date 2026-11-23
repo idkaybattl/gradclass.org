@@ -54,9 +54,9 @@ class UserViewTests(TestCase):
         self.assertContains(response, "data-user-detail")
         self.assertContains(response, "Ben Albers")
         self.assertContains(
-            response,
-            f'href="{reverse("user-details", args=[self.user.pk])}" data-overlay-open="overlay"',
+            response, f'href="{reverse("user-details", args=[self.user.pk])}"'
         )
+        self.assertContains(response, 'data-overlay-toggle="overlay"')
         self.assertNotContains(response, reverse("user-details", args=[self.other.pk]))
 
     def test_user_details_renders_fragment_for_htmx(self):

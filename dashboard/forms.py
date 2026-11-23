@@ -750,6 +750,17 @@ class StartVotingForm(forms.Form):
         return value
 
 
+class SuggestionDeadlineForm(forms.Form):
+    suggestion_deadline = forms.DateTimeField(
+        label="Neue Vorschlagsfrist",
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={"type": "datetime-local", "lang": "de-DE"},
+        ),
+        help_text="Die Vorschlagsphase läuft bis zu diesem Zeitpunkt.",
+    )
+
+
 class ExternalMailForm(forms.ModelForm):
     external_mail = forms.EmailField(
         label="Externe E‑Mail",

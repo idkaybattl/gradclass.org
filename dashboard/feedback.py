@@ -60,6 +60,7 @@ STATUS_FEEDBACK = {
     "suggestions-started": ("success", "Vorschlagsphase gestartet."),
     "suggestions-ended": ("error", "Die Vorschlagsphase ist beendet."),
     "suggestions-closed": ("success", "Vorschläge geschlossen."),
+    "suggestion-deadline-updated": ("success", "Vorschlagsfrist geändert."),
     "voting-started": ("success", "Abstimmung gestartet."),
     "voting-closed": ("success", "Abstimmung beendet."),
     "suggestion-added": ("success", "Vorschlag hinzugefügt."),

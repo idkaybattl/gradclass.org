@@ -170,6 +170,11 @@ urlpatterns = [
         name="poll-close-suggestions",
     ),
     path(
+        "polls/<int:poll_id>/suggestion-deadline/",
+        polls.poll_set_suggestion_deadline,
+        name="poll-suggestion-deadline",
+    ),
+    path(
         "polls/<int:poll_id>/close-voting/",
         polls.poll_close_voting,
         name="poll-close-voting",

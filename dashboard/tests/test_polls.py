@@ -380,6 +380,73 @@ class PollPhaseTests(PollTestCase):
         detail = self.client.get(reverse("poll-details", args=[poll.pk]))
         self.assertContains(detail, "100 %")
 
+    def test_manager_can_change_suggestion_deadline(self):
+        poll = self.make_poll(phase=Poll.Phase.SUGGESTIONS, mode=Poll.Mode.SUGGESTIONS)
+        old_deadline = poll.suggestion_deadline
+        deadline = (timezone.localtime() + timedelta(days=15)).strftime(
+            "%Y-%m-%dT%H:%M"
+        )
+        self.client.force_login(self.rep)
+
+        response = self.client.post(
+            reverse("poll-suggestion-deadline", args=[poll.pk]),
+            {"suggestion_deadline": deadline},
+        )
+
+        poll.refresh_from_db()
+        self.assertIn("suggestion-deadline-updated", response.url)
+        self.assertGreater(poll.suggestion_deadline, old_deadline)
+        self.assertEqual(poll.phase, Poll.Phase.SUGGESTIONS)
+
+    def test_manager_can_shorten_suggestion_deadline(self):
+        poll = self.make_poll(phase=Poll.Phase.SUGGESTIONS, mode=Poll.Mode.SUGGESTIONS)
+        old_deadline = poll.suggestion_deadline
+        deadline = (timezone.localtime() + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M")
+        self.client.force_login(self.rep)
+
+        response = self.client.post(
+            reverse("poll-suggestion-deadline", args=[poll.pk]),
+            {"suggestion_deadline": deadline},
+        )
+
+        poll.refresh_from_db()
+        self.assertIn("suggestion-deadline-updated", response.url)
+        self.assertLess(poll.suggestion_deadline, old_deadline)
+        self.assertEqual(poll.phase, Poll.Phase.SUGGESTIONS)
+
+    def test_suggestion_deadline_must_be_in_the_future(self):
+        poll = self.make_poll(phase=Poll.Phase.SUGGESTIONS, mode=Poll.Mode.SUGGESTIONS)
+        old_deadline = poll.suggestion_deadline
+        deadline = (timezone.localtime() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M")
+        self.client.force_login(self.rep)
+
+        response = self.client.post(
+            reverse("poll-suggestion-deadline", args=[poll.pk]),
+            {"suggestion_deadline": deadline},
+        )
+
+        poll.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "in der Zukunft liegen")
+        self.assertEqual(poll.suggestion_deadline, old_deadline)
+
+    def test_students_cannot_change_suggestion_deadline(self):
+        poll = self.make_poll(phase=Poll.Phase.SUGGESTIONS, mode=Poll.Mode.SUGGESTIONS)
+        old_deadline = poll.suggestion_deadline
+        deadline = (timezone.localtime() + timedelta(days=15)).strftime(
+            "%Y-%m-%dT%H:%M"
+        )
+        self.client.force_login(self.student)
+
+        response = self.client.post(
+            reverse("poll-suggestion-deadline", args=[poll.pk]),
+            {"suggestion_deadline": deadline},
+        )
+
+        poll.refresh_from_db()
+        self.assertIn("moderation-denied", response.url)
+        self.assertEqual(poll.suggestion_deadline, old_deadline)
+
 
 class PollSuggestionTests(PollTestCase):
     def test_student_can_add_suggestions_up_to_three(self):
