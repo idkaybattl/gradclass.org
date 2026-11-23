@@ -7,15 +7,17 @@
     <h1>Datenschutz</h1>
 
     <section class="card page__body">
-        <h2>Verantwortlicher</h2>
-        {% include 'legal/_controller.html' %}
-        <p>
-            Diese Seite ist ein privates, nicht kommerzielles Projekt der
-            Jahrgangsstufe. Fragen zum Datenschutz gehen an die oben genannte
-            Adresse.
-        </p>
+        <div class="page__body-content">
+            <h2>Verantwortlicher</h2>
+            {% include 'legal/_controller.html' %}
+            <p>
+                Diese Seite ist ein privates, nicht kommerzielles Projekt der
+                Jahrgangsstufe. Fragen zum Datenschutz gehen an die oben genannte
+                Adresse.
+            </p>
 
-        {% include 'legal/_privacy_body.html' %}
+            {% include 'legal/_privacy_body.html' %}
+        </div>
     </section>
 </div>
 {% endblock %}

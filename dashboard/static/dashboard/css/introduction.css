@@ -3,6 +3,7 @@
 .introduction {
     height: 100%;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
 
     display: flex;
     flex-direction: column;

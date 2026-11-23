@@ -321,13 +321,17 @@ textarea::placeholder {
     flex: 0 1 auto;
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior-y: none;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
 
+    padding: 14px;
+}
+
+/* Keep the scrollport a block; the inner wrapper handles content spacing. */
+.page__body-content {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 14px;
+    min-height: 100%;
 }
 
 .page__body h2 {

@@ -528,9 +528,28 @@ footer {
     min-height: 0;
     padding: var(--base-padding);
     overflow-y: auto;
-    /* do not chain or bounce scroll gestures on iOS */
-    overscroll-behavior-y: none;
-    -webkit-overflow-scrolling: touch;
+    /* keep the native bounce, but do not chain it to the fixed shell */
+    overscroll-behavior-y: contain;
+}
+
+/*
+ * iOS scrolls an overflow container natively (its own scroll view, momentum,
+ * bounce) only once that container has a composited layer. The overlay
+ * scrollers get one from the overlay transform; these in-flow scrollports do
+ * not, so they fall back to main-thread scrolling and gestures are easily
+ * picked up by the fixed shell instead. Promote them to match.
+ */
+.page__body,
+.events-grid,
+.polls-grid,
+.quotes-list,
+.abikasse,
+.index-card__body,
+.profile,
+.user-search__results,
+.introduction,
+.login-page {
+    transform: translateZ(0);
 }
 
 

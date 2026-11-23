@@ -131,10 +131,12 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
   `border-radius`.
 - Font: self-hosted BioRhyme. Do not add a Google Fonts CDN link.
 - Mobile-first and responsive. Preserve the overlay/menu drag behaviour in `base.css` and `base.js`.
-- The shell never scrolls: use `overflow: hidden` (not `clip`) on `html`/`body`
-  and `overscroll-behavior-y: none` on nested scroll areas. iOS home-screen apps
-  latch gestures to clipped documents, which freezes inner scrollers. See
-  `base.css`.
+- The shell never scrolls: `html`/`body` are fixed and `overflow: hidden`.
+  Inner scroll areas use `overscroll-behavior-y: contain` (native bounce, no
+  chaining) and must be listed in the `translateZ(0)` rule in `base.css`: iOS
+  only scrolls an overflow container natively once it has its own composited
+  layer, otherwise in-flow scrollports fall back to main-thread scrolling.
+  `-webkit-overflow-scrolling` is unsupported on current iOS; do not use it.
 - Use `{% static %}` for assets. Run `collectstatic` after static changes.
 - Component initialisers expose `window.initX(root)`, are idempotent and scoped to
   `root`. `base.js` is the only place that calls them, on `DOMContentLoaded` and
@@ -170,6 +172,10 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Stop and ask when the request is ambiguous, has multiple reasonable
   interpretations, or when you see a materially simpler approach. Do not
   silently choose a different design.
+- Getting the specification is your job, not the user's. If the request omits
+  what you need — environment, exact failing behaviour, which case works vs
+  fails, a constraint — ask for it before editing. Do not fill the gaps with
+  assumptions; a wrong assumption costs more than a question.
 - Reuse existing helpers and components. When a pattern appears a second or
   third time, extract it (CSS component, template partial, form widget,
   service helper). Do not generalise from a single use.
@@ -177,6 +183,23 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Do not add dependencies, commit, or push unless asked.
 - Comments only where they explain structure, intent, or a non-obvious
   constraint.
+
+## Debugging
+
+- Verify a diagnosis before building on it. A code comment, a summary of earlier
+  work, or a cited browser bug is a claim, not evidence — check its scope (e.g.
+  WebKit #222654 only affects home-screen apps and is fixed in current iOS).
+- For device-only bugs, list the ranked hypotheses and the observation that
+  separates them before editing. Get the environment up front: device, OS
+  version, Safari tab vs home-screen app, and which elements work vs fail.
+- Change one variable per round and say what observation will confirm it. Never
+  combine a fix with a feel or cleanup change the user has to test by hand.
+- Match the validation to the failure: renders and layout probes cannot verify
+  gesture, momentum or compositing behaviour.
+- Do not replace a stated constraint with a different design. “Keep the shell”
+  means fix scrolling inside it, not make the document the scroller.
+- If a device-only bug survives two focused attempts, ask for an independent,
+  unanchored diagnosis instead of producing more variants of one theory.
 
 ## Self-review
 

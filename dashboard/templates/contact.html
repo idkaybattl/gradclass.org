@@ -7,21 +7,24 @@
     <h1>Kontakt</h1>
 
     <section class="card page__body">
-        <p>
-            Bei Problemen, Verbesserungs- oder Featurevorschlägen gerne melden.
-            Featurevorschläge können gerne absurd sein, bitte nicht zurückhalten.
-        </p>
+        <div class="page__body-content">
+            <p>
+                Bei Problemen, Verbesserungs- oder Featurevorschlägen gerne melden.
+                Featurevorschläge können gerne absurd sein, bitte nicht zurückhalten.
+            </p>
 
-        <h2>Persönlich bei mir</h2>
-        {% include 'legal/_controller.html' with show_phone=True %}
+            <h2>Persönlich bei mir</h2>
+            {% include 'legal/_controller.html' with show_phone=True %}
 
-        <p>
-            Der ganze Quellcode liegt außerdem komplett offen auf
-            <a href="https://github.com/idkaybattl/gradclass.org/" target="_blank" rel="noopener noreferrer">GitHub</a>.
-        </p>
+            <p>
+                Der ganze Quellcode liegt außerdem komplett offen auf
+                <a href="https://github.com/idkaybattl/gradclass.org/" target="_blank"
+                    rel="noopener noreferrer">GitHub</a>.
+            </p>
 
-        <h2>Datenschutz</h2>
-        {% include 'legal/_privacy_body.html' %}
+            <h2>Datenschutz</h2>
+            {% include 'legal/_privacy_body.html' %}
+        </div>
     </section>
 </div>
 {% endblock %}

@@ -1,7 +1,9 @@
 .login-page {
     height: 100%;
-    display: flex;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
+
+    display: flex;
 }
 
 .login-card {
