@@ -779,3 +779,51 @@ class PollLengthLimitTests(PollTestCase):
         self.assertEqual(
             poll.questions.first().options.filter(created_by=self.student).count(), 0
         )
+
+
+class PollExportTests(PollTestCase):
+    def test_export_requires_manager(self):
+        poll = self.make_poll(
+            phase=Poll.Phase.SUGGESTIONS,
+            mode=Poll.Mode.SUGGESTIONS,
+            approved=(),
+            suggested=("Geheim",),
+        )
+        self.client.force_login(self.student)
+
+        response = self.client.get(reverse("poll-export", args=[poll.pk]))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_export_lists_suggestions_with_authors(self):
+        poll = self.make_poll(
+            phase=Poll.Phase.SUGGESTIONS,
+            mode=Poll.Mode.SUGGESTIONS,
+            approved=("A",),
+            suggested=("Geheim",),
+        )
+        self.client.force_login(self.rep)
+
+        response = self.client.get(reverse("poll-export", args=[poll.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response["Content-Type"].startswith("text/csv"))
+        self.assertTrue(response.content.startswith(b"\xef\xbb\xbf"))
+        content = response.content.decode()
+        self.assertIn("Vorschlag;Autor:in;Status;Zusammengeführt in", content)
+        self.assertIn("A;;Freigegeben;", content)
+        self.assertIn("Geheim;student;Vorgeschlagen;", content)
+
+    def test_creator_can_export_own_poll(self):
+        poll = self.make_poll(
+            creator=self.student,
+            phase=Poll.Phase.SUGGESTIONS,
+            mode=Poll.Mode.SUGGESTIONS,
+            approved=(),
+            suggested=("Geheim",),
+        )
+        self.client.force_login(self.student)
+
+        response = self.client.get(reverse("poll-export", args=[poll.pk]))
+
+        self.assertEqual(response.status_code, 200)

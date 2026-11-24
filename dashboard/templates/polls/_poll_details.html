@@ -69,6 +69,9 @@
     <section class="card poll-detail__section">
         <div class="poll-detail__section-header">
             <h3>{% if phase == "suggestions" %}Vorschläge{% else %}Moderation{% endif %}</h3>
+            {% if is_manager %}
+            <a class="btn btn--secondary" href="{% url 'poll-export' poll.id %}">CSV</a>
+            {% endif %}
             {% if can_close_suggestions %}
             <form method="post" action="{% url 'poll-close-suggestions' poll.id %}"
                 hx-post="{% url 'poll-close-suggestions' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">

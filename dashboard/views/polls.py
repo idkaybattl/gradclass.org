@@ -1,10 +1,11 @@
+import csv
 import random
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -639,6 +640,37 @@ def poll_vote(request, poll_id):
             secure=request.is_secure(),
             path="/",
         )
+    return response
+
+
+@login_required
+@require_GET
+def poll_export(request, poll_id):
+    poll = get_object_or_404(Poll.objects.select_related("creator"), pk=poll_id)
+    if not can_manage_poll(request.user, poll):
+        raise PermissionDenied
+
+    question = get_poll_question(poll)
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = (
+        f'attachment; filename="vorschlaege-{poll.pk}-{timezone.localdate():%Y-%m-%d}.csv"'
+    )
+    response.write("\ufeff")
+
+    writer = csv.writer(response, delimiter=";")
+    writer.writerow(["Vorschlag", "Autor:in", "Status", "Zusammengeführt in"])
+    options = question.options.select_related("created_by", "merged_into")
+    for option in options:
+        author = option.created_by
+        writer.writerow(
+            [
+                option.label,
+                (author.get_full_name() or author.username) if author else "",
+                Option.State(option.state).label,
+                option.merged_into.label if option.merged_into else "",
+            ]
+        )
+
     return response
 
 

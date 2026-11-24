@@ -187,6 +187,7 @@ urlpatterns = [
         name="poll-moderate",
     ),
     path("polls/<int:poll_id>/results/", polls.poll_results, name="poll-results"),
+    path("polls/<int:poll_id>/export/", polls.poll_export, name="poll-export"),
     # quotes
     path("quotes/", quotes.quotes, name="quotes"),
     path("quotes/create/", quotes.quote_create, name="quote-create"),
