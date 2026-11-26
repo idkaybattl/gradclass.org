@@ -60,9 +60,12 @@
                 <span class="abikasse-ledger__kind">{{ entry.get_kind_display }}</span>
                 <span class="abikasse-ledger__amount">{{ entry.amount|floatformat:2 }} €</span>
                 <span class="abikasse-ledger__actions">
-                    <a class="btn" href="{% url 'abikasse-entry-edit' entry.id %}" data-overlay-open="overlay"
-                        hx-get="{% url 'abikasse-entry-edit' entry.id %}" hx-target="#overlay-content"
-                        hx-swap="innerHTML">Bearbeiten</a>
+                    <a class="btn" href="{% url 'abikasse-entry-edit' entry.id %}" aria-label="Bearbeiten"
+                        data-overlay-open="overlay" hx-get="{% url 'abikasse-entry-edit' entry.id %}"
+                        hx-target="#overlay-content" hx-swap="innerHTML">
+                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/edit.svg' %}')"
+                            aria-hidden="true"></span>
+                    </a>
                     <form method="post" action="{% url 'abikasse-entry-delete' entry.id %}"
                         hx-post="{% url 'abikasse-entry-delete' entry.id %}" hx-target="#overlay-content"
                         hx-swap="innerHTML" data-confirm-title="Eintrag löschen?"

@@ -15,8 +15,13 @@
     <div class="overlay-panel-header__actions">
         {% if action_url %}
         <a class="btn" href="{{ action_url }}" {% if action_overlay %}data-overlay-open="overlay"
-            hx-get="{{ action_url }}" hx-target="#overlay-content" hx-swap="innerHTML" {% endif %}>
+            hx-get="{{ action_url }}" hx-target="#overlay-content" hx-swap="innerHTML" {% endif %}
+            aria-label="{{ action_label }}">
+            {% if action_icon %}
+            <span class="logo" style="--icon: url('{% static action_icon %}')" aria-hidden="true"></span>
+            {% else %}
             {{ action_label }}
+            {% endif %}
         </a>
         {% endif %}
     </div>

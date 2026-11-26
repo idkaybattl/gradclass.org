@@ -1,3 +1,4 @@
+{% load static %}
 <ul class="poll-suggestions">
     {% for option in options %}
     <li class="poll-suggestions__item">
@@ -22,7 +23,10 @@
         </div>
 
         <details class="poll-suggestions__edit">
-            <summary>Bearbeiten</summary>
+            <summary aria-label="Bearbeiten">
+                <span class="logo" style="--icon: url('{% static 'dashboard/icons/edit.svg' %}')"
+                    aria-hidden="true"></span>
+            </summary>
             <form method="post" action="{% url 'poll-suggest' poll.id %}" hx-post="{% url 'poll-suggest' poll.id %}"
                 hx-target="#overlay-content" hx-swap="innerHTML">
                 {% csrf_token %}

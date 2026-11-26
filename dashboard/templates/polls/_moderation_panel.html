@@ -50,13 +50,15 @@
 
             {% if option.state != "merged" %}
             <div class="poll-moderation__controls">
-                <input type="checkbox" class="poll-moderation__edit-toggle" id="poll-edit-{{ option.id }}" />
+                <input type="checkbox" class="poll-moderation__edit-toggle" id="poll-edit-{{ option.id }}"
+                    aria-label="Bearbeiten" />
 
                 <div class="poll-moderation__row-actions">
                     <label for="poll-edit-{{ option.id }}"
                         class="btn btn--secondary poll-moderation__edit-toggle-label">
                         <span class="poll-moderation__marker" aria-hidden="true"></span>
-                        Bearbeiten
+                        <span class="logo" style="--icon: url('{% static 'dashboard/icons/edit.svg' %}')"
+                            aria-hidden="true"></span>
                     </label>
 
                     <div class="poll-moderation__actions">

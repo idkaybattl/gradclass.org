@@ -33,6 +33,14 @@
     color: inherit;
 }
 
+/* icon-only action: the mask paints in the button's label colour */
+.btn .logo {
+    width: 1.25em;
+    height: 1.25em;
+
+    background-color: currentColor;
+}
+
 /* fields */
 .field {
     display: grid;

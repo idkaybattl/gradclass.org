@@ -315,6 +315,7 @@ def event_details_context(
         "detail_url": detail_url,
         "edit_url": edit_url,
         "action_label": "Bearbeiten" if can_edit else "",
+        "action_icon": "dashboard/icons/edit.svg" if can_edit else "",
         "action_url": edit_url if can_edit else "",
         "action_overlay": can_edit,
         "participation_times_open": participation_times_open,
