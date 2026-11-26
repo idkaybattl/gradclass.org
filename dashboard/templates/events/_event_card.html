@@ -17,7 +17,7 @@
         <time datetime="{{ event.ending_date|date:'c' }}">{{ event.ending_date|date:"d.m.Y, H:i" }} Uhr</time>
         {% endif %}
     </p>
-    {% if event.description %}
+    {% if event.description and not hide_description %}
     <p class="event-card__description">{{ event.description|truncatewords:24 }}</p>
     {% endif %}
 </a>

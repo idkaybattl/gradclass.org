@@ -757,7 +757,6 @@ class SuggestionDeadlineForm(forms.Form):
             format="%Y-%m-%dT%H:%M",
             attrs={"type": "datetime-local", "lang": "de-DE"},
         ),
-        help_text="Die Vorschlagsphase läuft bis zu diesem Zeitpunkt.",
     )
 
 

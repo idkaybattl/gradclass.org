@@ -239,6 +239,12 @@
     align-items: flex-start;
 }
 
+/* Without stretch the field is shrink-to-fit and a native date/time control
+   keeps its intrinsic width, which can spill past the card on mobile. */
+.poll-voting-deadline .field {
+    align-self: stretch;
+}
+
 /* suggestion form */
 .poll-suggest-form {
     display: flex;

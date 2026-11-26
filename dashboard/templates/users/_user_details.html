@@ -42,7 +42,7 @@
 
         <div class="user-detail__events">
             {% for event in participation_events %}
-            {% include "events/_event_card.html" with event=event card_back_url=detail_url %}
+            {% include "events/_event_card.html" with event=event card_back_url=detail_url hide_description=True %}
             {% empty %}
             <p>Keine Projektteilnahmen</p>
             {% endfor %}
