@@ -3,80 +3,13 @@
     <li class="poll-suggestions__item">
         <p class="poll-suggestions__label">{{ option.label }}</p>
 
-        {% if is_manager %}
-        {% if option.created_by %}
+        {% if is_manager and option.created_by %}
         <p class="poll-suggestions__author">
             von {{ option.created_by.get_full_name|default:option.created_by.username }}
         </p>
         {% endif %}
 
-        {% if option.merged_options.all %}
-        <ul class="poll-suggestions__merged">
-            {% for merged in option.merged_options.all %}
-            <li>
-                Zusammengeführt: {{ merged.label }}{% if merged.created_by %}
-                (von {{ merged.created_by.get_full_name|default:merged.created_by.username }}){% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-
-        {% if can_moderate %}
-        <div class="poll-suggestions__actions">
-            {% if option.state == "suggested" %}
-            <form method="post" action="{% url 'poll-moderate' poll.id %}" hx-post="{% url 'poll-moderate' poll.id %}"
-                hx-target="#overlay-content" hx-swap="innerHTML">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="approve" />
-                <input type="hidden" name="option" value="{{ option.id }}" />
-                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Freigeben</button>
-            </form>
-            {% endif %}
-            <form method="post" action="{% url 'poll-moderate' poll.id %}" hx-post="{% url 'poll-moderate' poll.id %}"
-                hx-target="#overlay-content" hx-swap="innerHTML">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="reject" />
-                <input type="hidden" name="option" value="{{ option.id }}" />
-                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Ablehnen</button>
-            </form>
-        </div>
-
-        <details class="poll-suggestions__edit">
-            <summary>Bearbeiten</summary>
-            <form method="post" action="{% url 'poll-moderate' poll.id %}" hx-post="{% url 'poll-moderate' poll.id %}"
-                hx-target="#overlay-content" hx-swap="innerHTML">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="edit" />
-                <input type="hidden" name="option" value="{{ option.id }}" />
-                <p class="field">
-                    <label>Text
-                        <input class="input" name="label" maxlength="120" value="{{ option.label }}" required />
-                    </label>
-                </p>
-                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Speichern</button>
-            </form>
-
-            <form method="post" action="{% url 'poll-moderate' poll.id %}" hx-post="{% url 'poll-moderate' poll.id %}"
-                hx-target="#overlay-content" hx-swap="innerHTML">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="merge" />
-                <input type="hidden" name="option" value="{{ option.id }}" />
-                <p class="field">
-                    <label>Zusammenführen mit
-                        <select class="input" name="merged_into">
-                            {% for target in options %}
-                            {% if target.id != option.id %}
-                            <option value="{{ target.id }}">{{ target.label }}</option>
-                            {% endif %}
-                            {% endfor %}
-                        </select>
-                    </label>
-                </p>
-                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Zusammenführen</button>
-            </form>
-        </details>
-        {% endif %}
-        {% elif can_suggest and option.created_by_id == user.id %}
+        {% if can_suggest and not is_manager and option.created_by_id == user.id %}
         <div class="poll-suggestions__actions">
             <form method="post" action="{% url 'poll-suggest' poll.id %}" hx-post="{% url 'poll-suggest' poll.id %}"
                 hx-target="#overlay-content" hx-swap="innerHTML">

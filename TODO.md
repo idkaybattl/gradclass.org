@@ -1077,7 +1077,10 @@ suggested option list. Single-choice only for now, but modelled around
   its author under the target.
 - New suggestions are approved immediately. Moderation is optional: managers
   reject, edit or merge as needed.
-- Rejected or removed suggestions disappear entirely; no tombstones.
+- Rejecting a suggestion sets its state to `rejected` instead of deleting it,
+  so the moderation panel can restore it with “Annehmen”. Rejected suggestions
+  are hidden from the normal list; withdrawing one’s own suggestion still
+  deletes it.
 - `Poll.suggestions_public` defaults to on: suggestions are visible to everyone
   from the start of the phase, pending and approved together. When it is off,
   suggestions stay manager-only until voting opens; only approved options are
@@ -1157,12 +1160,14 @@ Poll overlay (bottom sheet, full detail):
 - Phase body:
   - Entwurf: question and option summary, “Bearbeiten”, and the start action
     (“Vorschläge starten”, or “Abstimmung starten” for fixed options).
-  - Vorschläge: plain list in random order; each entry shows the option text.
-    Managers also see the author and moderation actions, plus “Vorschläge
-    schließen”. Own entries get edit/withdraw, and the “Vorschlag hinzufügen”
-    form sits below.
-  - Moderation: the same list with approve/reject/edit/merge and “Abstimmung
-    starten”.
+  - Vorschläge: collapsed list (“Vorschläge anzeigen (n)”) in random order
+    with dashed separators; each entry shows the option text, plus the author
+    for managers. Own entries keep edit/withdraw, and the “Vorschlag
+    hinzufügen” form sits below.
+  - Moderation: managers open a compact “Moderieren” panel listing every
+    option with its author and state, approve/reject (reject is reversible),
+    edit/merge, plus “Vorschläge schließen”, the suggestion deadline, CSV
+    export and “Abstimmung starten”.
   - Abstimmung: live result bars above the options, then the selectable cards
     and “Abstimmen”. After voting, the current choice is marked and “Stimme
     ändern” stays available until the deadline. Managers get “Abstimmung
@@ -1258,8 +1263,9 @@ Tiebreaker (later):
 - [x] `polls.html` list with status badges and the card switcher.
 - [x] `polls/_poll_details.html`, `_suggestion_list.html`, `_vote_form.html`,
   `_results.html`.
-- [x] Suggestion list: plain list, randomised order per render, manager-only
-  author and moderation actions.
+- [x] Suggestion list: collapsed, dashed, randomised order per render, own
+  edit/withdraw only, manager-only authors; managers moderate in a separate
+  compact, also randomised panel.
 - [x] Results: a bar per option with “12 % · 6/50” (percentage and fraction of
   votes cast), total votes, tie shown as “Gleichstand”; hidden from students
   when `results_public` is off.
@@ -1286,9 +1292,9 @@ Tiebreaker (later):
   it starts voting. A poll created without a voting deadline is valid.
 - [x] Ending suggestions early moves the poll to moderation; ending voting early
   closes it and reveals results.
-- [x] Suggestions are visible immediately, removed suggestions disappear
-  entirely, merging works before voting, and no option edits are possible
-  afterwards.
+- [x] Suggestions are visible immediately, rejected suggestions can be
+  restored with “Annehmen”, merging works before voting, and no option edits
+  are possible afterwards.
 - [x] Results are aggregate-only and show percentage and fraction. Students see
   them live when `results_public` is on, never when it is off; managers always
   see them.

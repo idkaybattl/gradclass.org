@@ -1,0 +1,155 @@
+{% load static %}
+
+<div class="poll-moderation" data-poll-moderation>
+    {% include "components/_overlay_header.html" %}
+
+    {% if feedback %}
+    {% include "components/_feedback.html" %}
+    {% endif %}
+
+    {% if suggestion_error %}
+    <p class="errorlist">{{ suggestion_error }}</p>
+    {% endif %}
+
+    {% if moderation_options %}
+    <ul class="poll-moderation__list">
+        {% for option in moderation_options %}
+        <li class="poll-moderation__item" data-state="{{ option.state }}">
+            <div class="poll-moderation__row">
+                <p class="poll-moderation__label">{{ option.label }}</p>
+                <span class="poll-moderation__state">
+                    {{ option.get_state_display }}
+                </span>
+            </div>
+
+            {% if option.created_by %}
+            <p class="poll-moderation__author">
+                von {{ option.created_by.get_full_name|default:option.created_by.username }}
+            </p>
+            {% endif %}
+
+            {% if option.merged_into %}
+            <p class="poll-moderation__note">
+                Zusammengeführt in {{ option.merged_into.label }}
+            </p>
+            {% endif %}
+
+            {% if option.merged_options.all %}
+            <p class="poll-moderation__note">
+                Zusammengeführt:
+                {% for merged in option.merged_options.all %}
+                <span class="poll-moderation__merged">
+                    {{ merged.label }}{% if not forloop.last %},{% endif %}
+                    {% if merged.created_by %}
+                    (von {{ merged.created_by.get_full_name|default:merged.created_by.username }})
+                    {% endif %}
+                </span>
+                {% endfor %}
+            </p>
+            {% endif %}
+
+            {% if option.state != "merged" %}
+            <div class="poll-moderation__controls">
+                <input type="checkbox" class="poll-moderation__edit-toggle" id="poll-edit-{{ option.id }}" />
+
+                <div class="poll-moderation__row-actions">
+                    <label for="poll-edit-{{ option.id }}"
+                        class="btn btn--secondary poll-moderation__edit-toggle-label">
+                        <span class="poll-moderation__marker" aria-hidden="true"></span>
+                        Bearbeiten
+                    </label>
+
+                    <div class="poll-moderation__actions">
+                        {% if option.state == "rejected" or option.state == "suggested" %}
+                        <form method="post" action="{% url 'poll-moderate' poll.id %}"
+                            hx-post="{% url 'poll-moderate' poll.id %}" hx-target="#overlay-content"
+                            hx-swap="innerHTML">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve" />
+                            <input type="hidden" name="option" value="{{ option.id }}" />
+                            <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Annehmen</button>
+                        </form>
+                        {% endif %}
+                        {% if option.state == "suggested" or option.state == "approved" %}
+                        <form method="post" action="{% url 'poll-moderate' poll.id %}"
+                            hx-post="{% url 'poll-moderate' poll.id %}" hx-target="#overlay-content"
+                            hx-swap="innerHTML">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject" />
+                            <input type="hidden" name="option" value="{{ option.id }}" />
+                            <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Ablehnen</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="poll-moderation__edit-panel">
+                    <form method="post" action="{% url 'poll-moderate' poll.id %}"
+                        hx-post="{% url 'poll-moderate' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="edit" />
+                        <input type="hidden" name="option" value="{{ option.id }}" />
+                        <p class="field">
+                            <label>Text
+                                <input class="input" name="label" maxlength="120" value="{{ option.label }}" required />
+                            </label>
+                        </p>
+                        <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Speichern</button>
+                    </form>
+
+                    <form method="post" action="{% url 'poll-moderate' poll.id %}"
+                        hx-post="{% url 'poll-moderate' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="merge" />
+                        <input type="hidden" name="option" value="{{ option.id }}" />
+                        <p class="field">
+                            <label>Zusammenführen mit
+                                <select class="input" name="merged_into">
+                                    {% for target in merge_targets %}
+                                    {% if target.id != option.id %}
+                                    <option value="{{ target.id }}">{{ target.label }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </p>
+                        <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Zusammenführen</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Noch keine Vorschläge.</p>
+    {% endif %}
+
+    <section class="card poll-detail__section">
+        <h3>Aktionen</h3>
+
+        <div class="poll-detail__actions">
+            <a class="btn btn--secondary" href="{% url 'poll-export' poll.id %}">CSV</a>
+
+            {% if can_close_suggestions %}
+            <form method="post" action="{% url 'poll-close-suggestions' poll.id %}"
+                hx-post="{% url 'poll-close-suggestions' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Vorschläge schließen</button>
+            </form>
+            {% endif %}
+
+            {% if can_start_voting %}
+            <form method="post" action="{% url 'poll-start-voting' poll.id %}"
+                hx-post="{% url 'poll-start-voting' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button type="submit" class="btn" hx-disabled-elt="this">Abstimmung starten</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if phase == "suggestions" and suggestion_deadline_form %}
+        {% include "polls/_suggestion_deadline_form.html" %}
+        {% endif %}
+    </section>
+</div>

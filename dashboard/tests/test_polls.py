@@ -521,13 +521,16 @@ class PollSuggestionTests(PollTestCase):
             approved=(),
             suggested=("Idee",),
         )
-        url = reverse("poll-details", args=[poll.pk])
+        detail_url = reverse("poll-details", args=[poll.pk])
+        moderation_url = reverse("poll-moderate", args=[poll.pk])
 
         self.client.force_login(self.student)
-        self.assertNotContains(self.client.get(url), "student")
+        self.assertNotContains(self.client.get(detail_url), "student")
+        self.assertEqual(self.client.get(moderation_url).status_code, 302)
 
         self.client.force_login(self.rep)
-        self.assertContains(self.client.get(url), "student")
+        self.assertContains(self.client.get(detail_url), "student")
+        self.assertContains(self.client.get(moderation_url, **self.htmx()), "student")
 
     def test_suggestions_public_toggle_hides_them_from_students(self):
         poll = self.make_poll(
@@ -581,20 +584,35 @@ class PollSuggestionTests(PollTestCase):
         self.client.post(
             reverse("poll-moderate", args=[poll.pk]),
             {"action": "merge", "option": second.pk, "merged_into": first.pk},
+            **self.htmx(),
         )
         second.refresh_from_db()
         self.assertEqual(second.state, Option.State.MERGED)
         self.assertEqual(second.merged_into_id, first.pk)
 
-        detail = self.client.get(reverse("poll-details", args=[poll.pk]))
-        self.assertContains(detail, "Zusammengeführt: Zwei")
-        self.assertContains(detail, "von student")
+        panel = self.client.get(reverse("poll-moderate", args=[poll.pk]), **self.htmx())
+        self.assertContains(panel, "Zusammengeführt:")
+        self.assertContains(panel, "Zwei")
+        self.assertContains(panel, "von student")
 
         self.client.post(
             reverse("poll-moderate", args=[poll.pk]),
             {"action": "reject", "option": first.pk},
+            **self.htmx(),
         )
-        self.assertFalse(Option.objects.filter(pk=first.pk).exists())
+        first.refresh_from_db()
+        self.assertEqual(first.state, Option.State.REJECTED)
+
+        detail = self.client.get(reverse("poll-details", args=[poll.pk]))
+        self.assertNotContains(detail, "Eins")
+
+        self.client.post(
+            reverse("poll-moderate", args=[poll.pk]),
+            {"action": "approve", "option": first.pk},
+            **self.htmx(),
+        )
+        first.refresh_from_db()
+        self.assertEqual(first.state, Option.State.APPROVED)
 
     def test_options_cannot_be_moderated_after_voting_starts(self):
         poll = self.make_poll(phase=Poll.Phase.VOTING, suggested=())

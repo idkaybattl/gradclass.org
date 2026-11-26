@@ -66,7 +66,7 @@ STATUS_FEEDBACK = {
     "suggestion-added": ("success", "Vorschlag hinzugefügt."),
     "suggestion-updated": ("success", "Vorschlag gespeichert."),
     "suggestion-withdrawn": ("success", "Vorschlag zurückgezogen."),
-    "suggestion-approved": ("success", "Vorschlag freigegeben."),
+    "suggestion-approved": ("success", "Vorschlag angenommen."),
     "suggestion-rejected": ("success", "Vorschlag abgelehnt."),
     "suggestion-merged": ("success", "Vorschläge zusammengeführt."),
     "moderation-denied": (

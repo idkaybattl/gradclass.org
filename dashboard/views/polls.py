@@ -110,33 +110,53 @@ def poll_details_context(
     phase = poll.phase
     question = get_poll_question(poll)
     is_manager = can_manage_poll(user, poll)
-
-    if phase in {Poll.Phase.SUGGESTIONS, Poll.Phase.MODERATION}:
-        options = []
-        if is_manager or poll.suggestions_public:
-            options_queryset = question.options.filter(
-                state__in=[Option.State.SUGGESTED, Option.State.APPROVED]
-            )
-            if is_manager:
-                options_queryset = options_queryset.select_related(
-                    "created_by"
-                ).prefetch_related("merged_options__created_by")
-            options = list(options_queryset)
-            random.shuffle(options)
-    else:
-        options = list(question.options.filter(state=Option.State.APPROVED))
-
-    token = read_ballot_token(request, question)
-    current_option_id = read_poll_vote(question, user, token)
-    has_voted = question.participations.filter(user=user).exists()
     can_moderate = is_manager and phase in {
         Poll.Phase.SUGGESTIONS,
         Poll.Phase.MODERATION,
     }
 
+    options = []
+    moderation_options = []
+    if phase in {Poll.Phase.SUGGESTIONS, Poll.Phase.MODERATION}:
+        if is_manager or poll.suggestions_public:
+            options_queryset = question.options.filter(
+                state__in=[Option.State.SUGGESTED, Option.State.APPROVED]
+            )
+            if is_manager:
+                options_queryset = options_queryset.select_related("created_by")
+            options = list(options_queryset)
+            random.shuffle(options)
+        if can_moderate:
+            moderation_options = list(
+                question.options.select_related(
+                    "created_by", "merged_into"
+                ).prefetch_related("merged_options__created_by")
+            )
+            random.shuffle(moderation_options)
+    else:
+        options = list(question.options.filter(state=Option.State.APPROVED))
+
+    merge_targets = [
+        option
+        for option in moderation_options
+        if option.state in {Option.State.SUGGESTED, Option.State.APPROVED}
+    ]
+
+    token = read_ballot_token(request, question)
+    current_option_id = read_poll_vote(question, user, token)
+    has_voted = question.participations.filter(user=user).exists()
+
     can_edit = is_manager and phase == Poll.Phase.DRAFT
     detail_url = poll_detail_url(poll)
     edit_url = f"{reverse('poll-edit', kwargs={'poll_id': poll.pk})}?{urlencode({'back': detail_url})}"
+    moderation_url = reverse("poll-moderate", kwargs={"poll_id": poll.pk})
+
+    action_label = ""
+    action_url = ""
+    if can_edit:
+        action_label, action_url = "Bearbeiten", edit_url
+    elif can_moderate:
+        action_label, action_url = "Moderieren", moderation_url
 
     results_context = _results_context(poll, user)
 
@@ -182,9 +202,11 @@ def poll_details_context(
         "back_url": back_url,
         "detail_url": detail_url,
         "edit_url": edit_url,
-        "action_label": "Bearbeiten" if can_edit else "",
-        "action_url": edit_url if can_edit else "",
-        "action_overlay": can_edit,
+        "moderation_options": moderation_options,
+        "merge_targets": merge_targets,
+        "action_label": action_label,
+        "action_url": action_url,
+        "action_overlay": bool(action_url),
         "feedback": get_feedback(status, message=message),
     }
 
@@ -199,9 +221,25 @@ def render_poll_details(request, poll, **overrides):
     )
 
 
+def render_moderation_panel(request, poll, **overrides):
+    context = poll_details_context(request, poll, **overrides)
+    context["title"] = "Moderation"
+    context["back_url"] = context["detail_url"]
+    context["action_label"] = ""
+    context["action_url"] = ""
+    return render(request, "polls/_moderation_panel.html", context)
+
+
 def poll_action_response(request, poll, status, message=""):
     if is_htmx_request(request):
         return render_poll_details(request, poll, status=status, message=message)
+
+    return redirect(poll_detail_url(poll, status))
+
+
+def moderation_action_response(request, poll, status, message=""):
+    if is_htmx_request(request):
+        return render_moderation_panel(request, poll, status=status, message=message)
 
     return redirect(poll_detail_url(poll, status))
 
@@ -487,6 +525,9 @@ def poll_set_suggestion_deadline(request, poll_id):
         else:
             return poll_action_response(request, poll, "suggestion-deadline-updated")
 
+    if is_htmx_request(request):
+        return render_moderation_panel(request, poll, suggestion_deadline_form=form)
+
     return render_poll_details(request, poll, suggestion_deadline_form=form)
 
 
@@ -557,13 +598,18 @@ def poll_suggest(request, poll_id):
 
 
 @login_required
-@require_POST
+@require_http_methods(["GET", "POST"])
 def poll_moderate(request, poll_id):
     poll = get_object_or_404(Poll.objects.select_related("creator"), pk=poll_id)
     if not can_manage_poll(request.user, poll):
         return poll_action_response(request, poll, "moderation-denied")
     if poll.phase not in {Poll.Phase.SUGGESTIONS, Poll.Phase.MODERATION}:
         return poll_action_response(request, poll, "poll-phase-denied")
+
+    if request.method == "GET":
+        if not is_htmx_request(request):
+            return redirect(poll_detail_url(poll))
+        return render_moderation_panel(request, poll)
 
     question = get_poll_question(poll)
     action = request.POST.get("action")
@@ -574,12 +620,17 @@ def poll_moderate(request, poll_id):
         option.save(update_fields=["state"])
         status = "suggestion-approved"
     elif action == "reject":
-        option.delete()
+        option.state = Option.State.REJECTED
+        option.save(update_fields=["state"])
         status = "suggestion-rejected"
     elif action == "edit":
         label = request.POST.get("label", "").strip()
         error = _suggestion_label_error(label)
         if error:
+            if is_htmx_request(request):
+                return render_moderation_panel(
+                    request, poll, suggestion_error=error, suggestion_value=label
+                )
             return render_poll_details(
                 request,
                 poll,
@@ -590,11 +641,10 @@ def poll_moderate(request, poll_id):
         option.save(update_fields=["label"])
         status = "suggestion-updated"
     elif action == "merge":
-        target = get_object_or_404(
-            Option,
-            pk=request.POST.get("merged_into"),
-            question=question,
-        )
+        merged_into = request.POST.get("merged_into")
+        if not merged_into:
+            return poll_action_response(request, poll, "poll-phase-denied")
+        target = get_object_or_404(Option, pk=merged_into, question=question)
         if target.pk == option.pk or target.state not in {
             Option.State.SUGGESTED,
             Option.State.APPROVED,
@@ -607,7 +657,7 @@ def poll_moderate(request, poll_id):
     else:
         return poll_action_response(request, poll, "poll-phase-denied")
 
-    return poll_action_response(request, poll, status)
+    return moderation_action_response(request, poll, status)
 
 
 @login_required

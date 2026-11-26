@@ -67,29 +67,13 @@
 
     {% if phase == "suggestions" or phase == "moderation" %}
     <section class="card poll-detail__section">
-        <div class="poll-detail__section-header">
-            <h3>{% if phase == "suggestions" %}Vorschläge{% else %}Moderation{% endif %}</h3>
-            {% if is_manager %}
-            <a class="btn btn--secondary" href="{% url 'poll-export' poll.id %}">CSV</a>
-            {% endif %}
-            {% if can_close_suggestions %}
-            <form method="post" action="{% url 'poll-close-suggestions' poll.id %}"
-                hx-post="{% url 'poll-close-suggestions' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
-                {% csrf_token %}
-                <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Vorschläge schließen</button>
-            </form>
-            {% endif %}
-            {% if can_start_voting and not show_voting_deadline_form %}
-            <form method="post" action="{% url 'poll-start-voting' poll.id %}"
-                hx-post="{% url 'poll-start-voting' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
-                {% csrf_token %}
-                <button type="submit" class="btn" hx-disabled-elt="this">Abstimmung starten</button>
-            </form>
-            {% endif %}
-        </div>
+        <h3>Vorschläge</h3>
 
         {% if options %}
-        {% include "polls/_suggestion_list.html" %}
+        <details class="poll-suggestions-fold">
+            <summary>Vorschläge anzeigen ({{ options|length }})</summary>
+            {% include "polls/_suggestion_list.html" %}
+        </details>
         {% elif is_manager or poll.suggestions_public %}
         <p>Noch keine Vorschläge.</p>
         {% else %}
@@ -102,7 +86,7 @@
     </section>
     {% endif %}
 
-    {% if phase == "suggestions" and suggestion_deadline_form %}
+    {% if phase == "suggestions" and suggestion_deadline_form.errors %}
     <section class="card poll-detail__section">
         {% include "polls/_suggestion_deadline_form.html" %}
     </section>
