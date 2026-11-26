@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from ..forms import EventForm
 from ..models import Event, EventParticipation
+from ..notifications import Notification, NotificationVerbChoices
 from ..views.events import MAX_PROJECTS_PER_HOUR
 from .helpers import User, make_limited_creator, make_rep
 
@@ -343,6 +344,41 @@ class EventEditViewTests(TestCase):
         self.assertEqual(self.event.title, "Sommerfest neu")
         self.assertEqual(self.event.creator, self.creator)
         self.assertEqual(self.event.manager, self.manager)
+
+    def test_edit_does_not_notify_about_time_frame_change(self):
+        self.event.participants.add(self.other)
+        new_start = self.start + timedelta(hours=1)
+        new_end = self.end + timedelta(hours=1)
+
+        response = self.client.post(
+            reverse("event-edit", args=[self.event.pk]),
+            self.edit_data(
+                **{
+                    f"{self.event.pk}-starting_date": timezone.localtime(
+                        new_start
+                    ).strftime("%Y-%m-%dT%H:%M"),
+                    f"{self.event.pk}-ending_date": timezone.localtime(
+                        new_end
+                    ).strftime("%Y-%m-%dT%H:%M"),
+                }
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('event-details', args=[self.event.pk])}?status=updated",
+            fetch_redirect_response=False,
+        )
+        self.event.refresh_from_db()
+        self.assertEqual(
+            timezone.localtime(self.event.starting_date).strftime("%Y-%m-%dT%H:%M"),
+            timezone.localtime(new_start).strftime("%Y-%m-%dT%H:%M"),
+        )
+        self.assertFalse(
+            Notification.objects.filter(
+                verb=NotificationVerbChoices.TIME_FRAME_CHANGED
+            ).exists()
+        )
 
     def test_edit_removes_participants(self):
         self.event.participants.add(self.other)

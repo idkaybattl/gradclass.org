@@ -85,6 +85,10 @@
     font-size: var(--font-size-sm);
 }
 
+.event-card__participation {
+    font-size: var(--font-size-sm);
+}
+
 .event-card__description {
     font-size: var(--font-size-sm);
     overflow-wrap: anywhere;

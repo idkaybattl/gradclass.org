@@ -28,6 +28,7 @@ from ..permissions import (
 )
 from ..services import (
     build_password_reset_url,
+    participation_points,
     ticket_estimate,
     total_points,
     work_points,
@@ -97,6 +98,11 @@ def user_details_context(request, user, *, back_url=None, status=None, feedback=
         event = participation.event
         event.is_upcoming = event.ending_date > now
         event.is_own = True
+        event.participation_hours = format_duration(participation.participation_time)
+        event.participation_points = None
+        # Points only count for final, past events, like work_points().
+        if can_view_points and event.final and event.ending_date < now:
+            event.participation_points = participation_points(participation)
         participation_events.append(event)
 
     if feedback is None:

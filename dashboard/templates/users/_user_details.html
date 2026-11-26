@@ -21,14 +21,14 @@
 
     <section class="user-detail__section card">
         <h3>Profil</h3>
-        <p><strong>Geburtstag:</strong> {{ profile_user.profile.birthday|date:"d.m.Y"|default:"Keine Angabe bisher" }}
+        <p><strong>Geburtstag:</strong> {{ profile_user.profile.birthday|date:"d.m.Y"|default:"Keine Angabe" }}
         </p>
         <p><strong>Nutzername:</strong> {{ profile_user.username }}</p>
         {% if can_view_mail %}
-        <p><strong>IServ Mail:</strong> {{ profile_user.email|default:"Keine Angabe bisher" }}</p>
-        <p><strong>Externe Mail:</strong> {{ profile_user.profile.external_mail|default:"Keine Angabe bisher" }}</p>
+        <p><strong>IServ Mail:</strong> {{ profile_user.email|default:"Keine Angabe" }}</p>
+        <p><strong>Externe Mail:</strong> {{ profile_user.profile.external_mail|default:"Keine Angabe" }}</p>
         {% endif %}
-        <p><strong>Telefonnummer:</strong> {{ profile_user.profile.phone_number|default:"Keine Angabe bisher" }}</p>
+        <p><strong>Telefonnummer:</strong> {{ profile_user.profile.phone_number|default:"Keine Angabe" }}</p>
     </section>
 
     <section class="user-detail__section card">

@@ -30,7 +30,7 @@ from .models import (
     Question,
     QuestionParticipation,
 )
-from .notifications import notify_participants, notify_time_frame_changed
+from .notifications import notify_participants
 
 User = get_user_model()
 
@@ -67,13 +67,9 @@ def save_event(form, user):
         # form may already have modified, so read from DB to get the real old
         # values.
         previous_event = Event.objects.get(pk=form.instance.pk)
-        old_starting_datetime = previous_event.starting_date
-        old_ending_datetime = previous_event.ending_date
-        old_duration = old_ending_datetime - old_starting_datetime
+        old_duration = previous_event.ending_date - previous_event.starting_date
         old = set(previous_event.participants.all())
     else:
-        old_starting_datetime = None
-        old_ending_datetime = None
         old_duration = None
         old = set()
 
@@ -127,23 +123,6 @@ def save_event(form, user):
 
     if to_update:
         EventParticipation.objects.bulk_update(to_update, ["participation_time"])  # pyright: ignore[rparticipationortArgumentType]
-
-    # Notify participants of changes in timeframe
-    new_starting_datetime = event.starting_date
-    new_ending_datetime = event.ending_date
-
-    if old_duration and (
-        old_starting_datetime != event.starting_date
-        or old_ending_datetime != event.ending_date
-    ):
-        notify_time_frame_changed(
-            event,
-            event.participants.all(),
-            old_starting_datetime,
-            old_ending_datetime,
-            new_starting_datetime,
-            new_ending_datetime,
-        )
 
     new = set(event.participants.all())
 
@@ -387,6 +366,10 @@ def _duration_hours(value):
     ) / SECONDS_PER_HOUR
 
 
+def _work_factor(event):
+    return Decimal("2") if event.work_kind == Event.WorkKind.FREETIME else Decimal("1")
+
+
 def work_points(user):
     total = Decimal("0")
     participations = EventParticipation.objects.filter(
@@ -399,12 +382,7 @@ def work_points(user):
         hours = _duration_hours(participation.participation_time)
         if hours <= 0:
             continue
-        factor = (
-            Decimal("2")
-            if participation.event.work_kind == Event.WorkKind.FREETIME
-            else Decimal("1")
-        )
-        total += hours * factor
+        total += hours * _work_factor(participation.event)
 
     return int(total.to_integral_value(rounding=ROUND_FLOOR))
 
@@ -439,6 +417,26 @@ def earnings_share(user):
         total += user_hours / event_hours * participation.event.earnings
 
     return total
+
+
+def participation_points(participation, *, point_value=None):
+    """Points one participation contributed: work hours plus earnings share."""
+    if point_value is None:
+        point_value = current_point_value()
+
+    event = participation.event
+    hours = _duration_hours(participation.participation_time)
+    if hours <= 0:
+        return 0
+
+    earnings = Decimal("0")
+    if event.earnings and event.earnings > 0:
+        event_hours = _event_hours(event)
+        if event_hours > 0:
+            earnings = hours / event_hours * event.earnings
+
+    points = hours * _work_factor(event) + earnings / point_value
+    return int(points.to_integral_value(rounding=ROUND_FLOOR))
 
 
 def get_abikasse():

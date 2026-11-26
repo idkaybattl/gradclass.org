@@ -16,6 +16,7 @@ User = settings.AUTH_USER_MODEL
 class NotificationVerbChoices(models.TextChoices):
     ADDED_TO_EVENT = ("added_to_event", "Added to event")
     REMOVED_FROM_EVENT = ("removed_from_event", "Removed from event")
+    # No longer created, but existing notifications must keep rendering.
     TIME_FRAME_CHANGED = ("time_frame_changed", "Time frame changed")
     EVENT_JOIN_REQUEST = ("event_join_request", "Event join request")
     EVENT_JOIN_REQUEST_ACCEPTED = (
@@ -174,34 +175,6 @@ def notify_participants(event: Event, old, new):
             user=participant,
             verb=NotificationVerbChoices.REMOVED_FROM_EVENT,
             target=event,
-        ).save()
-
-
-def notify_time_frame_changed(
-    event,
-    recipients,
-    old_starting_date,
-    old_ending_date,
-    new_starting_date,
-    new_ending_date,
-):
-    payload = {
-        "old_starting_date": old_starting_date.isoformat()
-        if old_starting_date
-        else None,
-        "old_ending_date": old_ending_date.isoformat() if old_ending_date else None,
-        "new_starting_date": new_starting_date.isoformat()
-        if new_starting_date
-        else None,
-        "new_ending_date": new_ending_date.isoformat() if new_ending_date else None,
-    }
-
-    for recipient in recipients:
-        Notification(
-            user=recipient,
-            verb=NotificationVerbChoices.TIME_FRAME_CHANGED,
-            target=event,
-            payload=payload,
         ).save()
 
 

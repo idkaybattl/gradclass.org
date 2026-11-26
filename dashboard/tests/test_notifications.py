@@ -93,6 +93,24 @@ class NotificationViewTests(TestCase):
         self.assertContains(response, 'data-overlay-open="overlay"')
         self.assertContains(response, 'hx-target="#overlay-content"')
 
+    def test_legacy_time_frame_notification_still_renders(self):
+        Notification.objects.create(
+            user=self.user,
+            verb=NotificationVerbChoices.TIME_FRAME_CHANGED,
+            target=self.event,
+            payload={
+                "old_starting_date": "2026-01-01T10:00:00+00:00",
+                "old_ending_date": "2026-01-01T12:00:00+00:00",
+                "new_starting_date": "2026-01-01T11:00:00+00:00",
+                "new_ending_date": "2026-01-01T13:00:00+00:00",
+            },
+        )
+
+        response = self.client.get(reverse("notifications"), HTTP_HX_REQUEST="true")
+
+        self.assertContains(response, "Zeitrahmen geändert")
+        self.assertContains(response, "2026-01-01 11:00")
+
     def test_join_request_notification_opens_request_in_overlay(self):
         join_request = JoinRequest.objects.create(
             requestor=self.other_user, event=self.event

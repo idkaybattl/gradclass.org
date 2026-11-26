@@ -17,6 +17,12 @@
         <time datetime="{{ event.ending_date|date:'c' }}">{{ event.ending_date|date:"d.m.Y, H:i" }} Uhr</time>
         {% endif %}
     </p>
+    {% if event.participation_hours %}
+    <p class="event-card__participation">
+        {{ event.participation_hours }} h{% if event.participation_points is not None %} ·
+        {{ event.participation_points }} Punkt{{ event.participation_points|pluralize:"e" }}{% endif %}
+    </p>
+    {% endif %}
     {% if event.description and not hide_description %}
     <p class="event-card__description">{{ event.description|truncatewords:24 }}</p>
     {% endif %}

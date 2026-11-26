@@ -310,7 +310,7 @@ pages. It keeps the move from churning code that is still being written.
 - [x] Add `templates/users/_user_details.html`:
   - Header: name, “Bearbeiten” (if `can_edit`), “Passwort ändern”
     (if `can_change_password`), back.
-  - Profile fields: birthday (or “Keine Angabe bisher”), username, IServ mail,
+  - Profile fields: birthday (or “Keine Angabe”), username, IServ mail,
     external mail, phone number, bio.
   - Arbeitsstunden (`total_hours`; format `timedelta` readably, e.g. `H:MM`).
   - Projektteilnahmen: list of events. Reuse a simple event card partial or the

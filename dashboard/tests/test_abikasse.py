@@ -10,6 +10,7 @@ from ..services import (
     abikasse_balance,
     earnings_share,
     get_abikasse,
+    participation_points,
     ticket_base,
     ticket_estimate,
     total_points,
@@ -106,6 +107,24 @@ class PointsServiceTests(TestCase):
         participate(event, self.other, 3)
 
         self.assertEqual(earnings_share(self.user), Decimal("25"))
+
+    def test_participation_points_add_work_and_earnings_share(self):
+        event = make_event(
+            self.user,
+            earnings=Decimal("100.00"),
+            work_kind=Event.WorkKind.FREETIME,
+        )
+        participation = participate(event, self.user, 2)
+        participate(event, self.other, 2)
+
+        # 2 h freetime (2×) plus half of 100 € at the default 2 € per point.
+        self.assertEqual(participation_points(participation), 29)
+
+    def test_participation_points_without_hours_are_zero(self):
+        event = make_event(self.user)
+        participation = participate(event, self.user, 0)
+
+        self.assertEqual(participation_points(participation), 0)
 
     def test_earnings_share_skips_zero_hours_and_missing_earnings(self):
         zero_event = make_event(self.user, earnings=Decimal("100.00"))
@@ -281,6 +300,24 @@ class VisibilityViewTests(TestCase):
         self.assertContains(response, "Punkte gesamt")
         self.assertContains(response, "Ticketpreis")
         self.assertContains(response, "Schätzung vom")
+
+    def test_participation_cards_show_hours_and_points(self):
+        event = make_event(self.student)
+        participate(event, self.student, 2)
+
+        response = self.client.get(reverse("user-details", args=[self.student.pk]))
+
+        self.assertContains(response, "2:00 h")
+        self.assertContains(response, "2 Punkte")
+
+    def test_participation_cards_hide_points_from_unrelated_users(self):
+        event = make_event(self.other)
+        participate(event, self.other, 2)
+
+        response = self.client.get(reverse("user-details", args=[self.other.pk]))
+
+        self.assertContains(response, "2:00 h")
+        self.assertNotContains(response, "2 Punkte")
 
     def test_rep_and_superuser_see_other_user_points(self):
         for user in (self.rep, self.superuser):
