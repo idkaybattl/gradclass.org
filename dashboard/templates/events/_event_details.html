@@ -24,7 +24,9 @@
 
         {% if can_delete %}
         <form method="post" action="{% url 'event-delete' event.id %}" hx-post="{% url 'event-delete' event.id %}"
-            hx-target="#overlay-content" hx-swap="innerHTML">
+            hx-target="#overlay-content" hx-swap="innerHTML" data-confirm-title="Aktion löschen?"
+            data-confirm="Die Aktion „{{ event.title }}“ wird dauerhaft gelöscht. Teilnahmen und offene Anfragen werden mit entfernt."
+            data-confirm-action="Löschen">
             {% csrf_token %}
             <button type="submit" class="btn" hx-disabled-elt="this">Löschen</button>
         </form>

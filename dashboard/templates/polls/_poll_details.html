@@ -118,7 +118,10 @@
             <h3>Abstimmung</h3>
             {% if can_close_voting %}
             <form method="post" action="{% url 'poll-close-voting' poll.id %}"
-                hx-post="{% url 'poll-close-voting' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                hx-post="{% url 'poll-close-voting' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML"
+                data-confirm-title="Abstimmung beenden?"
+                data-confirm="Die Abstimmung endet sofort. Das Ergebnis ist danach endgültig."
+                data-confirm-action="Beenden">
                 {% csrf_token %}
                 <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Abstimmung beenden</button>
             </form>

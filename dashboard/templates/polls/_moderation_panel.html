@@ -133,7 +133,10 @@
 
             {% if can_close_suggestions %}
             <form method="post" action="{% url 'poll-close-suggestions' poll.id %}"
-                hx-post="{% url 'poll-close-suggestions' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML">
+                hx-post="{% url 'poll-close-suggestions' poll.id %}" hx-target="#overlay-content" hx-swap="innerHTML"
+                data-confirm-title="Vorschläge schließen?"
+                data-confirm="Die Vorschlagsphase endet sofort. Danach können keine Vorschläge mehr eingereicht werden."
+                data-confirm-action="Schließen">
                 {% csrf_token %}
                 <button type="submit" class="btn btn--secondary" hx-disabled-elt="this">Vorschläge schließen</button>
             </form>

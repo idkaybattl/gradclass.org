@@ -12,7 +12,8 @@
         {% if can_suggest and not is_manager and option.created_by_id == user.id %}
         <div class="poll-suggestions__actions">
             <form method="post" action="{% url 'poll-suggest' poll.id %}" hx-post="{% url 'poll-suggest' poll.id %}"
-                hx-target="#overlay-content" hx-swap="innerHTML">
+                hx-target="#overlay-content" hx-swap="innerHTML" data-confirm-title="Vorschlag zurückziehen?"
+                data-confirm="„{{ option.label }}“ wird dauerhaft entfernt." data-confirm-action="Zurückziehen">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="withdraw" />
                 <input type="hidden" name="option" value="{{ option.id }}" />

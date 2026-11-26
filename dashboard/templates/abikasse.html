@@ -65,7 +65,9 @@
                         hx-swap="innerHTML">Bearbeiten</a>
                     <form method="post" action="{% url 'abikasse-entry-delete' entry.id %}"
                         hx-post="{% url 'abikasse-entry-delete' entry.id %}" hx-target="#overlay-content"
-                        hx-swap="innerHTML">
+                        hx-swap="innerHTML" data-confirm-title="Eintrag löschen?"
+                        data-confirm="Der Eintrag „{{ entry.description }}“ wird dauerhaft aus der Abikasse entfernt."
+                        data-confirm-action="Löschen">
                         {% csrf_token %}
                         {% if next_url %}
                         <input type="hidden" name="next" value="{{ next_url }}" />

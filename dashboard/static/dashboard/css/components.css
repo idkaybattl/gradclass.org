@@ -300,6 +300,54 @@ textarea::placeholder {
     gap: 8px;
 }
 
+/* confirmation dialog: a native <dialog> in the top layer, so it covers an
+   open sheet. Cancel is focused first to make the safe choice the default. */
+.confirm-dialog {
+    width: calc(100% - 2 * var(--base-padding));
+    max-width: 420px;
+    max-height: calc(100% - 2 * var(--base-padding));
+    margin: auto;
+    padding: 0;
+    overflow: auto;
+
+    border-style: solid;
+    border-radius: 0;
+
+    background: var(--bg);
+    color: var(--text);
+}
+
+.confirm-dialog::backdrop {
+    background: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.confirm-dialog__form {
+    display: grid;
+    gap: 12px;
+    padding: var(--base-padding);
+}
+
+.confirm-dialog__title {
+    font-size: var(--font-size-lg);
+}
+
+.confirm-dialog__message {
+    font-size: var(--font-size-base);
+}
+
+.confirm-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+    .confirm-dialog__actions .btn {
+        flex: 1 1 auto;
+    }
+}
+
 /* static content page: title plus a bordered text block */
 .page {
     display: flex;

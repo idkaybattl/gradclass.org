@@ -127,6 +127,7 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Shared components: `dashboard/static/dashboard/css/components.css` — `.btn`, `.field`, `.input`, `.checkbox`, `.errorlist`.
 - Page styles: `base.css` (shell, nav, footer, overlays, menu), `index.css`, `login.css`.
 - Use the existing tokens and components. Do not hardcode colours, font sizes, or border widths. Font sizes use `--font-size-sm/base/lg/xl`.
+- Irreversible actions (deletes, one-way phase changes) opt into the shared confirmation dialog with `data-confirm`, `data-confirm-title` and `data-confirm-action` on the form. `confirm.js` handles htmx and plain forms; do not use `hx-confirm` or inline `onsubmit`.
 - Style: flat, square corners, one border thickness (`--border-width`). Avoid
   `border-radius`.
 - Font: self-hosted BioRhyme. Do not add a Google Fonts CDN link.

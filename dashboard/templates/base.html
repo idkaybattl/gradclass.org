@@ -197,8 +197,22 @@
         {% endblock %}
     </main>
 
+    <dialog class="confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message">
+        <form method="dialog" class="confirm-dialog__form">
+            <h2 class="confirm-dialog__title" id="confirm-dialog-title"></h2>
+            <p class="confirm-dialog__message" id="confirm-dialog-message"></p>
+            <div class="confirm-dialog__actions">
+                <button type="submit" value="cancel"
+                    class="btn btn--secondary confirm-dialog__cancel">Abbrechen</button>
+                <button type="submit" value="confirm" class="btn confirm-dialog__accept"></button>
+            </div>
+        </form>
+    </dialog>
+
     <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
     <script src="{% static 'dashboard/js/htmx-setup.js' %}" defer></script>
+    <script src="{% static 'dashboard/js/confirm.js' %}" defer></script>
     <script src="{% static 'dashboard/js/search.js' %}" defer></script>
     <script src="{% static 'dashboard/js/user-picker.js' %}" defer></script>
     <script src="{% static 'dashboard/js/event-form.js' %}" defer></script>

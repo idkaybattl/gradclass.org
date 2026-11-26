@@ -548,7 +548,8 @@ footer {
 .profile,
 .user-search__results,
 .introduction,
-.login-page {
+.login-page,
+.confirm-dialog {
     transform: translateZ(0);
 }
 

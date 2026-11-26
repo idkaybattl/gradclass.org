@@ -32,7 +32,9 @@
                 <p class="quote-report__reason">{{ report.reason }}</p>
                 {% endif %}
                 <div class="quote-report__actions">
-                    <form method="post" action="{% url 'quote-delete' report.quote.id %}">
+                    <form method="post" action="{% url 'quote-delete' report.quote.id %}"
+                        data-confirm-title="Zitat löschen?" data-confirm="Das Zitat wird dauerhaft gelöscht."
+                        data-confirm-action="Löschen">
                         {% csrf_token %}
                         <button type="submit" class="quote-card__action">Zitat löschen</button>
                     </form>

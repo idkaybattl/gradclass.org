@@ -41,7 +41,8 @@
     {% if quote.can_delete or quote.can_report %}
     <div class="quote-card__actions">
         {% if quote.can_delete %}
-        <form method="post" action="{% url 'quote-delete' quote.id %}">
+        <form method="post" action="{% url 'quote-delete' quote.id %}" data-confirm-title="Zitat löschen?"
+            data-confirm="Das Zitat wird dauerhaft gelöscht." data-confirm-action="Löschen">
             {% csrf_token %}
             <button type="submit" class="quote-card__action">Löschen</button>
         </form>
