@@ -21,7 +21,12 @@ from ..http_helpers import (
 )
 from ..intro import introduction_required
 from ..models import OPTION_LABEL_MAX_LENGTH, BallotVote, Option, Poll
-from ..permissions import can_create_poll, can_manage_poll, can_view_poll_results
+from ..permissions import (
+    can_create_poll,
+    can_manage_poll,
+    can_view_poll_option_authors,
+    can_view_poll_results,
+)
 from ..services import (
     BALLOT_SALT,
     add_poll_suggestion,
@@ -61,15 +66,15 @@ def _results_context(poll, user):
     question = get_poll_question(poll)
     total_votes = question.participations.count()
     can_view_results = can_view_poll_results(user, poll)
+    can_view_authors = can_view_poll_option_authors(user, poll)
     results = []
     is_tie = False
 
     if can_view_results:
-        approved = list(
-            question.options.filter(state=Option.State.APPROVED).annotate(
-                vote_count=Count("votes")
-            )
-        )
+        approved_queryset = question.options.filter(state=Option.State.APPROVED)
+        if can_view_authors:
+            approved_queryset = approved_queryset.select_related("created_by")
+        approved = list(approved_queryset.annotate(vote_count=Count("votes")))
         top_votes = max((option.vote_count for option in approved), default=0)
         results = [
             {
@@ -87,6 +92,7 @@ def _results_context(poll, user):
 
     return {
         "can_view_results": can_view_results,
+        "can_view_authors": can_view_authors,
         "results": results,
         "total_votes": total_votes,
         "is_tie": is_tie,
@@ -110,6 +116,7 @@ def poll_details_context(
     phase = poll.phase
     question = get_poll_question(poll)
     is_manager = can_manage_poll(user, poll)
+    can_view_authors = can_view_poll_option_authors(user, poll)
     can_moderate = is_manager and phase in {
         Poll.Phase.SUGGESTIONS,
         Poll.Phase.MODERATION,
@@ -122,7 +129,7 @@ def poll_details_context(
             options_queryset = question.options.filter(
                 state__in=[Option.State.SUGGESTED, Option.State.APPROVED]
             )
-            if is_manager:
+            if is_manager or can_view_authors:
                 options_queryset = options_queryset.select_related("created_by")
             options = list(options_queryset)
             random.shuffle(options)
@@ -175,6 +182,7 @@ def poll_details_context(
         "title": poll.title,
         "options": options,
         "is_manager": is_manager,
+        "can_view_authors": can_view_authors,
         "can_moderate": can_moderate,
         "can_suggest": phase == Poll.Phase.SUGGESTIONS,
         "can_edit": can_edit,

@@ -4,7 +4,7 @@
     <li class="poll-suggestions__item">
         <p class="poll-suggestions__label">{{ option.label }}</p>
 
-        {% if is_manager and option.created_by %}
+        {% if can_view_authors and option.created_by %}
         <p class="poll-suggestions__author">
             von {{ option.created_by.get_full_name|default:option.created_by.username }}
         </p>

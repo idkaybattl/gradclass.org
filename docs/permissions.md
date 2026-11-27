@@ -42,6 +42,7 @@ new group with the old name).
 | `manage_users` | – | – | ✓ |
 | `access_admin` | – | – | ✓ |
 | `manage_polls` | – | ✓ | ✓ |
+| `view_poll_results` | – | – | ✓ |
 | `view_abikasse` | ✓ | ✓ | ✓ |
 | `manage_abikasse` | – | ✓ | ✓ |
 | `view_any_points` | – | ✓ | ✓ |
@@ -64,6 +65,8 @@ These are independent of groups and live in `permissions.py`:
   and `manage_users` holders.
 - The poll creator or `manage_polls` holders may edit, moderate and start their
   own poll. Any logged-in user may view polls, suggest options and vote.
+  `view_poll_results` holders additionally see results for internal polls and the
+  author of each option; `manage_polls` holders already see both.
 - Only `manage_earnings` holders (reps/superuser) may mark earnings as received
   and finalise the event.
 - The quote uploader or a `manage_quotes` holder may delete a quote. Any

@@ -15,6 +15,11 @@
                 <span class="poll-result__label">{{ result.option.label }}</span>
                 <span class="poll-result__value">{{ result.percent }} % · {{ result.votes }}/{{ total_votes }}</span>
             </div>
+            {% if can_view_authors and result.option.created_by %}
+            <p class="poll-result__author">
+                von {{ result.option.created_by.get_full_name|default:result.option.created_by.username }}
+            </p>
+            {% endif %}
             <div class="poll-result__bar" role="img"
                 aria-label="{{ result.option.label }}: {{ result.percent }} Prozent">
                 <span style="width: {{ result.percent }}%"></span>

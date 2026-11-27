@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.auth.models import Permission
 from django.core import signing
 from django.test import TestCase
 from django.urls import reverse
@@ -85,6 +86,13 @@ class PollTestCase(TestCase):
 
     def options(self, poll):
         return list(poll.questions.first().options.all())
+
+    def make_results_viewer(self):
+        user = User.objects.create_user(username="viewer", password="password")
+        user.user_permissions.add(Permission.objects.get(codename="view_poll_results"))
+        user.profile.has_had_introduction = True
+        user.profile.save(update_fields=["has_had_introduction"])
+        return user
 
 
 class PollListViewTests(PollTestCase):
@@ -532,6 +540,20 @@ class PollSuggestionTests(PollTestCase):
         self.assertContains(self.client.get(detail_url), "student")
         self.assertContains(self.client.get(moderation_url, **self.htmx()), "student")
 
+    def test_view_poll_results_capability_sees_suggestion_authors(self):
+        viewer = self.make_results_viewer()
+        poll = self.make_poll(
+            phase=Poll.Phase.SUGGESTIONS,
+            mode=Poll.Mode.SUGGESTIONS,
+            approved=(),
+            suggested=("Idee",),
+        )
+
+        self.client.force_login(viewer)
+        response = self.client.get(reverse("poll-details", args=[poll.pk]))
+
+        self.assertContains(response, "von student")
+
     def test_suggestions_public_toggle_hides_them_from_students(self):
         poll = self.make_poll(
             phase=Poll.Phase.SUGGESTIONS,
@@ -768,6 +790,42 @@ class PollResultTests(PollTestCase):
         results = self.client.get(reverse("poll-results", args=[poll.pk]))
         self.assertEqual(results.status_code, 200)
         self.assertContains(results, "100 %")
+
+    def test_view_poll_results_capability_sees_internal_results(self):
+        viewer = self.make_results_viewer()
+        poll = self.make_poll(phase=Poll.Phase.CLOSED, results_public=False)
+        cast_poll_vote(poll.questions.first(), self.options(poll)[0], self.other)
+
+        self.client.force_login(viewer)
+        detail = self.client.get(reverse("poll-details", args=[poll.pk]))
+        self.assertContains(detail, "100 %")
+
+        results = self.client.get(reverse("poll-results", args=[poll.pk]))
+        self.assertEqual(results.status_code, 200)
+        self.assertContains(results, "100 %")
+
+    def test_view_poll_results_capability_sees_option_authors(self):
+        viewer = self.make_results_viewer()
+        poll = self.make_poll(phase=Poll.Phase.CLOSED)
+        option = self.options(poll)[0]
+        option.created_by = self.student
+        option.save(update_fields=["created_by"])
+        cast_poll_vote(poll.questions.first(), option, self.other)
+
+        self.client.force_login(viewer)
+        response = self.client.get(reverse("poll-details", args=[poll.pk]))
+        self.assertContains(response, "von student")
+
+    def test_option_authors_are_hidden_without_the_capability(self):
+        poll = self.make_poll(phase=Poll.Phase.CLOSED)
+        option = self.options(poll)[0]
+        option.created_by = self.student
+        option.save(update_fields=["created_by"])
+        cast_poll_vote(poll.questions.first(), option, self.other)
+
+        self.client.force_login(self.student)
+        response = self.client.get(reverse("poll-details", args=[poll.pk]))
+        self.assertNotContains(response, "von student")
 
     def test_results_endpoint_hides_nothing_when_public(self):
         poll = self.make_poll(phase=Poll.Phase.CLOSED)

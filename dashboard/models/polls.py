@@ -44,6 +44,10 @@ class Poll(models.Model):
     class Meta:
         permissions = [
             ("manage_polls", "Umfragen verwalten"),
+            (
+                "view_poll_results",
+                "Ergebnisse aller Umfragen und Vorschlagende einsehen",
+            ),
         ]
 
     def __str__(self):
