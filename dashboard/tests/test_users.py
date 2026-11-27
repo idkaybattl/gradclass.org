@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from ..models import Event, EventParticipation
+from ..models import Event, EventParticipation, UserProfile
 from .helpers import User, make_rep
 
 
@@ -314,3 +314,33 @@ class UserViewTests(TestCase):
         )
         self.other.refresh_from_db()
         self.assertTrue(self.other.check_password("password"))
+
+
+class AdminUserAddTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="staff", password="password"
+        )
+        self.client.force_login(self.admin)
+
+    def test_admin_add_user_creates_exactly_one_profile(self):
+        # The post_save signal creates the profile; inline data must not create
+        # a second one (hence the posted profile-0 fields).
+        response = self.client.post(
+            reverse("admin:auth_user_add"),
+            {
+                "username": "neu",
+                "password1": "sicheresPasswort123",
+                "password2": "sicheresPasswort123",
+                "profile-TOTAL_FORMS": "1",
+                "profile-INITIAL_FORMS": "0",
+                "profile-MIN_NUM_FORMS": "0",
+                "profile-MAX_NUM_FORMS": "1",
+                "profile-0-ticket_count": "7",
+                "profile-0-bio": "hallo",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        user = User.objects.get(username="neu")
+        self.assertEqual(UserProfile.objects.filter(user=user).count(), 1)

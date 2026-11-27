@@ -30,6 +30,13 @@ class EmployeeInline(admin.StackedInline):
 class UserAdmin(BaseUserAdmin):
     inlines = [EmployeeInline]
 
+    def get_inline_instances(self, request, obj=None):
+        # A new user gets its UserProfile from the post_save signal, so the
+        # inline must not try to create a second one on the add form.
+        if obj is None:
+            return []
+        return super().get_inline_instances(request, obj)
+
 
 # Re-register UserAdmin
 admin.site.unregister(User)

@@ -226,6 +226,9 @@ be rendered and looked at before reporting. Do not rely on the diff alone.
   `http://127.0.0.1:8000/...` in the MCP browser, log in with a dev user, and
   click through overlays. It exercises the real HTML and HTMX swaps and exposes
   console/network errors and screenshots.
+- Dev login credentials live in the gitignored `.dev-login` at the repo root
+  (`username=` / `password=`). Use them to log in in the MCP browser; never
+  commit the file or copy the credentials into code, tests or docs.
 - Prove layout with `evaluate_script` instead of eyeballing screenshots: compare
   `document.documentElement.scrollWidth` with `clientWidth`, and each control's
   `getBoundingClientRect()` with its card/viewport. Use `emulate` with a viewport

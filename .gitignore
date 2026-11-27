@@ -154,3 +154,6 @@ staticfiles/
 
 # Rendered UI previews (scripts/render_ui.py)
 .ui-preview/
+
+# Login credentials for Dev
+.dev-login
