@@ -186,24 +186,24 @@ class ManagerPickerWidget(UserSearchWidget):
 
 
 class EventForm(forms.ModelForm):
-    title = forms.CharField(label="Titel ", max_length=255)
-    description = forms.CharField(label="Beschreibung ", widget=forms.Textarea())
+    title = forms.CharField(label="Titel", max_length=255)
+    description = forms.CharField(label="Beschreibung", widget=forms.Textarea())
     starting_date = forms.DateTimeField(
-        label="Beginn ",
+        label="Beginn",
         widget=forms.DateTimeInput(
             format="%Y-%m-%dT%H:%M",
             attrs={"type": "datetime-local", "lang": "de-DE"},
         ),
     )
     ending_date = forms.DateTimeField(
-        label="Ende ",
+        label="Ende",
         widget=forms.DateTimeInput(
             format="%Y-%m-%dT%H:%M",
             attrs={"type": "datetime-local", "lang": "de-DE"},
         ),
     )
     participants = forms.ModelMultipleChoiceField(
-        label="Teilnehmer ",
+        label="Teilnehmer",
         queryset=User.objects.none(),
         widget=ParticipantsWidget(),
         required=False,

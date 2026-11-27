@@ -22,8 +22,8 @@
     {% endif %}
 
     <div class="events-toolbar">
-        <input type="search" class="input" data-events-search placeholder="durchsuchen …" aria-label="durchsuchen"
-            autocomplete="off" />
+        <input type="search" id="events-search" class="input" data-events-search placeholder="durchsuchen …"
+            aria-label="durchsuchen" autocomplete="off" />
 
         <div class="events-controls">
             <div class="switcher" role="group" aria-label="Aktionen anzeigen">
@@ -42,7 +42,7 @@
             </div>
 
             <label class="checkbox">
-                <input type="checkbox" data-events-own {% if own_only %}checked{% endif %} />
+                <input type="checkbox" id="events-own" data-events-own {% if own_only %}checked{% endif %} />
                 Nur meine Aktionen
             </label>
         </div>

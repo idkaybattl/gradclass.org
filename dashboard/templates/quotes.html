@@ -50,8 +50,8 @@
     {% endif %}
 
     <div class="quotes-toolbar">
-        <input type="search" class="input" data-quotes-search placeholder="durchsuchen …" aria-label="durchsuchen"
-            autocomplete="off" />
+        <input type="search" id="quotes-search" class="input" data-quotes-search placeholder="durchsuchen …"
+            aria-label="durchsuchen" autocomplete="off" />
         <a class="btn" href="{% url 'quote-create' %}" data-overlay-open="overlay" hx-get="{% url 'quote-create' %}"
             hx-target="#overlay-content" hx-swap="innerHTML">Neues Zitat</a>
     </div>

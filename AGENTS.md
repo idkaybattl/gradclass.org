@@ -229,12 +229,16 @@ be rendered and looked at before reporting. Do not rely on the diff alone.
 - Dev login credentials live in the gitignored `.dev-login` at the repo root
   (`username=` / `password=`). Use them to log in in the MCP browser; never
   commit the file or copy the credentials into code, tests or docs.
+- Stay on the site. Open no external pages (third-party links, docs, CDNs)
+  unless asked. Navigating between dev-server URLs and spinning up a throwaway
+  `data:` test page in an extra tab is fine; close extra tabs afterwards.
 - Prove layout with `evaluate_script` instead of eyeballing screenshots: compare
   `document.documentElement.scrollWidth` with `clientWidth`, and each control's
   `getBoundingClientRect()` with its card/viewport. Use `emulate` with a viewport
   (`390x844x3,mobile,touch`) and check narrow widths (e.g. `320`), not only
-  `390x844`. Prefer `emulate` over `resize_page`: the latter is bound to the OS
-  window, so tiling and Chrome's minimum window size can change it.
+  `390x844`. Use `emulate` rather than `resize_page`: the window manager tiles
+  and maximizes the window, so `resize_page` fails
+  (`Restore window to normal state`) or resizes unpredictably.
 - MCP tools are attached when a thread starts. If they are missing, open a new
   thread; the server is already configured in Zed settings.
 - MCP is Chrome/Blink, not Safari. It cannot verify iOS-native controls

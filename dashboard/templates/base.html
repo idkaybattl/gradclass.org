@@ -9,14 +9,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- favicon -->
-    <link rel="icon" type="image/png" href="{% static 'dashboard/icons/favicon.ico/favicon-96x96.png' %}"
+    <link rel="icon" type="image/png" href="{% static 'dashboard/icons/favicons/favicon-96x96.png' %}"
         sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="{% static 'dashboard/icons/favicon.ico/favicon.svg' %}" />
-    <link rel="shortcut icon" href="{% static 'dashboard/icons/favicon.ico/favicon.ico' %}" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'dashboard/icons/favicons/favicon.svg' %}" />
+    <link rel="shortcut icon" href="{% static 'dashboard/icons/favicons/favicon.ico' %}" />
     <link rel="apple-touch-icon" sizes="180x180"
-        href="{% static 'dashboard/icons/favicon.ico/apple-touch-icon.png' %}" />
+        href="{% static 'dashboard/icons/favicons/apple-touch-icon.png' %}" />
     <meta name="apple-mobile-web-app-title" content="gc.org" />
-    <link rel="manifest" href="{% static 'dashboard/icons/favicon.ico/site.webmanifest' %}" />
+    <link rel="manifest" href="{% static 'dashboard/icons/favicons/site.webmanifest' %}" />
 
     <!-- styling -->
     <link rel="preload" href="{% static 'dashboard/fonts/BioRhyme/BioRhyme-Variable.woff2' %}" as="font"
@@ -126,8 +126,8 @@
                     </a>
                 </div>
                 <div class="footer-items">
-                    {% comment %} Gallerie und Instagram vorerst ausgeblendet
-                    <a class="footer-item" aria-label="Gallerie">
+                    {% comment %} Galerie und Instagram vorerst ausgeblendet
+                    <a class="footer-item" aria-label="Galerie">
                         <span class="logo" style="--icon: url('{% static 'dashboard/icons/images.svg' %}')"></span>
                     </a>
                     <a class="footer-item" aria-label="Instagram">
@@ -178,7 +178,7 @@
                 <div class="overlay-content">
                     <a class="menu-link" href="{% url 'events' %}">Aktionen</a>
                     <a class="menu-link" href="{% url 'quotes' %}">Zitate</a>
-                    <span class="menu-link menu-link--disabled" aria-disabled="true">Gallerie</span>
+                    <span class="menu-link menu-link--disabled" aria-disabled="true">Galerie</span>
                     <a class="menu-link" href="{% url 'polls' %}">Umfragen</a>
                     <a class="menu-link" href="{% url 'abikasse' %}">Abikasse</a>
                     <span class="menu-link menu-link--disabled" aria-disabled="true">Forum</span>

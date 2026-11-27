@@ -448,7 +448,7 @@ pages. It keeps the move from churning code that is still being written.
     always shown and has no `href`).
   - “Profil” / navbar icon → current user details overlay.
   - “Logout” stays a CSRF-protected POST form (already correct).
-  - “Zitate”, “Gallerie”, “Abikasse”, “Forum” have no backend; keep them
+  - “Zitate”, “Galerie”, “Abikasse”, “Forum” have no backend; keep them
     visibly disabled or remove them from the menu until implemented.
 - [x] Reuse the menu’s close/overlay behaviour when an item opens the sheet.
 
@@ -1981,7 +1981,7 @@ only lifts the counters and the batch cap.
 
 `/gallery/`:
 
-- Header “Gallerie” with the upload button top-right; visible to every user.
+- Header “Galerie” with the upload button top-right; visible to every user.
 - Filter row: “Alle”, “Fotos”, “Videos”, plus a clearable event chip when
   `?event=` is active and a “Gemeldet (N)” chip for `manage_gallery`.
 - Responsive grid of square tiles; thumbnail/poster with a small photo/video
