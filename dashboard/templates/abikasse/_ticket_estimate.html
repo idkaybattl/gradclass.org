@@ -1,3 +1,4 @@
+{% load static %}
 <div class="ticket-estimate" id="ticket-estimate" data-ticket-estimate>
     {% if compact %}
     <p class="ticket-estimate__summary">
@@ -32,7 +33,9 @@
         <span>Für {{ ticket_count }} Personen</span>
         <a class="btn btn--secondary ticket-estimate__edit" href="{{ ticket_count_edit_url }}"
             data-overlay-open="overlay" hx-get="{{ ticket_count_edit_url }}" hx-target="#overlay-content"
-            hx-swap="innerHTML">Ändern</a>
+            hx-swap="innerHTML" aria-label="Personen ändern">
+            <span class="logo" style="--icon: url('{% static 'dashboard/icons/edit.svg' %}')" aria-hidden="true"></span>
+        </a>
     </div>
 
     {% if ticket_estimate %}

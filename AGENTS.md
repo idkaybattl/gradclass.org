@@ -196,7 +196,8 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 - Change one variable per round and say what observation will confirm it. Never
   combine a fix with a feel or cleanup change the user has to test by hand.
 - Match the validation to the failure: renders and layout probes cannot verify
-  gesture, momentum or compositing behaviour.
+  gesture, momentum, compositing or engine-specific native controls (e.g. iOS
+  date/time pickers).
 - Do not replace a stated constraint with a different design. “Keep the shell”
   means fix scrolling inside it, not make the document the scroller.
 - If a device-only bug survives two focused attempts, ask for an independent,
@@ -220,8 +221,22 @@ Django 6 website for managing a German Abitur year group (WHG Abi 2028).
 Every major UI change — layout, responsive behaviour, overlay, form, icon — must
 be rendered and looked at before reporting. Do not rely on the diff alone.
 
-- Preferred: Chrome DevTools MCP in Zed, when configured. Use it to open the
-  page, click through overlays, and inspect console/network errors.
+- Preferred: the Chrome DevTools MCP configured in Zed
+  (`chrome-devtools-mcp-zed`). Start `manage.py runserver`, open
+  `http://127.0.0.1:8000/...` in the MCP browser, log in with a dev user, and
+  click through overlays. It exercises the real HTML and HTMX swaps and exposes
+  console/network errors and screenshots.
+- Prove layout with `evaluate_script` instead of eyeballing screenshots: compare
+  `document.documentElement.scrollWidth` with `clientWidth`, and each control's
+  `getBoundingClientRect()` with its card/viewport. Use `emulate` with a viewport
+  (`390x844x3,mobile,touch`) and check narrow widths (e.g. `320`), not only
+  `390x844`. Prefer `emulate` over `resize_page`: the latter is bound to the OS
+  window, so tiling and Chrome's minimum window size can change it.
+- MCP tools are attached when a thread starts. If they are missing, open a new
+  thread; the server is already configured in Zed settings.
+- MCP is Chrome/Blink, not Safari. It cannot verify iOS-native controls
+  (date/time pickers), gesture, momentum or compositing; those still need a
+  device check.
 - Fallback: `scripts/render_ui.py` renders an authenticated page or overlay
   fragment with headless Firefox and writes `.ui-preview/<name>.png`. The title
   card is hidden in renders; add `--splash` to include it:

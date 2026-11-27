@@ -571,7 +571,7 @@ class IndexCardTests(TestCase):
         self.assertContains(response, "→")
         self.assertContains(response, "3000,00 €")
         self.assertContains(response, "Für 5 Personen")
-        self.assertContains(response, "Ändern")
+        self.assertContains(response, 'aria-label="Personen ändern"')
         self.assertNotContains(response, "Schätzung vom")
         self.assertNotContains(response, "Dein Ticketpreis")
 
