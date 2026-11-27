@@ -101,6 +101,25 @@ input[type="number"] {
     appearance: textfield;
 }
 
+/*
+ * iOS Safari renders date/datetime-local inputs as native controls that keep
+ * their intrinsic width: width: 100% is ignored and padding is added on top
+ * (WebKit bug 301648), so the control spills past its field on mobile.
+ * Dropping the native appearance lets it size like a text input; tapping it
+ * still opens the native picker.
+ */
+@supports (-webkit-touch-callout: none) {
+
+    .field input[type="date"],
+    .field input[type="datetime-local"],
+    .input[type="date"],
+    .input[type="datetime-local"] {
+        -webkit-appearance: none;
+        appearance: none;
+        overflow: hidden;
+    }
+}
+
 input::placeholder,
 textarea::placeholder {
     color: var(--text);
